@@ -1,0 +1,28 @@
+{
+  "name": "lucid-sound-api",
+  "private": true,
+  "version": "0.0.0",
+  "type": "commonjs",
+  "scripts": {
+    "dev": "nodemon src/index.js",
+    "build": "echo \"No build step for API (running with node)\"",
+    "lint": "node -e \"console.log('skip lint for scaffold')\"",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.0.0",
+    "better-sqlite3": "^11.0.0",
+    "cookie-parser": "^1.4.6",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "nanoid": "^5.0.7",
+    "zod": "^3.24.1",
+    "prisma": "^6.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.4"
+  }
+}
+

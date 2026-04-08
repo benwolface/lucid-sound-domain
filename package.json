@@ -1,0 +1,19 @@
+{
+  "name": "lucid-sound-domain",
+  "private": true,
+  "version": "0.0.0",
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "concurrently -n API,WEB -c cyan,green \"npm -w apps/api run dev\" \"npm -w apps/web run dev\"",
+    "build": "npm -w apps/web run build && npm -w apps/api run build",
+    "lint": "npm -w apps/web run lint && npm -w apps/api run lint",
+    "prisma:generate": "npm -w apps/api run prisma:generate",
+    "prisma:migrate": "npm -w apps/api run prisma:migrate"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.0"
+  }
+}
+
