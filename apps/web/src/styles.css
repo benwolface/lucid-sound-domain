@@ -17,9 +17,7 @@ body {
   margin: 0;
   font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial,
     "Apple Color Emoji", "Segoe UI Emoji";
-  background: radial-gradient(800px 600px at 30% 0%, rgba(34, 197, 94, 0.12), transparent),
-    radial-gradient(700px 500px at 100% 20%, rgba(34, 197, 94, 0.08), transparent),
-    var(--bg);
+  background: #000;
   color: var(--text);
 }
 
@@ -27,6 +25,13 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+}
+
+.bootBlack {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  background: #000;
 }
 
 .header {
