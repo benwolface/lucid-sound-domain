@@ -64,13 +64,12 @@ body {
 /* ── Splash text (above backgrounds) ── */
 
 .splash {
-  position: relative;
-  z-index: 2;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 0.1em;
 }
+
 
 .splash-word {
   display: block;
@@ -92,6 +91,51 @@ body {
   /* anime.js drives opacity and filter from these starting values */
   opacity: 0;
   filter: blur(30px);
+}
+
+/* ── Welcome circle ── */
+
+.welcome-wrap {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Spinning dotted ring — sits behind the black circle */
+.welcome-ring {
+  position: absolute;
+  width: clamp(250px, 38vw, 330px);
+  height: clamp(250px, 38vw, 330px);
+  border-radius: 50%;
+  border: 1.5px dashed rgba(255, 255, 255, 0.65);
+  animation: ring-spin 12s linear infinite;
+}
+
+@keyframes ring-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Pitch black circle */
+.welcome-circle {
+  width: clamp(218px, 33vw, 294px);
+  height: clamp(218px, 33vw, 294px);
+  border-radius: 50%;
+  background: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* SVG text container */
+.welcome-svg {
+  width: 78%;
+  height: auto;
+  overflow: visible;
 }
 
 /* ── Accessibility ── */
