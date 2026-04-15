@@ -3,9 +3,9 @@ import { animate } from 'animejs'
 import './styles.css'
 
 const BACKGROUNDS = [
-  { url: '/bg-1-sky.jpg',   position: 'center bottom', size: 'cover'   },
-  { url: '/bg-2-disco.jpg', position: 'center center', size: 'cover'   },
-  { url: '/bg-3-red.jpg',   position: 'center center', size: 'cover'   },
+  { url: '/bg-1-sky.jpg',   position: 'center 60%',   size: 'cover' },
+  { url: '/bg-2-disco.jpg', position: 'center center', size: 'cover' },
+  { url: '/bg-3-red.jpg',   position: 'center center', size: 'cover' },
 ]
 
 export default function App() {
@@ -23,7 +23,6 @@ function Landing() {
   const bgSlideRef  = useRef(null)
   const splashRef   = useRef(null)
   const welcomeRef  = useRef(null)
-  const gridRef     = useRef(null)
 
   useEffect(() => {
     const words = [...document.querySelectorAll('.splash-word')]
@@ -35,34 +34,12 @@ function Landing() {
     // Start hidden
     if (bgSlideRef.current) bgSlideRef.current.style.opacity = '0'
     if (welcomeRef.current) welcomeRef.current.style.opacity = '0'
-    if (gridRef.current)    gridRef.current.style.opacity    = '0'
 
     words.forEach(word => {
       word.style.opacity   = '0'
       word.style.filter    = 'blur(6px)'
       word.style.transform = 'translateY(0px)'
     })
-
-    // ── Grid overlay: fade in with entrance, vanish as strobe fires ──
-    const grid = gridRef.current
-    if (grid) {
-      const gi = { opacity: 0 }
-      animations.push(
-        animate(gi, {
-          opacity: 1,
-          duration: 1400, delay: 300, ease: 'out(2)',
-          onRender: () => { grid.style.opacity = gi.opacity }
-        })
-      )
-      const go = { opacity: 1 }
-      animations.push(
-        animate(go, {
-          opacity: 0,
-          duration: 180, delay: 6060, ease: 'linear',
-          onRender: () => { grid.style.opacity = go.opacity }
-        })
-      )
-    }
 
     // ── Phase 1: Entrance ──
     words.forEach((word, i) => {
@@ -81,6 +58,9 @@ function Landing() {
 
     // ── Phase 2: Hold → strobe → hard cut ──
     flickerStart = setTimeout(() => {
+      // Kill the grid before the strobe so it doesn't animate blur every frame forever
+      words.forEach(word => word.classList.add('no-grid'))
+
       const FLICKER_MS = 550
       const born = performance.now()
       flickerTick = setInterval(() => {
@@ -132,7 +112,7 @@ function Landing() {
       )
     })
 
-    // ── Photo reveal ──
+    // ── Photo reveal — black fades away as smoke phase begins ──
     const slide = bgSlideRef.current
     if (slide) {
       const sp = { opacity: 0 }
@@ -145,13 +125,13 @@ function Landing() {
       )
     }
 
-    // ── Logo transition (photo done at 6800 + 4000 = 10800ms) ──
-    const LOGO_SCALE  = 0.28
-    const LOGO_TOP_PX = 32
-
+    // ── Logo transition — title shrinks to top once photo is revealed ──
     logoTimeout = setTimeout(() => {
       const splashEl = splashRef.current
       if (!splashEl) return
+
+      const LOGO_SCALE  = 0.28
+      const LOGO_TOP_PX = 32
 
       const rect = splashEl.getBoundingClientRect()
       const currentCenterY = rect.top + rect.height / 2
@@ -170,7 +150,7 @@ function Landing() {
       )
     }, 9000)
 
-    // ── Welcome circle: fade in after logo settles (10800 + 1400 = 12200ms) ──
+    // ── Welcome circle: fades in after logo settles ──
     const welcomeWrap = welcomeRef.current
     if (welcomeWrap) {
       const ww = { opacity: 0 }
@@ -182,14 +162,12 @@ function Landing() {
         })
       )
 
-      // ── "welcome" write-on: sweep clip rect left→right after circle appears ──
       const clipRect = welcomeWrap.querySelector('.write-rect')
       if (clipRect) {
-        const SVG_W = 220
         const wr = { w: 0 }
         animations.push(
           animate(wr, {
-            w: SVG_W,
+            w: 220,
             duration: 2400, delay: 11400, ease: 'out(1.2)',
             onRender: () => { clipRect.setAttribute('width', wr.w) }
           })
@@ -205,10 +183,10 @@ function Landing() {
         word.style.opacity   = '0'
         word.style.filter    = 'blur(6px)'
         word.style.transform = 'translateY(0px)'
+        word.classList.remove('no-grid')
       })
       if (splashRef.current)  splashRef.current.style.transform  = ''
       if (welcomeRef.current) welcomeRef.current.style.opacity   = '0'
-      if (gridRef.current)    gridRef.current.style.opacity      = '0'
       if (slide) slide.style.opacity = '0'
       animations.forEach(a => a.revert())
     }
@@ -228,14 +206,14 @@ function Landing() {
       <div className="bg-veil" />
 
       <div ref={splashRef} className="splash">
-        <div ref={gridRef} className="splash-grid" />
-        <span className="splash-word">LUCID</span>
-        <span className="splash-word">SOUND</span>
-        <span className="splash-word">DOMAIN</span>
+        <span className="splash-word" data-word="LUCID">LUCID</span>
+        <span className="splash-word" data-word="SOUND">SOUND</span>
+        <span className="splash-word" data-word="DOMAIN">DOMAIN</span>
       </div>
 
-      {/* Welcome circle — appears after logo settles */}
       <div ref={welcomeRef} className="welcome-wrap">
+        <div className="accretion-disk" />
+        <div className="welcome-ring" />
         <div className="welcome-circle">
           <svg
             className="welcome-svg"

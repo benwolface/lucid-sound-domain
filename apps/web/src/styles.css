@@ -50,7 +50,8 @@ body {
   inset: 0;
   z-index: 0;
   /* backgroundImage / backgroundPosition / backgroundSize set via inline style in React */
-  filter: brightness(0.65) saturate(0.85);
+  background-repeat: no-repeat;
+  filter: brightness(0.55) saturate(0.80);
 }
 
 /* Veil: dark overlay between image and text */
@@ -69,36 +70,49 @@ body {
   align-items: center;
   gap: 0.1em;
   position: relative;
+  z-index: 2;
 }
 
-/* Thin graph-paper grid overlay — sits on top of the words via mix-blend-mode */
-.splash-grid {
+/* Grid clipped to letter shapes — removed once smoke phase begins */
+.splash-word.no-grid::after {
+  display: none;
+}
+
+.splash-word::after {
+  content: attr(data-word);
   position: absolute;
-  inset: -24px -48px; /* bleed a little beyond the text edges */
-  pointer-events: none;
-  z-index: 1;
-  mix-blend-mode: overlay;
+  inset: 0;
+  display: block;
+  text-align: center;
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  letter-spacing: inherit;
+  line-height: inherit;
+  /* Solid #000 lines = crisp 1px, no anti-aliasing blur */
   background-image:
     repeating-linear-gradient(
       0deg,
-      rgba(255, 255, 255, 0.18) 0px,
-      rgba(255, 255, 255, 0.18) 0.75px,
-      transparent 0.75px,
-      transparent 18px
+      #000 0px, #000 1px,
+      transparent 1px, transparent 14px
     ),
     repeating-linear-gradient(
       90deg,
-      rgba(255, 255, 255, 0.18) 0px,
-      rgba(255, 255, 255, 0.18) 0.75px,
-      transparent 0.75px,
-      transparent 18px
+      #000 0px, #000 1px,
+      transparent 1px, transparent 14px
     );
-  opacity: 0;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  opacity: 0.28;
+  pointer-events: none;
 }
 
 
 .splash-word {
   display: block;
+  position: relative;
   font-family: 'Akira Expanded', sans-serif;
   font-size: clamp(2rem, 5.5vw, 5.5rem);
   font-weight: 900;
@@ -132,22 +146,68 @@ body {
   justify-content: center;
 }
 
-/* Pitch black circle — dashed border IS the ring, spinning together */
-.welcome-circle {
+/* Accretion disk — flat rotating ellipse of hot glowing gas */
+.accretion-disk {
+  position: absolute;
+  width: clamp(300px, 46vw, 410px);
+  height: clamp(300px, 46vw, 410px);
+  border-radius: 50%;
+  background: conic-gradient(
+    from 0deg,
+    transparent            0deg,
+    rgba(255,140,10,0.00)  15deg,
+    rgba(255,140,10,0.55)  45deg,
+    rgba(255,210,80,0.90)  72deg,
+    rgba(255,230,120,1.00) 85deg,
+    rgba(255,200,70,0.85)  98deg,
+    rgba(255,130,10,0.40)  125deg,
+    transparent            155deg,
+    transparent            210deg,
+    rgba(160,60,5,0.08)    290deg,
+    transparent            360deg
+  );
+  filter: blur(16px);
+  transform: scaleY(0.2);
+  animation: disk-spin 6s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes disk-spin {
+  from { transform: scaleY(0.2) rotate(0deg); }
+  to   { transform: scaleY(0.2) rotate(360deg); }
+}
+
+/* Spinning dotted ring — separate element so circle content stays still */
+.welcome-ring {
+  position: absolute;
   width: clamp(250px, 38vw, 330px);
   height: clamp(250px, 38vw, 330px);
   border-radius: 50%;
-  background: #000;
-  border: 1.5px dashed rgba(255, 255, 255, 0.65);
+  border: 1.5px dashed rgba(255, 255, 255, 0.55);
   animation: ring-spin 12s linear infinite;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  pointer-events: none;
 }
 
 @keyframes ring-spin {
   to { transform: rotate(360deg); }
 }
+
+/* Static black hole — no spin, photon ring glow */
+.welcome-circle {
+  position: relative;
+  width: clamp(250px, 38vw, 330px);
+  height: clamp(250px, 38vw, 330px);
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 38%, #0d0d0d 0%, #000 50%);
+  box-shadow:
+    0 0  18px  5px rgba(255, 130, 15, 0.50),
+    0 0  55px 18px rgba(255,  80,  8, 0.22),
+    0 0 100px 40px rgba(180,  40,  4, 0.10);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 
 /* SVG text container */
 .welcome-svg {
