@@ -10,11 +10,28 @@ export default defineConfig({
       includeAssets: ["favicon.svg"],
       manifest: {
         name: "Lucid Sound Domain",
-        short_name: "Lucid Sound",
+        short_name: "Lucid",
+        description: "A homebase for the Lucid sound series.",
         start_url: "/",
         display: "standalone",
-        background_color: "#0b1220",
-        theme_color: "#0f172a"
+        orientation: "portrait",
+        background_color: "#000000",
+        theme_color: "#000000"
+      },
+      workbox: {
+        globPatterns: ["**/*.{js,css,html,ico,svg,woff2}"],
+        runtimeCaching: [
+          {
+            urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
+            handler: "CacheFirst",
+            options: { cacheName: "google-fonts-cache", expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 365 } }
+          },
+          {
+            urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
+            handler: "CacheFirst",
+            options: { cacheName: "gstatic-fonts-cache", expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 365 } }
+          }
+        ]
       },
       devOptions: {
         enabled: true
