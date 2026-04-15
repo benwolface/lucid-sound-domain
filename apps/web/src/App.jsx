@@ -23,6 +23,7 @@ function Landing() {
   const bgSlideRef  = useRef(null)
   const splashRef   = useRef(null)
   const welcomeRef  = useRef(null)
+  const gridRef     = useRef(null)
 
   useEffect(() => {
     const words = [...document.querySelectorAll('.splash-word')]
@@ -34,12 +35,34 @@ function Landing() {
     // Start hidden
     if (bgSlideRef.current) bgSlideRef.current.style.opacity = '0'
     if (welcomeRef.current) welcomeRef.current.style.opacity = '0'
+    if (gridRef.current)    gridRef.current.style.opacity    = '0'
 
     words.forEach(word => {
       word.style.opacity   = '0'
       word.style.filter    = 'blur(6px)'
       word.style.transform = 'translateY(0px)'
     })
+
+    // ── Grid overlay: fade in with entrance, vanish as strobe fires ──
+    const grid = gridRef.current
+    if (grid) {
+      const gi = { opacity: 0 }
+      animations.push(
+        animate(gi, {
+          opacity: 1,
+          duration: 1400, delay: 300, ease: 'out(2)',
+          onRender: () => { grid.style.opacity = gi.opacity }
+        })
+      )
+      const go = { opacity: 1 }
+      animations.push(
+        animate(go, {
+          opacity: 0,
+          duration: 180, delay: 6060, ease: 'linear',
+          onRender: () => { grid.style.opacity = go.opacity }
+        })
+      )
+    }
 
     // ── Phase 1: Entrance ──
     words.forEach((word, i) => {
@@ -145,7 +168,7 @@ function Landing() {
           }
         })
       )
-    }, 10800)
+    }, 9000)
 
     // ── Welcome circle: fade in after logo settles (10800 + 1400 = 12200ms) ──
     const welcomeWrap = welcomeRef.current
@@ -154,7 +177,7 @@ function Landing() {
       animations.push(
         animate(ww, {
           opacity: 1,
-          duration: 1000, delay: 12400, ease: 'out(2)',
+          duration: 1000, delay: 10600, ease: 'out(2)',
           onRender: () => { welcomeWrap.style.opacity = ww.opacity }
         })
       )
@@ -167,7 +190,7 @@ function Landing() {
         animations.push(
           animate(wr, {
             w: SVG_W,
-            duration: 2400, delay: 13200, ease: 'out(1.2)',
+            duration: 2400, delay: 11400, ease: 'out(1.2)',
             onRender: () => { clipRect.setAttribute('width', wr.w) }
           })
         )
@@ -185,6 +208,7 @@ function Landing() {
       })
       if (splashRef.current)  splashRef.current.style.transform  = ''
       if (welcomeRef.current) welcomeRef.current.style.opacity   = '0'
+      if (gridRef.current)    gridRef.current.style.opacity      = '0'
       if (slide) slide.style.opacity = '0'
       animations.forEach(a => a.revert())
     }
@@ -204,6 +228,7 @@ function Landing() {
       <div className="bg-veil" />
 
       <div ref={splashRef} className="splash">
+        <div ref={gridRef} className="splash-grid" />
         <span className="splash-word">LUCID</span>
         <span className="splash-word">SOUND</span>
         <span className="splash-word">DOMAIN</span>
@@ -211,7 +236,6 @@ function Landing() {
 
       {/* Welcome circle — appears after logo settles */}
       <div ref={welcomeRef} className="welcome-wrap">
-        <div className="welcome-ring" />
         <div className="welcome-circle">
           <svg
             className="welcome-svg"
