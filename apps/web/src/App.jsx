@@ -114,8 +114,6 @@ function Home() {
           heroHintVisibleRef.current = firstViewVisible;
           setHeroHintVisible(firstViewVisible);
         }
-
-
       },
       { root: el, threshold: 0.05 },
     );
@@ -272,7 +270,9 @@ function Home() {
               alt="Artist statement"
               className="j-artist-statement-image"
             />
-            <p className="j-image-subcaption j-artist-subcaption">questions to consider within the domain</p>
+            <p className="j-image-subcaption j-artist-subcaption">
+              questions to consider within the domain
+            </p>
           </div>
 
           {/* ── Flow ── */}
@@ -288,9 +288,9 @@ function Home() {
                 8:00p - Regulation (Deep Listening Session)
               </p>
               <p className="j-attend-note">
-                during this part of the event, we ask that the room hold silence.
-                you&apos;re welcome to chat, smoke, or use your devices in
-                rooms or on the roof.
+                during this part, we ask that the room be silent for full
+                immersion. you&apos;re welcome to step into a room or the roof
+                to chat, smoke, or use your phone
               </p>
               <p className="j-attend-slot">
                 9:00 - 9:30p - Transition Time (Ambient)
@@ -370,6 +370,7 @@ function Home() {
             </footer>
           </section>
         </div>
+        <MobileTimeline active={active} pageRef={pageRef} />
       </div>
     </div>
   );
@@ -555,6 +556,41 @@ function JourneyTimeline({ active, pageRef }) {
             <span className="j-node-ring" />
           </span>
           <span className="j-node-label">{s.label}</span>
+        </a>
+      ))}
+    </nav>
+  );
+}
+
+// ── Horizontal bottom timeline for mobile ──
+function MobileTimeline({ active, pageRef }) {
+  const activeIdx = JOURNEY_SECTIONS.findIndex((s) => s.id === active);
+  const fillPct =
+    activeIdx <= 0 ? 0 : (activeIdx / (JOURNEY_SECTIONS.length - 1)) * 100;
+
+  return (
+    <nav className="j-timeline-mobile">
+      <span className="j-track-h">
+        <span className="j-track-h-fill" style={{ width: `${fillPct}%` }} />
+      </span>
+      {JOURNEY_SECTIONS.map((s, i) => (
+        <a
+          key={s.id}
+          href={s.id === "home" ? "#" : `#j-${s.id}`}
+          onClick={
+            s.id === "home"
+              ? (e) => {
+                  e.preventDefault();
+                  pageRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+                }
+              : undefined
+          }
+          className={`j-mnode${s.id === active ? " is-active" : ""}${i < activeIdx ? " is-past" : ""}`}
+        >
+          <span className="j-mnode-label">{s.label}</span>
+          <span className="j-mnode-dot">
+            <span className="j-mnode-ring" />
+          </span>
         </a>
       ))}
     </nav>
@@ -1270,7 +1306,7 @@ function Landing({ onHome }) {
               <>
                 who invited you to
                 <br />
-                <span className="circle-text-line">the domain?</span>
+                the domain?
               </>
             )}
           </span>
@@ -1293,9 +1329,7 @@ function Landing({ onHome }) {
           <input
             className="waitlist-input"
             type="text"
-            placeholder={
-              step === "contact" ? "phone number or email" : "name..."
-            }
+            placeholder={step === "contact" ? "phone number" : "name..."}
             value={step === "contact" ? contact : referrer}
             onChange={(e) =>
               step === "contact"

@@ -230,7 +230,7 @@ body {
 .circle-text {
   position: absolute;
   font-family: "Excrallik", cursive;
-  font-size: clamp(1.1rem, 2.2vw, 1.55rem);
+  font-size: clamp(0.8rem, 1.5vw, 1.1rem);
   color: #fff;
   text-align: center;
   letter-spacing: 0.06em;
@@ -257,7 +257,7 @@ body {
   outline: none;
   color: rgba(255, 255, 255, 0.82);
   font-family: "Akira Expanded", sans-serif;
-  font-size: clamp(0.62rem, 1vw, 0.8rem);
+  font-size: max(16px, clamp(0.62rem, 1vw, 0.8rem));
   text-align: center;
   letter-spacing: 0.08em;
   width: 280px;
@@ -1265,6 +1265,192 @@ body {
   opacity: 0;
   pointer-events: none;
   z-index: 999;
+}
+
+/* ── Mobile horizontal timeline (hidden on desktop) ── */
+.j-timeline-mobile {
+  display: none;
+}
+
+.j-track-h {
+  position: absolute;
+  left: 24px;
+  right: 24px;
+  bottom: calc(13px + env(safe-area-inset-bottom));
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+  pointer-events: none;
+}
+
+.j-track-h-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: rgba(143, 239, 74, 0.55);
+  transition: width 0.6s ease;
+}
+
+.j-mnode {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  text-decoration: none;
+  cursor: pointer;
+  position: relative;
+  z-index: 1;
+}
+
+.j-mnode-label {
+  font-family: "Akira Expanded", sans-serif;
+  font-size: 0.36rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.22);
+  transition: color 0.4s ease;
+  white-space: nowrap;
+}
+
+.j-mnode.is-active .j-mnode-label {
+  color: #8fef4a;
+}
+
+.j-mnode.is-past .j-mnode-label {
+  color: rgba(255, 255, 255, 0.42);
+}
+
+.j-mnode-dot {
+  position: relative;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.18);
+  flex-shrink: 0;
+  z-index: 1;
+  transition:
+    background 0.4s ease,
+    box-shadow 0.4s ease,
+    transform 0.4s ease;
+}
+
+.j-mnode-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1px solid rgba(143, 239, 74, 0);
+  transition:
+    border-color 0.4s ease,
+    width 0.4s ease,
+    height 0.4s ease;
+}
+
+.j-mnode.is-active .j-mnode-dot {
+  background: #8fef4a;
+  transform: scale(1.35);
+  box-shadow:
+    0 0 8px rgba(143, 239, 74, 0.9),
+    0 0 20px rgba(143, 239, 74, 0.45);
+}
+
+.j-mnode.is-active .j-mnode-ring {
+  border-color: rgba(143, 239, 74, 0.38);
+  animation: ring-pulse 2.2s ease-in-out infinite;
+}
+
+.j-mnode.is-past .j-mnode-dot {
+  background: rgba(143, 239, 74, 0.6);
+}
+
+/* ── Mobile layout overrides ── */
+@media (max-width: 768px) {
+  .j-invite-power {
+    display: flex;
+    margin-left: auto;
+    margin-right: auto;
+    width: min(60%, 240px);
+  }
+
+  /* Show horizontal bottom timeline, hide vertical sidebar */
+  .j-timeline-mobile {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-around;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: calc(58px + env(safe-area-inset-bottom));
+    padding: 0 16px calc(10px + env(safe-area-inset-bottom)) 16px;
+    background: rgba(0, 0, 0, 0.88);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-top: 1px solid rgba(255, 255, 255, 0.07);
+    z-index: 100;
+  }
+
+  .j-timeline-wrap {
+    display: none;
+  }
+
+  /* Single-column layout on mobile */
+  .journey-layout {
+    display: block;
+  }
+
+  /* Full-width sections, extra bottom padding for nav bar */
+  .j-section {
+    padding: 60px 24px calc(88px + env(safe-area-inset-bottom)) 24px;
+    min-height: 100svh;
+  }
+
+  .j-section--after-image {
+    padding-top: 0;
+  }
+
+  /* Stack domain layout vertically */
+  .j-domain-layout {
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .j-domain-image-wrap {
+    width: 100%;
+    margin-right: 0;
+  }
+
+  /* Artist statement full width */
+  .j-artist-statement-wrap {
+    padding: 0 16px;
+  }
+
+  /* First view uses svh to account for mobile browser chrome */
+  .home-first-view {
+    height: 100svh;
+  }
+
+  /* Section chevrons above mobile nav bar */
+  .section-scroll-hint {
+    bottom: calc(68px + env(safe-area-inset-bottom));
+    left: 50%;
+  }
+
+  /* Home first-view chevron above mobile nav bar */
+  .scroll-hint {
+    bottom: calc(62px + env(safe-area-inset-bottom));
+  }
+
+  /* Footer: no sidebar offset on mobile */
+  .home-footer {
+    left: 0;
+    width: 100vw;
+    bottom: calc(78px + env(safe-area-inset-bottom));
+    position: absolute;
+  }
 }
 
 /* ── Accessibility ── */
