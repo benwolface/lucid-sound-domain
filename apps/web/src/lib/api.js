@@ -43,3 +43,9 @@ export function apiTrackEvent({ type, properties }) {
   });
 }
 
+export function apiJoinWaitlist({ contact }) {
+  return apiRequest("/waitlist", {
+    method: "POST",
+    body: JSON.stringify({ contact })
+  });
+}

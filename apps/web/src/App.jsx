@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { animate } from "animejs";
+import { apiJoinWaitlist } from "./lib/api";
 import "./styles.css";
 
 // ── Dev flag — skip the intro so the circle shows immediately ──
@@ -44,8 +45,11 @@ function Home() {
   const [heroHintVisible, setHeroHintVisible] = useState(true)
   const pageRef      = useRef(null)
   const intersecting = useRef(new Set())
+  const activeRef = useRef('domain')
+  const logoVisibleRef = useRef(true)
+  const heroHintVisibleRef = useRef(true)
 
-  // Section activation + anime.js stagger
+  // Section activation + one-time reveal
   useEffect(() => {
     const el = pageRef.current
     if (!el) return
@@ -54,21 +58,17 @@ function Home() {
       entries.forEach(e => {
         if (!e.isIntersecting) return
         const id = e.target.dataset.section
-        setActive(id)
+        if (id && activeRef.current !== id) {
+          activeRef.current = id
+          setActive(id)
+        }
+
         const kids = Array.from(e.target.querySelectorAll('.j-animate'))
         kids.forEach((child, i) => {
-          child.style.opacity = '0'
-          child.style.transform = 'translateY(28px)'
-          const s = { op: 0, ty: 28 }
-          animate(s, {
-            op: 1, ty: 0,
-            duration: 800, delay: i * 110, ease: 'out(3)',
-            onRender: () => {
-              child.style.opacity = s.op
-              child.style.transform = `translateY(${s.ty}px)`
-            },
-          })
+          child.style.transitionDelay = `${i * 110}ms`
         })
+        e.target.classList.add('is-visible')
+        ob.unobserve(e.target)
       })
     }, { root: el, threshold: 0.35 })
     sections.forEach(s => ob.observe(s))
@@ -90,8 +90,18 @@ function Home() {
         if (e.isIntersecting) intersecting.current.add(e.target)
         else                  intersecting.current.delete(e.target)
       })
-      setLogoVisible(intersecting.current.size > 0)
-      setHeroHintVisible(firstView ? intersecting.current.has(firstView) : false)
+      const nextLogoVisible = intersecting.current.size > 0
+      const nextHeroHintVisible = firstView ? intersecting.current.has(firstView) : false
+
+      if (logoVisibleRef.current !== nextLogoVisible) {
+        logoVisibleRef.current = nextLogoVisible
+        setLogoVisible(nextLogoVisible)
+      }
+
+      if (heroHintVisibleRef.current !== nextHeroHintVisible) {
+        heroHintVisibleRef.current = nextHeroHintVisible
+        setHeroHintVisible(nextHeroHintVisible)
+      }
     }, { root: el, threshold: 0.05 })
 
     targets.forEach(t => ob.observe(t))
@@ -553,11 +563,7 @@ function Landing({ onHome }) {
   async function handleContactSubmit() {
     if (!isContactReady(contact)) return;
     try {
-      await fetch("/api/waitlist", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ contact }),
-      });
+      await apiJoinWaitlist({ contact });
     } catch {
       /* silent */
     }
@@ -693,7 +699,7 @@ function Landing({ onHome }) {
         whoTextRef.current.style.transform = "translateY(0)";
       }
       if (inputWrapRef.current) inputWrapRef.current.style.opacity = "1";
-      if (lineRef.current) lineRef.current.style.width = "280px";
+      if (lineRef.current) lineRef.current.style.transform = "scaleX(1)";
       return;
     }
 
@@ -944,15 +950,15 @@ function Landing({ onHome }) {
 
       const lineEl = lineRef.current;
       if (lineEl) {
-        const ln = { w: 0 };
+        const ln = { sx: 0 };
         animations.push(
           animate(ln, {
-            w: 280,
+            sx: 1,
             duration: 1600,
             delay: 14200,
             ease: "out(1.5)",
             onRender: () => {
-              lineEl.style.width = `${ln.w}px`;
+              lineEl.style.transform = `scaleX(${ln.sx})`;
             },
           }),
         );
@@ -980,7 +986,7 @@ function Landing({ onHome }) {
         whoTextRef.current.style.transform = "";
       }
       if (inputWrapRef.current) inputWrapRef.current.style.opacity = "0";
-      if (lineRef.current) lineRef.current.style.width = "0";
+      if (lineRef.current) lineRef.current.style.transform = "scaleX(0)";
       if (slide) slide.style.opacity = "0";
       animations.forEach((a) => a.revert());
     };
