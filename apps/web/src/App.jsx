@@ -30,101 +30,124 @@ export default function App() {
 }
 
 const JOURNEY_SECTIONS = [
-  { id: 'domain',     label: 'Understand'  },
-  { id: 'flow',       label: 'Attend'      },
-  { id: 'invitation', label: 'Invitation'  },
-  { id: 'contact',    label: 'Contribute'  },
-]
+  { id: "home",       label: "Regulation" },
+  { id: "domain",     label: "Understand" },
+  { id: "flow",       label: "Attend"     },
+  { id: "invitation", label: "Invitation" },
+  { id: "contact",    label: "Contribute" },
+];
 
 function Home() {
   const [bg] = useState(
     () => HOME_BACKGROUNDS[Math.floor(Math.random() * HOME_BACKGROUNDS.length)],
-  )
-  const [active, setActive] = useState('domain')
-  const [logoVisible, setLogoVisible] = useState(true)
-  const [heroHintVisible, setHeroHintVisible] = useState(true)
-  const pageRef      = useRef(null)
-  const intersecting = useRef(new Set())
-  const activeRef = useRef('domain')
-  const logoVisibleRef = useRef(true)
-  const heroHintVisibleRef = useRef(true)
+  );
+  const [active, setActive] = useState("home");
+  const [logoVisible, setLogoVisible] = useState(true);
+  const [heroHintVisible, setHeroHintVisible] = useState(true);
+  const pageRef = useRef(null);
+  const intersecting = useRef(new Set());
+  const activeRef = useRef("home");
+  const logoVisibleRef = useRef(true);
+  const heroHintVisibleRef = useRef(true);
 
   // Section activation + one-time reveal
   useEffect(() => {
-    const el = pageRef.current
-    if (!el) return
-    const sections = el.querySelectorAll('.j-section')
-    const ob = new IntersectionObserver(entries => {
-      entries.forEach(e => {
-        if (!e.isIntersecting) return
-        const id = e.target.dataset.section
-        if (id && activeRef.current !== id) {
-          activeRef.current = id
-          setActive(id)
-        }
+    const el = pageRef.current;
+    if (!el) return;
+    const sections = el.querySelectorAll(".j-section");
+    const revealed = new Set();
+    const ob = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => {
+          if (!e.isIntersecting) return;
+          const id = e.target.dataset.section;
 
-        const kids = Array.from(e.target.querySelectorAll('.j-animate'))
-        kids.forEach((child, i) => {
-          child.style.transitionDelay = `${i * 110}ms`
-        })
-        e.target.classList.add('is-visible')
-        ob.unobserve(e.target)
-      })
-    }, { root: el, threshold: 0.35 })
-    sections.forEach(s => ob.observe(s))
-    return () => ob.disconnect()
-  }, [])
+          // Always update active for timeline + chevron visibility
+          if (id && activeRef.current !== id) {
+            activeRef.current = id;
+            setActive(id);
+          }
+
+          // One-time animation reveal
+          if (!revealed.has(e.target)) {
+            revealed.add(e.target);
+            const kids = Array.from(e.target.querySelectorAll(".j-animate"));
+            kids.forEach((child, i) => {
+              child.style.transitionDelay = `${i * 110}ms`;
+            });
+            e.target.classList.add("is-visible");
+          }
+        });
+      },
+      { root: el, threshold: 0.35 },
+    );
+    sections.forEach((s) => ob.observe(s));
+    return () => ob.disconnect();
+  }, []);
 
   // Logo visibility — hide when between sections
   useEffect(() => {
-    const el = pageRef.current
-    if (!el) return
-    const firstView = el.querySelector('.home-first-view')
-    const targets = [
-      firstView,
-      ...el.querySelectorAll('.j-section'),
-    ].filter(Boolean)
+    const el = pageRef.current;
+    if (!el) return;
+    const firstView = el.querySelector(".home-first-view");
+    const targets = [firstView, ...el.querySelectorAll(".j-section")].filter(
+      Boolean,
+    );
 
-    const ob = new IntersectionObserver(entries => {
-      entries.forEach(e => {
-        if (e.isIntersecting) intersecting.current.add(e.target)
-        else                  intersecting.current.delete(e.target)
-      })
-      const nextLogoVisible = intersecting.current.size > 0
-      const nextHeroHintVisible = firstView ? intersecting.current.has(firstView) : false
+    const ob = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => {
+          if (e.isIntersecting) intersecting.current.add(e.target);
+          else intersecting.current.delete(e.target);
+        });
+        const nextLogoVisible = intersecting.current.size > 0;
+        const firstViewVisible = firstView
+          ? intersecting.current.has(firstView)
+          : false;
 
-      if (logoVisibleRef.current !== nextLogoVisible) {
-        logoVisibleRef.current = nextLogoVisible
-        setLogoVisible(nextLogoVisible)
-      }
+        if (logoVisibleRef.current !== nextLogoVisible) {
+          logoVisibleRef.current = nextLogoVisible;
+          setLogoVisible(nextLogoVisible);
+        }
 
-      if (heroHintVisibleRef.current !== nextHeroHintVisible) {
-        heroHintVisibleRef.current = nextHeroHintVisible
-        setHeroHintVisible(nextHeroHintVisible)
-      }
-    }, { root: el, threshold: 0.05 })
+        if (heroHintVisibleRef.current !== firstViewVisible) {
+          heroHintVisibleRef.current = firstViewVisible;
+          setHeroHintVisible(firstViewVisible);
+        }
 
-    targets.forEach(t => ob.observe(t))
-    return () => ob.disconnect()
-  }, [])
+        // Keep timeline active on 'home' while first view is visible
+        if (firstViewVisible && activeRef.current !== "home") {
+          activeRef.current = "home";
+          setActive("home");
+        }
+      },
+      { root: el, threshold: 0.05 },
+    );
+
+    targets.forEach((t) => ob.observe(t));
+    return () => ob.disconnect();
+  }, []);
 
   const scrollToJourney = () =>
     pageRef.current
-      ?.querySelector('#j-domain')
-      ?.scrollIntoView({ behavior: 'smooth' })
+      ?.querySelector("#j-domain")
+      ?.scrollIntoView({ behavior: "smooth" });
 
   return (
     <div ref={pageRef} className="home-page">
       {/* Background fixed behind all scroll content */}
-      <div className="home-bg" style={{
-        backgroundImage:    `url(${bg.url})`,
-        backgroundPosition: bg.position,
-        backgroundSize:     bg.size,
-      }} />
+      <div
+        className="home-bg"
+        style={{
+          backgroundImage: `url(${bg.url})`,
+          backgroundPosition: bg.position,
+          backgroundSize: bg.size,
+        }}
+      />
       <div className="home-veil" />
 
       {/* ── Fixed logo — visible when in a section, hidden between ── */}
-      <div className={`home-logo${logoVisible ? ' is-visible' : ''}`}>
+      <div className={`home-logo${logoVisible ? " is-visible" : ""}`}>
         <span className="home-logo-word">LUCID</span>
         <span className="home-logo-word">SOUND</span>
         <span className="home-logo-word">DOMAIN</span>
@@ -136,9 +159,24 @@ function Home() {
           <p className="home-regulation-title">( Regulation )</p>
           <p className="home-next-label">next portal opening on</p>
           <p className="home-next-date">Wednesday, April 22nd, 2026</p>
+          <p className="home-next-address">
+            1340 Turk St Apt 418 · San Francisco CA
+          </p>
           <CalendarButtons />
           <p className="home-upcoming-title">Upcoming portals</p>
           <p className="home-upcoming-date">Wednesday, April 29th, 2026</p>
+          <a
+            href="https://www.instagram.com/lucidsounddomain/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="home-ig-link"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+              <circle cx="12" cy="12" r="4"/>
+              <circle cx="17.5" cy="6.5" r="0.6" fill="currentColor" stroke="none"/>
+            </svg>
+          </a>
         </div>
         <ScrollHint onClick={scrollToJourney} visible={heroHintVisible} />
       </div>
@@ -147,20 +185,19 @@ function Home() {
       <div className="journey-layout">
         {/* Sticky timeline sidebar */}
         <div className="j-timeline-wrap">
-          <JourneyTimeline active={active} />
+          <JourneyTimeline active={active} pageRef={pageRef} />
         </div>
 
         {/* Sections */}
         <div className="journey-sections">
-
           {/* ── The Domain ── */}
           <section id="j-domain" className="j-section" data-section="domain">
             <div className="j-domain-layout">
               <div className="j-domain-text">
                 <h2 className="j-animate j-section-heading">Understand</h2>
                 <p className="j-animate j-domain-intro">
-                  The Lucid Sound Domain is an intimate, deep listening dance floor
-                  that requires nothing from you except your presence.
+                  The Lucid Sound Domain is an intimate, deep listening dance
+                  floor that requires nothing from you except your presence.
                 </p>
                 <div className="j-animate j-space-list">
                   <span className="j-space-lead">This is</span>
@@ -169,7 +206,9 @@ function Home() {
                     <li>a space to receive</li>
                     <li>a space to restore</li>
                     <li>a space to reconnect</li>
-                    <li>a space to <span className="j-green">REGULATE</span></li>
+                    <li>
+                      a space to <span className="j-green">Regulate</span>
+                    </li>
                     <li>and release</li>
                   </ul>
                 </div>
@@ -180,16 +219,32 @@ function Home() {
                   alt="Lucid Sound Domain sound system"
                   href="https://www.instagram.com/p/DV1a4kwjU8B/"
                 />
+                <a
+                  href="https://www.instagram.com/p/DV1a4kwjU8B/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="j-image-caption-link"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="j-ig-icon">
+                    <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+                    <circle cx="12" cy="12" r="4"/>
+                    <circle cx="17.5" cy="6.5" r="0.6" fill="currentColor" stroke="none"/>
+                  </svg>
+                  the sound system as a boundary object ↗
+                </a>
               </div>
             </div>
             <SectionScrollHint
               nextId="j-flow"
               containerRef={pageRef}
-              visible={active === 'domain'}
+              visible={active === "domain"}
             />
           </section>
 
-          <div className="j-artist-statement-wrap" aria-label="Artist statement">
+          <div
+            className="j-artist-statement-wrap"
+            aria-label="Artist statement"
+          >
             <img
               src="/artist-statement.jpg"
               alt="Artist statement"
@@ -198,39 +253,53 @@ function Home() {
           </div>
 
           {/* ── Flow ── */}
-          <section id="j-flow" className="j-section j-section--after-image" data-section="flow">
+          <section
+            id="j-flow"
+            className="j-section j-section--after-image"
+            data-section="flow"
+          >
             <h2 className="j-animate j-section-heading">Attend</h2>
             <div className="j-animate j-attend-schedule">
               <p className="j-attend-slot">7:00p - Arrival + Settle</p>
-              <p className="j-attend-slot">8:00p - Regulation (Deep Listening Session)</p>
-              <p className="j-attend-note">
-                we invite participants to not talk or use their phones during this time.
-                you&apos;re welcome to hang, smoke, or use devices in rooms, the fire
-                escape, or on the roof.
+              <p className="j-attend-slot">
+                8:00p - Regulation (Deep Listening Session)
               </p>
-              <p className="j-attend-slot">9:00 - 9:30p - Transition Time (Ambient)</p>
-              <p className="j-attend-slot">9:30 - 10:30p - Low-end Ritual (Movement)</p>
+              <p className="j-attend-note">
+                we invite participants to not talk or use their phones during
+                this time. you&apos;re welcome to hang, smoke, or use devices in
+                rooms, the fire escape, or on the roof.
+              </p>
+              <p className="j-attend-slot">
+                9:00 - 9:30p - Transition Time (Ambient)
+              </p>
+              <p className="j-attend-slot">
+                9:30 - 10:30p - Low-end Ritual (Movement)
+              </p>
               <p className="j-attend-note">dance release expression</p>
             </div>
             <SectionScrollHint
               nextId="j-invitation"
               containerRef={pageRef}
-              visible={active === 'flow'}
+              visible={active === "flow"}
             />
           </section>
 
           {/* ── Invitation ── */}
-          <section id="j-invitation" className="j-section" data-section="invitation">
+          <section
+            id="j-invitation"
+            className="j-section"
+            data-section="invitation"
+          >
             <h2 className="j-animate j-section-heading">Invitation</h2>
             <p className="j-animate j-section-copy">
-              if you&apos;d like to bring a friend into the domain for our next portal,
-              click here for your unique invite link
+              if you&apos;d like to bring a friend into the domain for our next
+              portal, click here for your unique invite link
             </p>
             <InviteLinkButton />
             <SectionScrollHint
               nextId="j-contact"
               containerRef={pageRef}
-              visible={active === 'invitation'}
+              visible={active === "invitation"}
             />
           </section>
 
@@ -238,37 +307,59 @@ function Home() {
           <section id="j-contact" className="j-section" data-section="contact">
             <h2 className="j-animate j-section-heading">Contribute</h2>
             <p className="j-animate j-section-copy">
-              if you&apos;d like to contribute to the co-creation of Regulation through
-              sound, visualization, food, drink or any other way, please text me at
-              {" "}
-              <a className="j-inline-link" href="sms:9805059936">9805059936</a>.
+              if you&apos;d like to contribute to the co-creation of Regulation
+              through sound, visualization, food, drink or any other way, please
+              reach out at{" "}
+              <a className="j-inline-link" href="sms:9805059936">
+                (980)-505-9936
+              </a>
+              .
             </p>
+            <footer className="home-footer">
+              <a
+                href="https://www.instagram.com/lucidsounddomain/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="home-footer-ig"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{width:16,height:16}}>
+                  <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+                  <circle cx="12" cy="12" r="4"/>
+                  <circle cx="17.5" cy="6.5" r="0.6" fill="currentColor" stroke="none"/>
+                </svg>
+              </a>
+              <p className="home-footer-tagline">remain present</p>
+              <p className="home-footer-copy">Lucid Sound Domain &copy; 2026</p>
+            </footer>
           </section>
-
         </div>
       </div>
+
     </div>
-  )
+  );
 }
 
 // ── Wide arc at the bottom of the first view ──
 function ScrollHint({ onClick, visible }) {
   return (
     <button
-      className={`scroll-hint${visible ? ' is-visible' : ''}`}
+      className={`scroll-hint${visible ? " is-visible" : ""}`}
       onClick={onClick}
       aria-label="Scroll to explore"
     >
-      <span className="scroll-hint-arc" />
       <span className="scroll-hint-chevron">
         <svg viewBox="0 0 24 12" fill="none">
-          <polyline points="2,1 12,10 22,1"
-            stroke="currentColor" strokeWidth="1.5"
-            strokeLinecap="round" strokeLinejoin="round"/>
+          <polyline
+            points="2,1 12,10 22,1"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
         </svg>
       </span>
     </button>
-  )
+  );
 }
 
 // ── Scroll hint at the bottom of each journey section ──
@@ -276,68 +367,80 @@ function SectionScrollHint({ nextId, containerRef, visible }) {
   const handleClick = () => {
     containerRef.current
       ?.querySelector(`#${nextId}`)
-      ?.scrollIntoView({ behavior: 'smooth' })
-  }
+      ?.scrollIntoView({ behavior: "smooth" });
+  };
   return (
     <button
-      className={`section-scroll-hint${visible ? ' is-visible' : ''}`}
+      className={`section-scroll-hint${visible ? " is-visible" : ""}`}
       onClick={handleClick}
       aria-label="Next section"
     >
       <svg viewBox="0 0 24 12" fill="none" className="section-chevron">
-        <polyline points="2,1 12,10 22,1"
-          stroke="currentColor" strokeWidth="1.5"
-          strokeLinecap="round" strokeLinejoin="round"/>
+        <polyline
+          points="2,1 12,10 22,1"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
       </svg>
     </button>
-  )
+  );
 }
 
 // ── Zoomable image lightbox ──
 function ZoomableImage({ src, alt, href }) {
-  const [open, setOpen]     = useState(false)
-  const [scale, setScale]   = useState(1)
-  const [pos, setPos]       = useState({ x: 0, y: 0 })
-  const dragging = useRef(false)
-  const last     = useRef({ x: 0, y: 0 })
-  const imgRef   = useRef(null)
+  const [open, setOpen] = useState(false);
+  const [scale, setScale] = useState(1);
+  const [pos, setPos] = useState({ x: 0, y: 0 });
+  const dragging = useRef(false);
+  const last = useRef({ x: 0, y: 0 });
+  const imgRef = useRef(null);
 
   // Reset when closed
   useEffect(() => {
-    if (!open) { setScale(1); setPos({ x: 0, y: 0 }) }
-  }, [open])
+    if (!open) {
+      setScale(1);
+      setPos({ x: 0, y: 0 });
+    }
+  }, [open]);
 
   // Escape to close
   useEffect(() => {
-    if (!open) return
-    const onKey = e => { if (e.key === 'Escape') setOpen(false) }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [open])
+    if (!open) return;
+    const onKey = (e) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open]);
 
-  const onWheel = e => {
-    e.preventDefault()
-    setScale(s => Math.min(6, Math.max(1, s - e.deltaY * 0.004)))
-  }
+  const onWheel = (e) => {
+    e.preventDefault();
+    setScale((s) => Math.min(6, Math.max(1, s - e.deltaY * 0.004)));
+  };
 
-  const onMouseDown = e => {
-    if (scale <= 1) return
-    dragging.current = true
-    last.current = { x: e.clientX, y: e.clientY }
-  }
-  const onMouseMove = e => {
-    if (!dragging.current) return
-    const dx = e.clientX - last.current.x
-    const dy = e.clientY - last.current.y
-    last.current = { x: e.clientX, y: e.clientY }
-    setPos(p => ({ x: p.x + dx, y: p.y + dy }))
-  }
-  const onMouseUp = () => { dragging.current = false }
+  const onMouseDown = (e) => {
+    if (scale <= 1) return;
+    dragging.current = true;
+    last.current = { x: e.clientX, y: e.clientY };
+  };
+  const onMouseMove = (e) => {
+    if (!dragging.current) return;
+    const dx = e.clientX - last.current.x;
+    const dy = e.clientY - last.current.y;
+    last.current = { x: e.clientX, y: e.clientY };
+    setPos((p) => ({ x: p.x + dx, y: p.y + dy }));
+  };
+  const onMouseUp = () => {
+    dragging.current = false;
+  };
 
   return (
     <>
       <img
-        src={src} alt={alt}
+        src={src}
+        alt={alt}
         className="j-domain-img"
         onClick={() => setOpen(true)}
       />
@@ -346,7 +449,7 @@ function ZoomableImage({ src, alt, href }) {
         <div className="lightbox-overlay" onClick={() => setOpen(false)}>
           <div
             className="lightbox-inner"
-            onClick={e => e.stopPropagation()}
+            onClick={(e) => e.stopPropagation()}
             onWheel={onWheel}
             onMouseDown={onMouseDown}
             onMouseMove={onMouseMove}
@@ -355,35 +458,41 @@ function ZoomableImage({ src, alt, href }) {
           >
             <img
               ref={imgRef}
-              src={src} alt={alt}
+              src={src}
+              alt={alt}
               className="lightbox-img"
               style={{
                 transform: `translate(${pos.x}px, ${pos.y}px) scale(${scale})`,
-                cursor: scale > 1 ? 'grab' : 'zoom-in',
+                cursor: scale > 1 ? "grab" : "zoom-in",
               }}
               draggable={false}
             />
             <div className="lightbox-actions">
               <a
-                href={href} target="_blank" rel="noopener noreferrer"
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="lightbox-ig-link"
-                onClick={e => e.stopPropagation()}
+                onClick={(e) => e.stopPropagation()}
               >
                 view on instagram
               </a>
-              <button className="lightbox-close" onClick={() => setOpen(false)}>✕</button>
+              <button className="lightbox-close" onClick={() => setOpen(false)}>
+                ✕
+              </button>
             </div>
           </div>
         </div>
       )}
     </>
-  )
+  );
 }
 
 // ── Vertical timeline sidebar ──
-function JourneyTimeline({ active }) {
-  const activeIdx = JOURNEY_SECTIONS.findIndex(s => s.id === active)
-  const fillPct   = activeIdx <= 0 ? 0 : (activeIdx / (JOURNEY_SECTIONS.length - 1)) * 100
+function JourneyTimeline({ active, pageRef }) {
+  const activeIdx = JOURNEY_SECTIONS.findIndex((s) => s.id === active);
+  const fillPct =
+    activeIdx <= 0 ? 0 : (activeIdx / (JOURNEY_SECTIONS.length - 1)) * 100;
 
   return (
     <nav className="j-timeline">
@@ -393,9 +502,11 @@ function JourneyTimeline({ active }) {
       </span>
 
       {JOURNEY_SECTIONS.map((s, i) => (
-        <a key={s.id}
-           href={`#j-${s.id}`}
-           className={`j-node${s.id === active ? ' is-active' : ''}${i < activeIdx ? ' is-past' : ''}`}
+        <a
+          key={s.id}
+          href={s.id === "home" ? "#" : `#j-${s.id}`}
+          onClick={s.id === "home" ? (e) => { e.preventDefault(); pageRef.current?.scrollTo({ top: 0, behavior: "smooth" }); } : undefined}
+          className={`j-node${s.id === active ? " is-active" : ""}${i < activeIdx ? " is-past" : ""}`}
         >
           <span className="j-node-dot">
             <span className="j-node-ring" />
@@ -404,7 +515,7 @@ function JourneyTimeline({ active }) {
         </a>
       ))}
     </nav>
-  )
+  );
 }
 
 const PORTAL_ICS = [
@@ -412,10 +523,11 @@ const PORTAL_ICS = [
   "VERSION:2.0",
   "PRODID:-//Lucid Sound Domain//EN",
   "BEGIN:VEVENT",
-  "DTSTART;VALUE=DATE:20260422",
-  "DTEND;VALUE=DATE:20260423",
+  "DTSTART:20260423T020000Z",
+  "DTEND:20260423T053000Z",
   "SUMMARY:Lucid Sound Domain — Portal Opening",
   "DESCRIPTION:The next portal opens. lucidsounddomain.com",
+  "LOCATION:1340 Turk St Apt 418\\, San Francisco\\, CA 94115",
   "END:VEVENT",
   "END:VCALENDAR",
 ].join("\r\n");
@@ -423,8 +535,9 @@ const PORTAL_ICS = [
 const GOOGLE_CAL_URL =
   "https://calendar.google.com/calendar/render?action=TEMPLATE" +
   "&text=Lucid+Sound+Domain+%E2%80%94+Portal+Opening" +
-  "&dates=20260422%2F20260423" +
-  "&details=The+next+portal+opens.+lucidsounddomain.com";
+  "&dates=20260423T020000Z%2F20260423T053000Z" +
+  "&details=The+next+portal+opens.+lucidsounddomain.com" +
+  "&location=1340+Turk+St+Apt+418%2C+San+Francisco%2C+CA+94115";
 
 function CalendarButtons() {
   const icsHref =
@@ -455,23 +568,105 @@ function CalendarButtons() {
 
 function GoogleCalIcon() {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <rect x="3" y="4" width="18" height="17" rx="2" stroke="currentColor" strokeWidth="1.8"/>
-      <line x1="3" y1="9" x2="21" y2="9" stroke="currentColor" strokeWidth="1.8"/>
-      <line x1="8" y1="2" x2="8" y2="6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
-      <line x1="16" y1="2" x2="16" y2="6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden="true"
+    >
+      <rect
+        x="3"
+        y="4"
+        width="18"
+        height="17"
+        rx="2"
+        stroke="currentColor"
+        strokeWidth="1.8"
+      />
+      <line
+        x1="3"
+        y1="9"
+        x2="21"
+        y2="9"
+        stroke="currentColor"
+        strokeWidth="1.8"
+      />
+      <line
+        x1="8"
+        y1="2"
+        x2="8"
+        y2="6"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+      <line
+        x1="16"
+        y1="2"
+        x2="16"
+        y2="6"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }
 
 function AppleCalIcon() {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true" py="">
-      <rect x="3" y="4" width="18" height="17" rx="2" stroke="currentColor" strokeWidth="1.8"/>
-      <line x1="3" y1="9" x2="21" y2="9" stroke="currentColor" strokeWidth="1.8"/>
-      <line x1="8" y1="2" x2="8" y2="6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
-      <line x1="16" y1="2" x2="16" y2="6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
-      <text x="12" y="19" textAnchor="middle" fontSize="7" fill="currentColor" fontFamily="system-ui">
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden="true"
+      py=""
+    >
+      <rect
+        x="3"
+        y="4"
+        width="18"
+        height="17"
+        rx="2"
+        stroke="currentColor"
+        strokeWidth="1.8"
+      />
+      <line
+        x1="3"
+        y1="9"
+        x2="21"
+        y2="9"
+        stroke="currentColor"
+        strokeWidth="1.8"
+      />
+      <line
+        x1="8"
+        y1="2"
+        x2="8"
+        y2="6"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+      <line
+        x1="16"
+        y1="2"
+        x2="16"
+        y2="6"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+      <text
+        x="12"
+        y="19"
+        textAnchor="middle"
+        fontSize="7"
+        fill="currentColor"
+        fontFamily="system-ui"
+      >
         22
       </text>
     </svg>
@@ -1025,19 +1220,16 @@ function Landing({ onHome }) {
           <span ref={welcomeTextRef} className="circle-text">
             welcome
           </span>
-          <span
-            ref={whoTextRef}
-            className={`circle-text${step !== "contact" ? " circle-text--sm" : ""}`}
-          >
-            {step === "contact"
-              ? "who are you?"
-              : (
-                <>
-                  who invited you in to
-                  <br />
-                  <span className="circle-text-line">the domain?</span>
-                </>
-              )}
+          <span ref={whoTextRef} className="circle-text">
+            {step === "contact" ? (
+              "who are you?"
+            ) : (
+              <>
+                who invited you to
+                <br />
+                <span className="circle-text-line">the domain?</span>
+              </>
+            )}
           </span>
         </div>
 
