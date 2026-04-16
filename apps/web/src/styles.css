@@ -1,10 +1,13 @@
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
-html, body {
+html,
+body {
   height: 100%;
   width: 100%;
   overflow: hidden;
@@ -17,7 +20,10 @@ html, body {
 }
 
 body {
-  font-family: 'Akira Expanded', -apple-system, sans-serif;
+  font-family:
+    "Akira Expanded",
+    -apple-system,
+    sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   color: #fff;
@@ -51,7 +57,7 @@ body {
   z-index: 0;
   /* backgroundImage / backgroundPosition / backgroundSize set via inline style in React */
   background-repeat: no-repeat;
-  filter: brightness(0.55) saturate(0.80);
+  filter: brightness(0.55) saturate(0.8);
 }
 
 /* Veil: dark overlay between image and text */
@@ -93,13 +99,17 @@ body {
   background-image:
     repeating-linear-gradient(
       0deg,
-      #000 0px, #000 1px,
-      transparent 1px, transparent 14px
+      #000 0px,
+      #000 1px,
+      transparent 1px,
+      transparent 14px
     ),
     repeating-linear-gradient(
       90deg,
-      #000 0px, #000 1px,
-      transparent 1px, transparent 14px
+      #000 0px,
+      #000 1px,
+      transparent 1px,
+      transparent 14px
     );
   -webkit-background-clip: text;
   background-clip: text;
@@ -109,11 +119,10 @@ body {
   pointer-events: none;
 }
 
-
 .splash-word {
   display: block;
   position: relative;
-  font-family: 'Akira Expanded', sans-serif;
+  font-family: "Akira Expanded", sans-serif;
   font-size: clamp(2rem, 5.5vw, 5.5rem);
   font-weight: 900;
   letter-spacing: 0.08em;
@@ -123,9 +132,9 @@ body {
   /* Full white — opacity driven entirely by anime.js (1.0 on entrance, 0.06–0.44 in smoke) */
   color: #fff;
   text-shadow:
-    0 0  12px rgba(255, 255, 255, 0.80),
-    0 0  30px rgba(255, 255, 255, 0.45),
-    0 0  65px rgba(255, 255, 255, 0.22),
+    0 0 12px rgba(255, 255, 255, 0.8),
+    0 0 30px rgba(255, 255, 255, 0.45),
+    0 0 65px rgba(255, 255, 255, 0.22),
     0 0 110px rgba(255, 255, 255, 0.08);
 
   /* anime.js drives opacity and filter from these starting values */
@@ -154,17 +163,17 @@ body {
   border-radius: 50%;
   background: conic-gradient(
     from 0deg,
-    transparent            0deg,
-    rgba(255,140,10,0.00)  15deg,
-    rgba(255,140,10,0.55)  45deg,
-    rgba(255,210,80,0.90)  72deg,
-    rgba(255,230,120,1.00) 85deg,
-    rgba(255,200,70,0.85)  98deg,
-    rgba(255,130,10,0.40)  125deg,
-    transparent            155deg,
-    transparent            210deg,
-    rgba(160,60,5,0.08)    290deg,
-    transparent            360deg
+    transparent 0deg,
+    rgba(255, 140, 10, 0) 15deg,
+    rgba(255, 140, 10, 0.55) 45deg,
+    rgba(255, 210, 80, 0.9) 72deg,
+    rgba(255, 230, 120, 1) 85deg,
+    rgba(255, 200, 70, 0.85) 98deg,
+    rgba(255, 130, 10, 0.4) 125deg,
+    transparent 155deg,
+    transparent 210deg,
+    rgba(160, 60, 5, 0.08) 290deg,
+    transparent 360deg
   );
   filter: blur(16px);
   transform: scaleY(0.2);
@@ -173,8 +182,12 @@ body {
 }
 
 @keyframes disk-spin {
-  from { transform: scaleY(0.2) rotate(0deg); }
-  to   { transform: scaleY(0.2) rotate(360deg); }
+  from {
+    transform: scaleY(0.2) rotate(0deg);
+  }
+  to {
+    transform: scaleY(0.2) rotate(360deg);
+  }
 }
 
 /* Spinning dotted ring — separate element so circle content stays still */
@@ -189,7 +202,9 @@ body {
 }
 
 @keyframes ring-spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Static black hole — no spin, photon ring glow */
@@ -200,19 +215,18 @@ body {
   border-radius: 50%;
   background: radial-gradient(circle at 40% 38%, #0d0d0d 0%, #000 50%);
   box-shadow:
-    0 0  18px  5px rgba(255, 130, 15, 0.50),
-    0 0  55px 18px rgba(255,  80,  8, 0.22),
-    0 0 100px 40px rgba(180,  40,  4, 0.10);
+    0 0 18px 5px rgba(255, 130, 15, 0.5),
+    0 0 55px 18px rgba(255, 80, 8, 0.22),
+    0 0 100px 40px rgba(180, 40, 4, 0.1);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-
 /* Text inside the circle — both stacked at center, only one visible at a time */
 .circle-text {
   position: absolute;
-  font-family: 'Excrallik', cursive;
+  font-family: "Excrallik", cursive;
   font-size: clamp(1.1rem, 2.2vw, 1.55rem);
   color: #fff;
   text-align: center;
@@ -239,7 +253,7 @@ body {
   border: none;
   outline: none;
   color: rgba(255, 255, 255, 0.82);
-  font-family: 'Excrallik', cursive;
+  font-family: "Excrallik", cursive;
   font-size: clamp(0.85rem, 1.4vw, 1.05rem);
   text-align: center;
   letter-spacing: 0.08em;
@@ -257,7 +271,12 @@ body {
 .welcome-line {
   height: 1px;
   width: 0;
-  background: linear-gradient(to right, transparent, rgba(255, 200, 80, 0.65), transparent);
+  background: linear-gradient(
+    to right,
+    transparent,
+    rgba(255, 200, 80, 0.65),
+    transparent
+  );
   pointer-events: none;
 }
 
@@ -266,21 +285,21 @@ body {
   margin-top: 22px;
   padding: 7px 22px;
   background: transparent;
-  border: 1px solid rgba(255, 200, 80, 0.0);
+  border: 1px solid rgba(255, 200, 80, 0);
   border-radius: 99px;
-  color: rgba(255, 200, 80, 0.0);
-  font-family: 'Excrallik', cursive;
+  color: rgba(255, 200, 80, 0);
+  font-family: "Excrallik", cursive;
   font-size: clamp(0.78rem, 1.3vw, 0.95rem);
   letter-spacing: 0.12em;
   cursor: pointer;
   opacity: 0;
   transform: translateY(8px);
   transition:
-    opacity       0.55s ease,
-    transform     0.55s ease,
-    border-color  0.55s ease,
-    color         0.55s ease,
-    box-shadow    0.3s  ease;
+    opacity 0.55s ease,
+    transform 0.55s ease,
+    border-color 0.55s ease,
+    color 0.55s ease,
+    box-shadow 0.3s ease;
   pointer-events: none;
   white-space: nowrap;
 }
@@ -292,16 +311,16 @@ body {
   transform: translateY(0);
   pointer-events: auto;
   box-shadow:
-    0 0  8px 1px rgba(255, 200, 80, 0.18),
-    0 0 20px 4px rgba(255, 140, 10, 0.10);
+    0 0 8px 1px rgba(255, 200, 80, 0.18),
+    0 0 20px 4px rgba(255, 140, 10, 0.1);
 }
 
 .submit-btn.visible:hover {
   border-color: rgba(255, 200, 80, 0.85);
   color: rgba(255, 230, 120, 1);
   box-shadow:
-    0 0 12px  3px rgba(255, 200, 80, 0.35),
-    0 0 32px  8px rgba(255, 140, 10, 0.18);
+    0 0 12px 3px rgba(255, 200, 80, 0.35),
+    0 0 32px 8px rgba(255, 140, 10, 0.18);
 }
 
 .submit-btn.visible:active {
@@ -338,10 +357,10 @@ body {
   border-radius: 50%;
   background: radial-gradient(
     circle,
-    rgba(255, 255, 255, 1.00)  0%,
+    rgba(255, 255, 255, 1) 0%,
     rgba(255, 255, 255, 0.85) 40%,
-    rgba(255, 230, 180, 0.40) 70%,
-    transparent               100%
+    rgba(255, 230, 180, 0.4) 70%,
+    transparent 100%
   );
   opacity: 0;
   pointer-events: none;
@@ -406,14 +425,14 @@ body {
 }
 
 .home-logo-word {
-  font-family: 'Akira Expanded', sans-serif;
+  font-family: "Akira Expanded", sans-serif;
   font-size: clamp(0.42rem, 0.9vw, 0.68rem);
   font-weight: 900;
   letter-spacing: 0.08em;
   line-height: 1.35;
   color: #fff;
   text-shadow:
-    0 0  8px rgba(255, 255, 255, 0.65),
+    0 0 8px rgba(255, 255, 255, 0.65),
     0 0 22px rgba(255, 255, 255, 0.28);
 }
 
@@ -424,19 +443,56 @@ body {
   align-items: center;
 }
 
-.home-next-label {
-  font-family: 'Akira Expanded', sans-serif;
+.home-regulation-title {
+  font-family: "Akira Expanded", sans-serif;
+  font-size: clamp(1.8rem, 3.4vw, 2.9rem);
+  letter-spacing: 0.16em;
+  color: rgba(255, 255, 255, 0.94);
+  text-transform: none;
+  line-height: 1.05;
+  margin: 0 0 22px 0;
+  text-shadow:
+    0 0 16px rgba(255, 255, 255, 0.78),
+    0 0 34px rgba(255, 255, 255, 0.42),
+    0 0 72px rgba(255, 255, 255, 0.22);
+}
+
+.home-upcoming-title {
+  font-family: "Akira Expanded", sans-serif;
   font-size: clamp(0.48rem, 0.85vw, 0.65rem);
   letter-spacing: 0.22em;
   color: rgba(255, 255, 255, 0.42);
   text-transform: uppercase;
+  margin: 22px 0 10px 0;
+}
+
+.home-upcoming-date {
+  font-family: "Excrallik", cursive;
+  font-size: clamp(0.92rem, 1.65vw, 1.25rem);
+  color: #8fef4a;
+  letter-spacing: 0.06em;
+  margin: 0 0 26px 0;
+  text-shadow:
+    0 0 10px rgba(143, 239, 74, 0.52),
+    0 0 24px rgba(143, 239, 74, 0.2);
+}
+
+.home-next-label {
+  font-family: "Akira Expanded", sans-serif;
+  font-size: clamp(0.48rem, 0.85vw, 0.65rem);
+  letter-spacing: 0.22em;
+  color: rgba(255, 255, 255, 0.84);
+  text-transform: uppercase;
   margin: 0 0 12px 0;
+  text-shadow:
+    0 0 8px rgba(255, 255, 255, 0.42),
+    0 0 18px rgba(255, 255, 255, 0.16);
 }
 
 .home-next-date {
-  font-family: 'Excrallik', cursive;
+  font-family: "Excrallik", cursive;
   font-size: clamp(1.2rem, 2.4vw, 1.85rem);
-  color: #8FEF4A;
+  color: #8fef4a;
   letter-spacing: 0.06em;
   margin: 0 0 30px 0;
   text-shadow:
@@ -459,6 +515,14 @@ body {
   align-items: flex-start;
   justify-content: center;
   padding-top: 14px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.35s ease;
+}
+
+.scroll-hint.is-visible {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .scroll-hint-arc {
@@ -480,13 +544,25 @@ body {
 }
 
 @keyframes arc-pulse {
-  0%, 100% { border-color: rgba(255, 255, 255, 0.08); }
-  50%       { border-color: rgba(255, 255, 255, 0.38); }
+  0%,
+  100% {
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+  50% {
+    border-color: rgba(255, 255, 255, 0.38);
+  }
 }
 
 @keyframes chevron-bob {
-  0%, 100% { transform: translateY(0);   opacity: 0.35; }
-  50%       { transform: translateY(6px); opacity: 0.8;  }
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.35;
+  }
+  50% {
+    transform: translateY(6px);
+    opacity: 0.8;
+  }
 }
 
 /* ── Journey layout ── */
@@ -527,18 +603,17 @@ body {
 }
 
 .j-section-heading {
-  font-family: 'Akira Expanded', sans-serif;
+  font-family: "Akira Expanded", sans-serif;
   font-size: clamp(1.4rem, 3.5vw, 3rem);
   font-weight: 900;
   letter-spacing: 0.06em;
   color: #fff;
-  text-shadow:
-    0 0 24px rgba(255, 255, 255, 0.25);
+  text-shadow: 0 0 24px rgba(255, 255, 255, 0.25);
   margin: 0 0 18px 0;
 }
 
 .j-section-placeholder {
-  font-family: 'Excrallik', cursive;
+  font-family: "Excrallik", cursive;
   font-size: clamp(0.75rem, 1.3vw, 1rem);
   color: rgba(255, 255, 255, 0.28);
   letter-spacing: 0.12em;
@@ -555,7 +630,9 @@ body {
   cursor: zoom-in;
   transition: opacity 0.2s ease;
 }
-.j-domain-img:hover { opacity: 0.85; }
+.j-domain-img:hover {
+  opacity: 0.85;
+}
 
 /* ── Lightbox ── */
 .lightbox-overlay {
@@ -596,7 +673,7 @@ body {
 }
 
 .lightbox-ig-link {
-  font-family: 'Akira Expanded', sans-serif;
+  font-family: "Akira Expanded", sans-serif;
   font-size: clamp(0.38rem, 0.65vw, 0.52rem);
   letter-spacing: 0.18em;
   text-transform: uppercase;
@@ -604,7 +681,9 @@ body {
   text-decoration: none;
   transition: color 0.2s ease;
 }
-.lightbox-ig-link:hover { color: #fff; }
+.lightbox-ig-link:hover {
+  color: #fff;
+}
 
 .lightbox-close {
   background: none;
@@ -618,9 +697,14 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: color 0.2s ease, border-color 0.2s ease;
+  transition:
+    color 0.2s ease,
+    border-color 0.2s ease;
 }
-.lightbox-close:hover { color: #fff; border-color: rgba(255,255,255,0.55); }
+.lightbox-close:hover {
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.55);
+}
 
 /* ── Section bottom scroll hint — just a floating arrow ── */
 .section-scroll-hint {
@@ -636,6 +720,14 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.35s ease;
+}
+
+.section-scroll-hint.is-visible {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .section-chevron {
@@ -674,10 +766,124 @@ body {
   object-fit: cover;
 }
 
+.j-artist-statement-wrap {
+  width: min(100%, 980px);
+  margin: clamp(8px, 2vw, 24px) auto;
+  padding: 0 clamp(24px, 4vw, 40px);
+}
+
+.j-artist-statement-image {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow:
+    0 0 24px rgba(255, 255, 255, 0.08),
+    0 0 56px rgba(0, 0, 0, 0.28);
+}
+
+.j-section--after-image {
+  justify-content: center;
+  min-height: 100vh;
+  padding-top: 0;
+}
+
+.j-attend-schedule {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 760px;
+}
+
+.j-attend-slot {
+  font-family: "Akira Expanded", sans-serif;
+  font-size: clamp(0.72rem, 1.2vw, 1rem);
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.82);
+  text-transform: none;
+  margin: 0;
+  text-shadow: 0 0 18px rgba(255, 255, 255, 0.12);
+}
+
+.j-attend-note,
+.j-section-copy {
+  font-family: "Excrallik", cursive;
+  font-size: clamp(0.95rem, 1.45vw, 1.18rem);
+  color: rgba(255, 255, 255, 0.72);
+  line-height: 1.7;
+  letter-spacing: 0.03em;
+  max-width: 760px;
+  margin: 0 0 8px 0;
+}
+
+.j-attend-note {
+  padding-left: clamp(14px, 2vw, 22px);
+}
+
+.j-inline-link {
+  color: #8fef4a;
+  text-decoration: none;
+  text-shadow:
+    0 0 10px rgba(143, 239, 74, 0.52),
+    0 0 24px rgba(143, 239, 74, 0.18);
+}
+
+.j-inline-link:hover {
+  color: #b7ff84;
+}
+
+.j-invite-power {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 20px;
+  width: min(33%, 240px);
+  padding: 12px 18px;
+  border-radius: 999px;
+  border: 1px solid rgba(143, 239, 74, 0.35);
+  background: rgba(143, 239, 74, 0.06);
+  color: rgba(143, 239, 74, 0.86);
+  font-family: "Akira Expanded", sans-serif;
+  font-size: clamp(0.55rem, 0.85vw, 0.68rem);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  cursor: pointer;
+  justify-content: center;
+  align-self: flex-start;
+  transition:
+    color 0.25s ease,
+    border-color 0.25s ease,
+    box-shadow 0.25s ease,
+    transform 0.25s ease,
+    background 0.25s ease;
+}
+
+.j-invite-power:hover {
+  color: #b7ff84;
+  border-color: rgba(143, 239, 74, 0.7);
+  background: rgba(143, 239, 74, 0.12);
+  box-shadow:
+    0 0 12px rgba(143, 239, 74, 0.16),
+    0 0 30px rgba(143, 239, 74, 0.08);
+}
+
+.j-invite-power:active {
+  transform: translateY(1px);
+}
+
+.j-invite-power.is-copied {
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.55);
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow:
+    0 0 14px rgba(255, 255, 255, 0.14),
+    0 0 32px rgba(255, 255, 255, 0.08);
+}
 
 /* ── Domain section content ── */
 .j-domain-intro {
-  font-family: 'Excrallik', cursive;
+  font-family: "Excrallik", cursive;
   font-size: clamp(0.95rem, 1.6vw, 1.25rem);
   color: rgba(255, 255, 255, 0.72);
   line-height: 1.7;
@@ -693,7 +899,7 @@ body {
 }
 
 .j-space-lead {
-  font-family: 'Akira Expanded', sans-serif;
+  font-family: "Akira Expanded", sans-serif;
   font-size: clamp(0.7rem, 1.2vw, 0.95rem);
   font-weight: 900;
   letter-spacing: 0.06em;
@@ -713,7 +919,7 @@ body {
 }
 
 .j-space-list li {
-  font-family: 'Excrallik', cursive;
+  font-family: "Excrallik", cursive;
   font-size: clamp(1rem, 1.8vw, 1.4rem);
   color: rgba(255, 255, 255, 0.82);
   letter-spacing: 0.05em;
@@ -721,7 +927,7 @@ body {
 }
 
 .j-green {
-  color: #8FEF4A;
+  color: #8fef4a;
   font-weight: 900;
   text-decoration: underline;
   text-underline-offset: 8px;
@@ -741,7 +947,7 @@ body {
 /* Vertical track line */
 .j-track {
   position: absolute;
-  left: 43px;  /* center of the dot */
+  left: 43px; /* center of the dot */
   top: 14px;
   bottom: 14px;
   width: 1px;
@@ -776,7 +982,10 @@ body {
   background: rgba(255, 255, 255, 0.18);
   flex-shrink: 0;
   z-index: 1;
-  transition: background 0.4s ease, box-shadow 0.4s ease, transform 0.4s ease;
+  transition:
+    background 0.4s ease,
+    box-shadow 0.4s ease,
+    transform 0.4s ease;
 }
 
 /* Outer pulsing ring on active node */
@@ -789,14 +998,17 @@ body {
   height: 20px;
   border-radius: 50%;
   border: 1px solid rgba(143, 239, 74, 0);
-  transition: border-color 0.4s ease, width 0.4s ease, height 0.4s ease;
+  transition:
+    border-color 0.4s ease,
+    width 0.4s ease,
+    height 0.4s ease;
 }
 
 .j-node.is-active .j-node-dot {
-  background: #8FEF4A;
+  background: #8fef4a;
   transform: scale(1.35);
   box-shadow:
-    0 0  8px rgba(143, 239, 74, 0.9),
+    0 0 8px rgba(143, 239, 74, 0.9),
     0 0 20px rgba(143, 239, 74, 0.45);
 }
 
@@ -810,12 +1022,21 @@ body {
 }
 
 @keyframes ring-pulse {
-  0%, 100% { width: 20px; height: 20px; opacity: 1;   }
-  50%       { width: 28px; height: 28px; opacity: 0.4; }
+  0%,
+  100% {
+    width: 20px;
+    height: 20px;
+    opacity: 1;
+  }
+  50% {
+    width: 28px;
+    height: 28px;
+    opacity: 0.4;
+  }
 }
 
 .j-node-label {
-  font-family: 'Akira Expanded', sans-serif;
+  font-family: "Akira Expanded", sans-serif;
   font-size: clamp(0.42rem, 0.75vw, 0.58rem);
   letter-spacing: 0.18em;
   text-transform: uppercase;
@@ -824,8 +1045,12 @@ body {
   white-space: nowrap;
 }
 
-.j-node.is-active .j-node-label { color: #8FEF4A; }
-.j-node.is-past   .j-node-label { color: rgba(255, 255, 255, 0.42); }
+.j-node.is-active .j-node-label {
+  color: #8fef4a;
+}
+.j-node.is-past .j-node-label {
+  color: rgba(255, 255, 255, 0.42);
+}
 
 /* ── Calendar add buttons ── */
 .cal-btns {
@@ -844,7 +1069,7 @@ body {
   border: 1px solid rgba(143, 239, 74, 0.35);
   background: rgba(143, 239, 74, 0.06);
   color: rgba(143, 239, 74, 0.82);
-  font-family: 'Akira Expanded', sans-serif;
+  font-family: "Akira Expanded", sans-serif;
   font-size: clamp(0.44rem, 0.8vw, 0.6rem);
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -852,19 +1077,19 @@ body {
   white-space: nowrap;
   cursor: pointer;
   transition:
-    background  0.3s ease,
+    background 0.3s ease,
     border-color 0.3s ease,
-    color        0.3s ease,
-    box-shadow   0.3s ease;
+    color 0.3s ease,
+    box-shadow 0.3s ease;
 }
 
 .cal-btn:hover {
   background: rgba(143, 239, 74, 0.14);
   border-color: rgba(143, 239, 74, 0.7);
-  color: #8FEF4A;
+  color: #8fef4a;
   box-shadow:
     0 0 12px rgba(143, 239, 74, 0.25),
-    0 0 28px rgba(143, 239, 74, 0.10);
+    0 0 28px rgba(143, 239, 74, 0.1);
 }
 
 .cal-btn:active {
@@ -886,7 +1111,7 @@ body {
 }
 
 .domain-text {
-  font-family: 'Excrallik', cursive;
+  font-family: "Excrallik", cursive;
   font-size: clamp(1.1rem, 2vw, 1.5rem);
   color: rgba(255, 255, 255, 0.9);
   letter-spacing: 0.1em;
@@ -894,7 +1119,7 @@ body {
 }
 
 .initiated-text {
-  font-family: 'Akira Expanded', sans-serif;
+  font-family: "Akira Expanded", sans-serif;
   font-size: clamp(0.5rem, 0.9vw, 0.7rem);
   color: rgba(255, 255, 255, 0.55);
   letter-spacing: 0.35em;

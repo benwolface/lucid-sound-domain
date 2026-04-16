@@ -41,6 +41,7 @@ function Home() {
   )
   const [active, setActive] = useState('domain')
   const [logoVisible, setLogoVisible] = useState(true)
+  const [heroHintVisible, setHeroHintVisible] = useState(true)
   const pageRef      = useRef(null)
   const intersecting = useRef(new Set())
 
@@ -78,8 +79,9 @@ function Home() {
   useEffect(() => {
     const el = pageRef.current
     if (!el) return
+    const firstView = el.querySelector('.home-first-view')
     const targets = [
-      el.querySelector('.home-first-view'),
+      firstView,
       ...el.querySelectorAll('.j-section'),
     ].filter(Boolean)
 
@@ -89,6 +91,7 @@ function Home() {
         else                  intersecting.current.delete(e.target)
       })
       setLogoVisible(intersecting.current.size > 0)
+      setHeroHintVisible(firstView ? intersecting.current.has(firstView) : false)
     }, { root: el, threshold: 0.05 })
 
     targets.forEach(t => ob.observe(t))
@@ -120,11 +123,14 @@ function Home() {
       {/* ── First viewport ── */}
       <div className="home-first-view">
         <div className="home-center">
+          <p className="home-regulation-title">( Regulation )</p>
           <p className="home-next-label">next portal opening on</p>
           <p className="home-next-date">Wednesday, April 22nd, 2026</p>
           <CalendarButtons />
+          <p className="home-upcoming-title">Upcoming portals</p>
+          <p className="home-upcoming-date">Wednesday, April 29th, 2026</p>
         </div>
-        <ScrollHint onClick={scrollToJourney} />
+        <ScrollHint onClick={scrollToJourney} visible={heroHintVisible} />
       </div>
 
       {/* ── Journey ── */}
@@ -150,7 +156,7 @@ function Home() {
                   <span className="j-space-lead">This is</span>
                   <ul>
                     <li>a space to rest</li>
-                    <li>a space to recieve</li>
+                    <li>a space to receive</li>
                     <li>a space to restore</li>
                     <li>a space to reconnect</li>
                     <li>a space to <span className="j-green">REGULATE</span></li>
@@ -166,27 +172,67 @@ function Home() {
                 />
               </div>
             </div>
-            <SectionScrollHint nextId="j-flow" containerRef={pageRef} />
+            <SectionScrollHint
+              nextId="j-flow"
+              containerRef={pageRef}
+              visible={active === 'domain'}
+            />
           </section>
 
+          <div className="j-artist-statement-wrap" aria-label="Artist statement">
+            <img
+              src="/artist-statement.jpg"
+              alt="Artist statement"
+              className="j-artist-statement-image"
+            />
+          </div>
+
           {/* ── Flow ── */}
-          <section id="j-flow" className="j-section" data-section="flow">
+          <section id="j-flow" className="j-section j-section--after-image" data-section="flow">
             <h2 className="j-animate j-section-heading">Attend</h2>
-            <p className="j-animate j-section-placeholder">— coming soon —</p>
-            <SectionScrollHint nextId="j-invitation" containerRef={pageRef} />
+            <div className="j-animate j-attend-schedule">
+              <p className="j-attend-slot">7:00p - Arrival + Settle</p>
+              <p className="j-attend-slot">8:00p - Regulation (Deep Listening Session)</p>
+              <p className="j-attend-note">
+                we invite participants to not talk or use their phones during this time.
+                you&apos;re welcome to hang, smoke, or use devices in rooms, the fire
+                escape, or on the roof.
+              </p>
+              <p className="j-attend-slot">9:00 - 9:30p - Transition Time (Ambient)</p>
+              <p className="j-attend-slot">9:30 - 10:30p - Low-end Ritual (Movement)</p>
+              <p className="j-attend-note">dance release expression</p>
+            </div>
+            <SectionScrollHint
+              nextId="j-invitation"
+              containerRef={pageRef}
+              visible={active === 'flow'}
+            />
           </section>
 
           {/* ── Invitation ── */}
           <section id="j-invitation" className="j-section" data-section="invitation">
             <h2 className="j-animate j-section-heading">Invitation</h2>
-            <p className="j-animate j-section-placeholder">— coming soon —</p>
-            <SectionScrollHint nextId="j-contact" containerRef={pageRef} />
+            <p className="j-animate j-section-copy">
+              if you&apos;d like to bring a friend into the domain for our next portal,
+              click here for your unique invite link
+            </p>
+            <InviteLinkButton />
+            <SectionScrollHint
+              nextId="j-contact"
+              containerRef={pageRef}
+              visible={active === 'invitation'}
+            />
           </section>
 
           {/* ── Contact ── */}
           <section id="j-contact" className="j-section" data-section="contact">
             <h2 className="j-animate j-section-heading">Contribute</h2>
-            <p className="j-animate j-section-placeholder">— coming soon —</p>
+            <p className="j-animate j-section-copy">
+              if you&apos;d like to contribute to the co-creation of Regulation through
+              sound, visualization, food, drink or any other way, please text me at
+              {" "}
+              <a className="j-inline-link" href="sms:9805059936">9805059936</a>.
+            </p>
           </section>
 
         </div>
@@ -196,9 +242,13 @@ function Home() {
 }
 
 // ── Wide arc at the bottom of the first view ──
-function ScrollHint({ onClick }) {
+function ScrollHint({ onClick, visible }) {
   return (
-    <button className="scroll-hint" onClick={onClick} aria-label="Scroll to explore">
+    <button
+      className={`scroll-hint${visible ? ' is-visible' : ''}`}
+      onClick={onClick}
+      aria-label="Scroll to explore"
+    >
       <span className="scroll-hint-arc" />
       <span className="scroll-hint-chevron">
         <svg viewBox="0 0 24 12" fill="none">
@@ -212,14 +262,18 @@ function ScrollHint({ onClick }) {
 }
 
 // ── Scroll hint at the bottom of each journey section ──
-function SectionScrollHint({ nextId, containerRef }) {
+function SectionScrollHint({ nextId, containerRef, visible }) {
   const handleClick = () => {
     containerRef.current
       ?.querySelector(`#${nextId}`)
       ?.scrollIntoView({ behavior: 'smooth' })
   }
   return (
-    <button className="section-scroll-hint" onClick={handleClick} aria-label="Next section">
+    <button
+      className={`section-scroll-hint${visible ? ' is-visible' : ''}`}
+      onClick={handleClick}
+      aria-label="Next section"
+    >
       <svg viewBox="0 0 24 12" fill="none" className="section-chevron">
         <polyline points="2,1 12,10 22,1"
           stroke="currentColor" strokeWidth="1.5"
@@ -402,7 +456,7 @@ function GoogleCalIcon() {
 
 function AppleCalIcon() {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true" py="">
       <rect x="3" y="4" width="18" height="17" rx="2" stroke="currentColor" strokeWidth="1.8"/>
       <line x1="3" y1="9" x2="21" y2="9" stroke="currentColor" strokeWidth="1.8"/>
       <line x1="8" y1="2" x2="8" y2="6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
@@ -428,6 +482,34 @@ function PowerIcon() {
       <path d="M18.36 6.64A9 9 0 1 1 5.64 6.64" />
       <line x1="12" y1="2" x2="12" y2="12" />
     </svg>
+  );
+}
+
+const INVITE_LINK_URL = "https://lucidsounddomain.com/invite/coming-soon";
+
+function InviteLinkButton() {
+  const [copied, setCopied] = useState(false);
+
+  async function handleCopy() {
+    try {
+      await navigator.clipboard.writeText(INVITE_LINK_URL);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1800);
+    } catch {
+      setCopied(false);
+    }
+  }
+
+  return (
+    <button
+      type="button"
+      className={`j-animate j-invite-power${copied ? " is-copied" : ""}`}
+      onClick={handleCopy}
+      aria-label="Copy invite link"
+    >
+      <PowerIcon />
+      <span>{copied ? "link copied" : "copy invite link"}</span>
+    </button>
   );
 }
 
