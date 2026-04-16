@@ -385,17 +385,24 @@ body {
   justify-content: center;
 }
 
-/* Floating logo at top */
+/* Fixed logo — stays at top through all scroll, fades when between sections */
 .home-logo {
-  position: absolute;
+  position: fixed;
   top: 28px;
   left: 50%;
   transform: translateX(-50%);
+  z-index: 200;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 0.05em;
   pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+
+.home-logo.is-visible {
+  opacity: 1;
 }
 
 .home-logo-word {
@@ -515,6 +522,8 @@ body {
   flex-direction: column;
   justify-content: center;
   padding: 0 clamp(24px, 6vw, 80px);
+  position: relative;
+  padding-bottom: 80px;
 }
 
 .j-section-heading {
@@ -535,6 +544,136 @@ body {
   letter-spacing: 0.12em;
   margin: 0;
 }
+
+/* ── Domain image thumbnail ── */
+.j-domain-img {
+  width: 100%;
+  height: auto;
+  border-radius: 4px;
+  display: block;
+  object-fit: cover;
+  cursor: zoom-in;
+  transition: opacity 0.2s ease;
+}
+.j-domain-img:hover { opacity: 0.85; }
+
+/* ── Lightbox ── */
+.lightbox-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.88);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lightbox-inner {
+  position: relative;
+  max-width: 92vw;
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  overflow: hidden;
+}
+
+.lightbox-img {
+  max-width: 90vw;
+  max-height: 80vh;
+  object-fit: contain;
+  border-radius: 4px;
+  transform-origin: center center;
+  transition: transform 0.08s linear;
+  user-select: none;
+}
+
+.lightbox-actions {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.lightbox-ig-link {
+  font-family: 'Akira Expanded', sans-serif;
+  font-size: clamp(0.38rem, 0.65vw, 0.52rem);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.45);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+.lightbox-ig-link:hover { color: #fff; }
+
+.lightbox-close {
+  background: none;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: rgba(255, 255, 255, 0.45);
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  font-size: 0.7rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+.lightbox-close:hover { color: #fff; border-color: rgba(255,255,255,0.55); }
+
+/* ── Section bottom scroll hint — just a floating arrow ── */
+.section-scroll-hint {
+  position: absolute;
+  bottom: 24px;
+  /* offset by sidebar width so the arrow lands at true viewport center */
+  left: calc(50vw - clamp(140px, 18vw, 200px));
+  transform: translateX(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.section-chevron {
+  width: 28px;
+  color: rgba(255, 255, 255, 0.35);
+  animation: chevron-bob 2.4s ease-in-out infinite;
+}
+
+.section-scroll-hint:hover .section-chevron {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* ── Domain two-column layout ── */
+.j-domain-layout {
+  display: flex;
+  align-items: center;
+  gap: clamp(32px, 5vw, 80px);
+  width: 100%;
+}
+
+.j-domain-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.j-domain-image-wrap {
+  flex-shrink: 0;
+  width: clamp(160px, 28vw, 380px);
+}
+
+.j-domain-image-wrap img {
+  width: 100%;
+  height: auto;
+  border-radius: 4px;
+  display: block;
+  object-fit: cover;
+}
+
 
 /* ── Domain section content ── */
 .j-domain-intro {

@@ -40,8 +40,11 @@ function Home() {
     () => HOME_BACKGROUNDS[Math.floor(Math.random() * HOME_BACKGROUNDS.length)],
   )
   const [active, setActive] = useState('domain')
-  const pageRef = useRef(null)
+  const [logoVisible, setLogoVisible] = useState(true)
+  const pageRef      = useRef(null)
+  const intersecting = useRef(new Set())
 
+  // Section activation + anime.js stagger
   useEffect(() => {
     const el = pageRef.current
     if (!el) return
@@ -51,7 +54,6 @@ function Home() {
         if (!e.isIntersecting) return
         const id = e.target.dataset.section
         setActive(id)
-        // anime.js: stagger the section's marked children in
         const kids = Array.from(e.target.querySelectorAll('.j-animate'))
         kids.forEach((child, i) => {
           child.style.opacity = '0'
@@ -72,6 +74,27 @@ function Home() {
     return () => ob.disconnect()
   }, [])
 
+  // Logo visibility — hide when between sections
+  useEffect(() => {
+    const el = pageRef.current
+    if (!el) return
+    const targets = [
+      el.querySelector('.home-first-view'),
+      ...el.querySelectorAll('.j-section'),
+    ].filter(Boolean)
+
+    const ob = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) intersecting.current.add(e.target)
+        else                  intersecting.current.delete(e.target)
+      })
+      setLogoVisible(intersecting.current.size > 0)
+    }, { root: el, threshold: 0.05 })
+
+    targets.forEach(t => ob.observe(t))
+    return () => ob.disconnect()
+  }, [])
+
   const scrollToJourney = () =>
     pageRef.current
       ?.querySelector('#j-domain')
@@ -87,13 +110,15 @@ function Home() {
       }} />
       <div className="home-veil" />
 
+      {/* ── Fixed logo — visible when in a section, hidden between ── */}
+      <div className={`home-logo${logoVisible ? ' is-visible' : ''}`}>
+        <span className="home-logo-word">LUCID</span>
+        <span className="home-logo-word">SOUND</span>
+        <span className="home-logo-word">DOMAIN</span>
+      </div>
+
       {/* ── First viewport ── */}
       <div className="home-first-view">
-        <div className="home-logo">
-          <span className="home-logo-word">LUCID</span>
-          <span className="home-logo-word">SOUND</span>
-          <span className="home-logo-word">DOMAIN</span>
-        </div>
         <div className="home-center">
           <p className="home-next-label">next portal opening on</p>
           <p className="home-next-date">Wednesday, April 22nd, 2026</p>
@@ -114,39 +139,53 @@ function Home() {
 
           {/* ── The Domain ── */}
           <section id="j-domain" className="j-section" data-section="domain">
-            <h2 className="j-animate j-section-heading">Understand</h2>
-            <p className="j-animate j-domain-intro">
-              The Lucid Sound Domain is an intimate, deep listening dance floor
-              that requires nothing from you except your presence.
-            </p>
-            <div className="j-animate j-space-list">
-              <span className="j-space-lead">This is</span>
-              <ul>
-                <li>a space to rest</li>
-                <li>a space to recieve</li>
-                <li>a space to restore</li>
-                <li>a space to reconnect</li>
-                <li>a space to <span className="j-green">REGULATE</span></li>
-                <li>and release</li>
-              </ul>
+            <div className="j-domain-layout">
+              <div className="j-domain-text">
+                <h2 className="j-animate j-section-heading">Understand</h2>
+                <p className="j-animate j-domain-intro">
+                  The Lucid Sound Domain is an intimate, deep listening dance floor
+                  that requires nothing from you except your presence.
+                </p>
+                <div className="j-animate j-space-list">
+                  <span className="j-space-lead">This is</span>
+                  <ul>
+                    <li>a space to rest</li>
+                    <li>a space to recieve</li>
+                    <li>a space to restore</li>
+                    <li>a space to reconnect</li>
+                    <li>a space to <span className="j-green">REGULATE</span></li>
+                    <li>and release</li>
+                  </ul>
+                </div>
+              </div>
+              <div className="j-animate j-domain-image-wrap">
+                <ZoomableImage
+                  src="/soundsystem-boundary.jpg"
+                  alt="Lucid Sound Domain sound system"
+                  href="https://www.instagram.com/p/DV1a4kwjU8B/"
+                />
+              </div>
             </div>
+            <SectionScrollHint nextId="j-flow" containerRef={pageRef} />
           </section>
 
           {/* ── Flow ── */}
           <section id="j-flow" className="j-section" data-section="flow">
             <h2 className="j-animate j-section-heading">Attend</h2>
             <p className="j-animate j-section-placeholder">— coming soon —</p>
+            <SectionScrollHint nextId="j-invitation" containerRef={pageRef} />
           </section>
 
           {/* ── Invitation ── */}
           <section id="j-invitation" className="j-section" data-section="invitation">
             <h2 className="j-animate j-section-heading">Invitation</h2>
             <p className="j-animate j-section-placeholder">— coming soon —</p>
+            <SectionScrollHint nextId="j-contact" containerRef={pageRef} />
           </section>
 
           {/* ── Contact ── */}
           <section id="j-contact" className="j-section" data-section="contact">
-            <h2 className="j-animate j-section-heading">Contact</h2>
+            <h2 className="j-animate j-section-heading">Contribute</h2>
             <p className="j-animate j-section-placeholder">— coming soon —</p>
           </section>
 
@@ -169,6 +208,111 @@ function ScrollHint({ onClick }) {
         </svg>
       </span>
     </button>
+  )
+}
+
+// ── Scroll hint at the bottom of each journey section ──
+function SectionScrollHint({ nextId, containerRef }) {
+  const handleClick = () => {
+    containerRef.current
+      ?.querySelector(`#${nextId}`)
+      ?.scrollIntoView({ behavior: 'smooth' })
+  }
+  return (
+    <button className="section-scroll-hint" onClick={handleClick} aria-label="Next section">
+      <svg viewBox="0 0 24 12" fill="none" className="section-chevron">
+        <polyline points="2,1 12,10 22,1"
+          stroke="currentColor" strokeWidth="1.5"
+          strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    </button>
+  )
+}
+
+// ── Zoomable image lightbox ──
+function ZoomableImage({ src, alt, href }) {
+  const [open, setOpen]     = useState(false)
+  const [scale, setScale]   = useState(1)
+  const [pos, setPos]       = useState({ x: 0, y: 0 })
+  const dragging = useRef(false)
+  const last     = useRef({ x: 0, y: 0 })
+  const imgRef   = useRef(null)
+
+  // Reset when closed
+  useEffect(() => {
+    if (!open) { setScale(1); setPos({ x: 0, y: 0 }) }
+  }, [open])
+
+  // Escape to close
+  useEffect(() => {
+    if (!open) return
+    const onKey = e => { if (e.key === 'Escape') setOpen(false) }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [open])
+
+  const onWheel = e => {
+    e.preventDefault()
+    setScale(s => Math.min(6, Math.max(1, s - e.deltaY * 0.004)))
+  }
+
+  const onMouseDown = e => {
+    if (scale <= 1) return
+    dragging.current = true
+    last.current = { x: e.clientX, y: e.clientY }
+  }
+  const onMouseMove = e => {
+    if (!dragging.current) return
+    const dx = e.clientX - last.current.x
+    const dy = e.clientY - last.current.y
+    last.current = { x: e.clientX, y: e.clientY }
+    setPos(p => ({ x: p.x + dx, y: p.y + dy }))
+  }
+  const onMouseUp = () => { dragging.current = false }
+
+  return (
+    <>
+      <img
+        src={src} alt={alt}
+        className="j-domain-img"
+        onClick={() => setOpen(true)}
+      />
+
+      {open && (
+        <div className="lightbox-overlay" onClick={() => setOpen(false)}>
+          <div
+            className="lightbox-inner"
+            onClick={e => e.stopPropagation()}
+            onWheel={onWheel}
+            onMouseDown={onMouseDown}
+            onMouseMove={onMouseMove}
+            onMouseUp={onMouseUp}
+            onMouseLeave={onMouseUp}
+          >
+            <img
+              ref={imgRef}
+              src={src} alt={alt}
+              className="lightbox-img"
+              style={{
+                transform: `translate(${pos.x}px, ${pos.y}px) scale(${scale})`,
+                cursor: scale > 1 ? 'grab' : 'zoom-in',
+              }}
+              draggable={false}
+            />
+            <div className="lightbox-actions">
+              <a
+                href={href} target="_blank" rel="noopener noreferrer"
+                className="lightbox-ig-link"
+                onClick={e => e.stopPropagation()}
+              >
+                view on instagram
+              </a>
+              <button className="lightbox-close" onClick={() => setOpen(false)}>✕</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   )
 }
 
