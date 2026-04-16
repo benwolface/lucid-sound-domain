@@ -256,8 +256,8 @@ body {
   border: none;
   outline: none;
   color: rgba(255, 255, 255, 0.82);
-  font-family: "Excrallik", cursive;
-  font-size: clamp(0.85rem, 1.4vw, 1.05rem);
+  font-family: "Akira Expanded", sans-serif;
+  font-size: clamp(0.62rem, 1vw, 0.8rem);
   text-align: center;
   letter-spacing: 0.08em;
   width: 280px;
@@ -266,6 +266,7 @@ body {
 }
 
 .waitlist-input::placeholder {
+  font-family: "Akira Expanded", sans-serif;
   color: rgba(255, 255, 255, 0.32);
   letter-spacing: 0.08em;
 }
@@ -294,8 +295,8 @@ body {
   border: 1px solid rgba(255, 200, 80, 0);
   border-radius: 99px;
   color: rgba(255, 200, 80, 0);
-  font-family: "Excrallik", cursive;
-  font-size: clamp(0.78rem, 1.3vw, 0.95rem);
+  font-family: "Akira Expanded", sans-serif;
+  font-size: clamp(0.5rem, 0.85vw, 0.68rem);
   letter-spacing: 0.12em;
   cursor: pointer;
   opacity: 0;
@@ -504,13 +505,8 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: rgba(255, 255, 255, 0.45);
+  color: #ffffff;
   text-decoration: none;
-  transition: color 0.2s ease;
-}
-
-.home-ig-link:hover {
-  color: rgba(255, 255, 255, 0.85);
 }
 
 .home-ig-link svg {
@@ -832,7 +828,7 @@ body {
   margin-top: 10px;
   font-family: "Excrallik", cursive;
   font-size: clamp(0.6rem, 0.9vw, 0.75rem);
-  color: rgba(255, 255, 255, 0.42);
+  color: rgba(255, 255, 255, 0.9);
   text-decoration: none;
   letter-spacing: 0.06em;
   transition: color 0.2s ease;
@@ -845,7 +841,24 @@ body {
 }
 
 .j-image-caption-link:hover {
-  color: rgba(255, 255, 255, 0.82);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.j-image-subcaption {
+  margin-top: 8px;
+  margin-bottom: 16px;
+  font-family: "Excrallik", cursive;
+  font-size: clamp(0.6rem, 0.9vw, 0.75rem);
+  color: rgba(255, 255, 255, 0.65);
+  letter-spacing: 0.08em;
+  text-align: left;
+  font-style: italic;
+}
+
+.j-artist-subcaption {
+  text-align: center;
+  margin-top: 12px;
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .j-domain-image-wrap img {
@@ -1017,13 +1030,12 @@ body {
 }
 
 .j-space-lead {
-  font-family: "Akira Expanded", sans-serif;
-  font-size: clamp(0.7rem, 1.2vw, 0.95rem);
+  font-family: "Excrallik", cursive;
+  font-size: clamp(1rem, 2vw, 1.6rem);
   font-weight: 900;
   letter-spacing: 0.06em;
-  color: rgba(255, 255, 255, 0.65);
-  text-shadow: 0 0 16px rgba(255, 255, 255, 0.2);
-  margin-bottom: 18px;
+  color: #fff;
+  margin-bottom: 4px;
   display: block;
 }
 
@@ -1039,7 +1051,7 @@ body {
 .j-space-list li {
   font-family: "Excrallik", cursive;
   font-size: clamp(1rem, 1.8vw, 1.4rem);
-  color: rgba(255, 255, 255, 0.82);
+  color: rgba(255, 255, 255, 0.72);
   letter-spacing: 0.05em;
   line-height: 1.3;
 }

@@ -8,13 +8,13 @@ const DEV_SKIP_INTRO = false;
 
 // Landing only uses the two atmospheric shots
 const LANDING_BACKGROUNDS = [
-  { url: "/bg-1-sky.jpg", position: "center 60%", size: "cover" },
+  { url: "/bg-1-sky.jpg", position: "center center", size: "cover" },
   { url: "/bg-2-disco.jpg", position: "center center", size: "cover" },
 ];
 
 // Home gets all three, including the red one
 const HOME_BACKGROUNDS = [
-  { url: "/bg-1-sky.jpg", position: "center 60%", size: "cover" },
+  { url: "/bg-1-sky.jpg", position: "center center", size: "cover" },
   { url: "/bg-2-disco.jpg", position: "center center", size: "cover" },
   { url: "/bg-3-red.jpg", position: "center center", size: "cover" },
 ];
@@ -30,11 +30,11 @@ export default function App() {
 }
 
 const JOURNEY_SECTIONS = [
-  { id: "home",       label: "Regulation" },
-  { id: "domain",     label: "Understand" },
-  { id: "flow",       label: "Attend"     },
+  { id: "home", label: "Regulation" },
+  { id: "domain", label: "Understand" },
+  { id: "flow", label: "Attend" },
   { id: "invitation", label: "Invitation" },
-  { id: "contact",    label: "Contribute" },
+  { id: "contact", label: "Contribute" },
 ];
 
 function Home() {
@@ -54,7 +54,7 @@ function Home() {
   useEffect(() => {
     const el = pageRef.current;
     if (!el) return;
-    const sections = el.querySelectorAll(".j-section");
+    const sections = el.querySelectorAll("[data-section]");
     const revealed = new Set();
     const ob = new IntersectionObserver(
       (entries) => {
@@ -115,11 +115,7 @@ function Home() {
           setHeroHintVisible(firstViewVisible);
         }
 
-        // Keep timeline active on 'home' while first view is visible
-        if (firstViewVisible && activeRef.current !== "home") {
-          activeRef.current = "home";
-          setActive("home");
-        }
+
       },
       { root: el, threshold: 0.05 },
     );
@@ -154,7 +150,7 @@ function Home() {
       </div>
 
       {/* ── First viewport ── */}
-      <div className="home-first-view">
+      <div className="home-first-view" data-section="home">
         <div className="home-center">
           <p className="home-regulation-title">( Regulation )</p>
           <p className="home-next-label">next portal opening on</p>
@@ -171,10 +167,23 @@ function Home() {
             rel="noopener noreferrer"
             className="home-ig-link"
           >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
-              <circle cx="12" cy="12" r="4"/>
-              <circle cx="17.5" cy="6.5" r="0.6" fill="currentColor" stroke="none"/>
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+              <circle cx="12" cy="12" r="4" />
+              <circle
+                cx="17.5"
+                cy="6.5"
+                r="0.6"
+                fill="currentColor"
+                stroke="none"
+              />
             </svg>
           </a>
         </div>
@@ -198,11 +207,10 @@ function Home() {
                 <p className="j-animate j-domain-intro">
                   The Lucid Sound Domain is an intimate, deep listening dance
                   floor that requires nothing from you except your presence.
+                  This is:
                 </p>
                 <div className="j-animate j-space-list">
-                  <span className="j-space-lead">This is</span>
                   <ul>
-                    <li>a space to rest</li>
                     <li>a space to receive</li>
                     <li>a space to restore</li>
                     <li>a space to reconnect</li>
@@ -225,12 +233,26 @@ function Home() {
                   rel="noopener noreferrer"
                   className="j-image-caption-link"
                 >
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="j-ig-icon">
-                    <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
-                    <circle cx="12" cy="12" r="4"/>
-                    <circle cx="17.5" cy="6.5" r="0.6" fill="currentColor" stroke="none"/>
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="j-ig-icon"
+                  >
+                    <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+                    <circle cx="12" cy="12" r="4" />
+                    <circle
+                      cx="17.5"
+                      cy="6.5"
+                      r="0.6"
+                      fill="currentColor"
+                      stroke="none"
+                    />
                   </svg>
-                  the sound system as a boundary object ↗
+                  the soundsystem as a boundary object ↗
                 </a>
               </div>
             </div>
@@ -250,6 +272,7 @@ function Home() {
               alt="Artist statement"
               className="j-artist-statement-image"
             />
+            <p className="j-image-subcaption j-artist-subcaption">questions to consider within the domain</p>
           </div>
 
           {/* ── Flow ── */}
@@ -265,9 +288,9 @@ function Home() {
                 8:00p - Regulation (Deep Listening Session)
               </p>
               <p className="j-attend-note">
-                we invite participants to not talk or use their phones during
-                this time. you&apos;re welcome to hang, smoke, or use devices in
-                rooms, the fire escape, or on the roof.
+                during this part of the event, we ask that the room hold silence.
+                you&apos;re welcome to chat, smoke, or use your devices in
+                rooms or on the roof.
               </p>
               <p className="j-attend-slot">
                 9:00 - 9:30p - Transition Time (Ambient)
@@ -322,10 +345,24 @@ function Home() {
                 rel="noopener noreferrer"
                 className="home-footer-ig"
               >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{width:16,height:16}}>
-                  <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
-                  <circle cx="12" cy="12" r="4"/>
-                  <circle cx="17.5" cy="6.5" r="0.6" fill="currentColor" stroke="none"/>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  style={{ width: 16, height: 16 }}
+                >
+                  <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+                  <circle cx="12" cy="12" r="4" />
+                  <circle
+                    cx="17.5"
+                    cy="6.5"
+                    r="0.6"
+                    fill="currentColor"
+                    stroke="none"
+                  />
                 </svg>
               </a>
               <p className="home-footer-tagline">remain present</p>
@@ -334,7 +371,6 @@ function Home() {
           </section>
         </div>
       </div>
-
     </div>
   );
 }
@@ -505,7 +541,14 @@ function JourneyTimeline({ active, pageRef }) {
         <a
           key={s.id}
           href={s.id === "home" ? "#" : `#j-${s.id}`}
-          onClick={s.id === "home" ? (e) => { e.preventDefault(); pageRef.current?.scrollTo({ top: 0, behavior: "smooth" }); } : undefined}
+          onClick={
+            s.id === "home"
+              ? (e) => {
+                  e.preventDefault();
+                  pageRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+                }
+              : undefined
+          }
           className={`j-node${s.id === active ? " is-active" : ""}${i < activeIdx ? " is-past" : ""}`}
         >
           <span className="j-node-dot">
