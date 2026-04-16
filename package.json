@@ -9,6 +9,7 @@
     "predev": "lsof -ti :8787 | xargs kill -9 2>/dev/null; true",
     "dev": "concurrently -n API,WEB -c cyan,green \"npm -w apps/api run dev\" \"npm -w apps/web run dev\"",
     "build": "npm -w apps/web run build && npm -w apps/api run build",
+    "vercel-build": "node scripts/vercel-build.mjs",
     "lint": "npm -w apps/web run lint && npm -w apps/api run lint",
     "prisma:generate": "npm -w apps/api run prisma:generate",
     "prisma:migrate": "npm -w apps/api run prisma:migrate"
