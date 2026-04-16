@@ -1,6 +1,6 @@
 const { Router } = require('express')
 const { z } = require('zod')
-const { prisma } = require('../prisma')
+const { createWaitlistEntry, findWaitlistEntry } = require('../store')
 
 const schema = z.object({
   contact: z.string().min(1),
@@ -25,17 +25,13 @@ function waitlistRouter() {
 
     try {
       // Check for existing entry with the same contact
-      const existing = await prisma.waitlistEntry.findFirst({
-        where: email ? { email } : { phone },
-      })
+      const existing = await findWaitlistEntry({ email, phone })
 
       if (existing) {
         return res.json({ status: 'already_joined' })
       }
 
-      await prisma.waitlistEntry.create({
-        data: { id: require('crypto').randomUUID(), email, phone, updatedAt: new Date() },
-      })
+      await createWaitlistEntry({ email, phone })
 
       return res.json({ status: 'joined' })
     } catch (err) {

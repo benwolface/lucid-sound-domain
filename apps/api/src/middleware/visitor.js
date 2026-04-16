@@ -1,7 +1,7 @@
 const cookieName = "lucid_visitor";
 
 const { nanoid } = require("nanoid");
-const { prisma } = require("../prisma");
+const { ensureVisitor, findVisitorById } = require("../store");
 
 function isProbablyId(v) {
   return typeof v === "string" && v.length >= 10;
@@ -13,9 +13,7 @@ function attachVisitor() {
       const incomingVisitorId = req.cookies?.[cookieName];
 
       if (isProbablyId(incomingVisitorId)) {
-        const existing = await prisma.visitor.findUnique({
-          where: { id: incomingVisitorId }
-        });
+        const existing = await findVisitorById(incomingVisitorId);
         if (existing) {
           req.visitor = existing;
           return next();
@@ -23,9 +21,7 @@ function attachVisitor() {
       }
 
       const id = nanoid();
-      const visitor = await prisma.visitor.create({
-        data: { id }
-      });
+      const visitor = await ensureVisitor(id);
 
       // Store visitor id so we can link events consistently.
       res.cookie(cookieName, id, {
@@ -44,4 +40,3 @@ function attachVisitor() {
 }
 
 module.exports = { attachVisitor };
-

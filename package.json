@@ -11,8 +11,8 @@
     "build": "npm -w apps/web run build && npm -w apps/api run build",
     "vercel-build": "node scripts/vercel-build.mjs",
     "lint": "npm -w apps/web run lint && npm -w apps/api run lint",
-    "prisma:generate": "npm -w apps/api run prisma:generate",
-    "prisma:migrate": "npm -w apps/api run prisma:migrate"
+    "prisma:generate": "node -e \"console.log('Database tooling is disabled for this preview setup')\"",
+    "prisma:migrate": "node -e \"console.log('Database tooling is disabled for this preview setup')\""
   },
   "devDependencies": {
     "concurrently": "^9.0.0"

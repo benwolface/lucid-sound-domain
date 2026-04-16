@@ -2,8 +2,14 @@ const { Router } = require("express");
 const { z } = require("zod");
 const { nanoid } = require("nanoid");
 
-const { prisma } = require("../prisma");
 const { sha256, randomToken } = require("../lib/crypto");
+const {
+  attachVisitorUser,
+  createEvent,
+  createSession,
+  deleteSessionByTokenHash,
+  upsertUser
+} = require("../store");
 
 const sessionCookieName = "lucid_session";
 const SESSION_DAYS = process.env.SESSION_DAYS
@@ -33,49 +39,38 @@ function authRouter() {
       const { email, name } = schema.parse(req.body);
       const normalizedEmail = email.trim().toLowerCase();
 
-      const user = await prisma.user.upsert({
-        where: { email: normalizedEmail },
-        update: { name },
-        create: {
-          id: nanoid(),
-          email: normalizedEmail,
-          name
-        }
+      const user = await upsertUser({
+        email: normalizedEmail,
+        name,
+        idFactory: nanoid
       });
 
       const rawToken = randomToken(32);
       const tokenHash = sha256(rawToken);
       const expiresAt = new Date(Date.now() + SESSION_DAYS * 24 * 60 * 60 * 1000);
 
-      await prisma.session.create({
-        data: {
-          id: nanoid(),
-          tokenHash,
-          userId: user.id,
-          expiresAt
-        }
+      await createSession({
+        id: nanoid(),
+        tokenHash,
+        userId: user.id,
+        expiresAt
       });
 
       // Link visitor -> user for continuity.
       if (req.visitor?.id) {
-        await prisma.visitor.update({
-          where: { id: req.visitor.id },
-          data: { userId: user.id }
-        });
+        await attachVisitorUser(req.visitor.id, user.id);
       }
 
       // Record sign-in event.
       if (req.visitor?.id) {
-        await prisma.event.create({
-          data: {
-            id: nanoid(),
-            visitorId: req.visitor.id,
-            userId: user.id,
-            type: "sign_in",
-            properties: JSON.stringify({ provider: "email_name" }),
-            ip: req.ip,
-            userAgent: req.headers["user-agent"]
-          }
+        await createEvent({
+          id: nanoid(),
+          visitorId: req.visitor.id,
+          userId: user.id,
+          type: "sign_in",
+          properties: JSON.stringify({ provider: "email_name" }),
+          ip: req.ip,
+          userAgent: req.headers["user-agent"]
         });
       }
 
@@ -98,7 +93,7 @@ function authRouter() {
       const rawSessionToken = req.cookies?.[sessionCookieName];
       if (rawSessionToken && typeof rawSessionToken === "string") {
         const tokenHash = sha256(rawSessionToken);
-        await prisma.session.deleteMany({ where: { tokenHash } });
+        await deleteSessionByTokenHash(tokenHash);
       }
 
       res.clearCookie(sessionCookieName, { path: "/" });
@@ -112,4 +107,3 @@ function authRouter() {
 }
 
 module.exports = { authRouter };
-

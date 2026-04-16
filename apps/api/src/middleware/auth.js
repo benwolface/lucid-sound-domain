@@ -1,7 +1,7 @@
 const cookieName = "lucid_session";
 
 const { sha256 } = require("../lib/crypto");
-const { prisma } = require("../prisma");
+const { deleteSessionByTokenHash, findSessionWithUser } = require("../store");
 
 function attachUser() {
   return async (req, res, next) => {
@@ -13,10 +13,7 @@ function attachUser() {
       }
 
       const tokenHash = sha256(rawSessionToken);
-      const session = await prisma.session.findUnique({
-        where: { tokenHash },
-        include: { user: true }
-      });
+      const session = await findSessionWithUser(tokenHash);
 
       if (!session) {
         req.user = null;
@@ -24,7 +21,7 @@ function attachUser() {
       }
 
       if (session.expiresAt.getTime() <= Date.now()) {
-        await prisma.session.deleteMany({ where: { tokenHash } });
+        await deleteSessionByTokenHash(tokenHash);
         res.clearCookie(cookieName, { path: "/" });
         req.user = null;
         return next();
@@ -39,4 +36,3 @@ function attachUser() {
 }
 
 module.exports = { attachUser };
-

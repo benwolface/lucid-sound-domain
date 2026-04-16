@@ -1,7 +1,7 @@
 const { Router } = require("express");
 const { z } = require("zod");
 
-const { prisma } = require("../prisma");
+const { createEvent } = require("../store");
 
 function trackRouter() {
   const router = Router();
@@ -20,15 +20,13 @@ function trackRouter() {
         return res.status(400).json({ error: "missing_visitor" });
       }
 
-      await prisma.event.create({
-        data: {
-          visitorId,
-          userId: req.user?.id ?? null,
-          type,
-          properties: properties ? JSON.stringify(properties) : null,
-          ip: req.ip,
-          userAgent: req.headers["user-agent"]
-        }
+      await createEvent({
+        visitorId,
+        userId: req.user?.id ?? null,
+        type,
+        properties: properties ? JSON.stringify(properties) : null,
+        ip: req.ip,
+        userAgent: req.headers["user-agent"]
       });
 
       res.status(201).json({ ok: true });
@@ -41,4 +39,3 @@ function trackRouter() {
 }
 
 module.exports = { trackRouter };
-

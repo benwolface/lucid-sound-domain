@@ -5,22 +5,19 @@
   "type": "commonjs",
   "scripts": {
     "dev": "nodemon src/index.js",
-    "build": "echo \"No build step for API (running with node)\"",
-    "vercel-build": "prisma generate",
+    "build": "node -e \"console.log('No build step for API')\"",
+    "vercel-build": "node -e \"console.log('Skipping database generation for preview deploy')\"",
     "lint": "node -e \"console.log('skip lint for scaffold')\"",
-    "prisma:generate": "prisma generate",
-    "prisma:migrate": "prisma migrate dev"
+    "prisma:generate": "node -e \"console.log('Prisma removed from preview API')\"",
+    "prisma:migrate": "node -e \"console.log('Prisma removed from preview API')\""
   },
   "dependencies": {
-    "@prisma/client": "^6.0.0",
-    "better-sqlite3": "^11.0.0",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "nanoid": "^5.0.7",
-    "zod": "^3.24.1",
-    "prisma": "^6.0.0"
+    "zod": "^3.24.1"
   },
   "devDependencies": {
     "nodemon": "^3.1.4"
