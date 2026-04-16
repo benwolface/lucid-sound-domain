@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "nodemon src/index.js",
     "build": "echo \"No build step for API (running with node)\"",
+    "vercel-build": "prisma generate",
     "lint": "node -e \"console.log('skip lint for scaffold')\"",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev"
@@ -25,4 +26,3 @@
     "nodemon": "^3.1.4"
   }
 }
-
