@@ -1,6 +1,6 @@
 const cookieName = "lucid_visitor";
 
-const { nanoid } = require("nanoid");
+const { randomUUID } = require("node:crypto");
 const { ensureVisitor, findVisitorById } = require("../store");
 
 function isProbablyId(v) {
@@ -20,7 +20,7 @@ function attachVisitor() {
         }
       }
 
-      const id = nanoid();
+      const id = randomUUID();
       const visitor = await ensureVisitor(id);
 
       // Store visitor id so we can link events consistently.
