@@ -209,11 +209,341 @@ body {
 }
 
 
-/* SVG text container */
-.welcome-svg {
-  width: 78%;
-  height: auto;
-  overflow: visible;
+/* Text inside the circle — both stacked at center, only one visible at a time */
+.circle-text {
+  position: absolute;
+  font-family: 'Excrallik', cursive;
+  font-size: clamp(1.1rem, 2.2vw, 1.55rem);
+  color: #fff;
+  text-align: center;
+  letter-spacing: 0.06em;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Input box below the circle */
+.waitlist-input-wrap {
+  position: absolute;
+  top: calc(100% + 48px);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  opacity: 0;
+}
+
+.waitlist-input {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: rgba(255, 255, 255, 0.82);
+  font-family: 'Excrallik', cursive;
+  font-size: clamp(0.85rem, 1.4vw, 1.05rem);
+  text-align: center;
+  letter-spacing: 0.08em;
+  width: 280px;
+  padding: 0 0 12px 0;
+  caret-color: rgba(255, 200, 80, 0.9);
+}
+
+.waitlist-input::placeholder {
+  color: rgba(255, 255, 255, 0.32);
+  letter-spacing: 0.08em;
+}
+
+/* Gold line — the bottom of the input box */
+.welcome-line {
+  height: 1px;
+  width: 0;
+  background: linear-gradient(to right, transparent, rgba(255, 200, 80, 0.65), transparent);
+  pointer-events: none;
+}
+
+/* Submit button — floats up into view once the input looks complete */
+.submit-btn {
+  margin-top: 22px;
+  padding: 7px 22px;
+  background: transparent;
+  border: 1px solid rgba(255, 200, 80, 0.0);
+  border-radius: 99px;
+  color: rgba(255, 200, 80, 0.0);
+  font-family: 'Excrallik', cursive;
+  font-size: clamp(0.78rem, 1.3vw, 0.95rem);
+  letter-spacing: 0.12em;
+  cursor: pointer;
+  opacity: 0;
+  transform: translateY(8px);
+  transition:
+    opacity       0.55s ease,
+    transform     0.55s ease,
+    border-color  0.55s ease,
+    color         0.55s ease,
+    box-shadow    0.3s  ease;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.submit-btn.visible {
+  border-color: rgba(255, 200, 80, 0.55);
+  color: rgba(255, 200, 80, 0.88);
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+  box-shadow:
+    0 0  8px 1px rgba(255, 200, 80, 0.18),
+    0 0 20px 4px rgba(255, 140, 10, 0.10);
+}
+
+.submit-btn.visible:hover {
+  border-color: rgba(255, 200, 80, 0.85);
+  color: rgba(255, 230, 120, 1);
+  box-shadow:
+    0 0 12px  3px rgba(255, 200, 80, 0.35),
+    0 0 32px  8px rgba(255, 140, 10, 0.18);
+}
+
+.submit-btn.visible:active {
+  transform: translateY(1px);
+}
+
+/* Power button state — round icon-only pill */
+.submit-btn--power {
+  padding: 9px 11px;
+  border-radius: 50%;
+  cursor: pointer;
+}
+.submit-btn--power svg {
+  display: block;
+}
+
+/* Smaller font for longer referral question */
+.circle-text--sm {
+  width: min(74%, 220px);
+  font-size: clamp(0.7rem, 1.2vw, 0.92rem);
+  letter-spacing: 0.04em;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.circle-text-line {
+  white-space: nowrap;
+}
+
+/* White glow that fills the circle on power press */
+.circle-inner-white {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 1.00)  0%,
+    rgba(255, 255, 255, 0.85) 40%,
+    rgba(255, 230, 180, 0.40) 70%,
+    transparent               100%
+  );
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ── Home screen ── */
+
+.home-screen {
+  position: relative;
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #000;
+  overflow: hidden;
+}
+
+/* Background image — separate element so filter doesn't bleed onto content */
+.home-bg {
+  position: absolute;
+  inset: 0;
+  background-repeat: no-repeat;
+  filter: brightness(0.42) saturate(0.72);
+}
+
+.home-veil {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.38);
+}
+
+/* Floating logo at top */
+.home-logo {
+  position: absolute;
+  top: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.05em;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.home-logo-word {
+  font-family: 'Akira Expanded', sans-serif;
+  font-size: clamp(0.42rem, 0.9vw, 0.68rem);
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  line-height: 1.35;
+  color: #fff;
+  text-shadow:
+    0 0  8px rgba(255, 255, 255, 0.65),
+    0 0 22px rgba(255, 255, 255, 0.28);
+}
+
+/* Center content */
+.home-center {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.home-next-label {
+  font-family: 'Akira Expanded', sans-serif;
+  font-size: clamp(0.48rem, 0.85vw, 0.65rem);
+  letter-spacing: 0.22em;
+  color: rgba(255, 255, 255, 0.42);
+  text-transform: uppercase;
+  margin: 0 0 12px 0;
+}
+
+.home-next-date {
+  font-family: 'Excrallik', cursive;
+  font-size: clamp(1.2rem, 2.4vw, 1.85rem);
+  color: #8FEF4A;
+  letter-spacing: 0.06em;
+  margin: 0 0 30px 0;
+  text-shadow:
+    0 0 12px rgba(143, 239, 74, 0.65),
+    0 0 32px rgba(143, 239, 74, 0.28);
+}
+
+/* ── Calendar ── */
+.cal-wrap {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  padding: 24px 28px 20px;
+  backdrop-filter: blur(12px);
+}
+
+.cal-month {
+  font-family: 'Akira Expanded', sans-serif;
+  font-size: 0.56rem;
+  letter-spacing: 0.3em;
+  color: rgba(255, 255, 255, 0.4);
+  text-align: center;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+}
+
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 36px);
+  gap: 3px 0;
+}
+
+.cal-dname {
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Akira Expanded', sans-serif;
+  font-size: 0.44rem;
+  letter-spacing: 0.06em;
+  color: rgba(255, 255, 255, 0.18);
+  text-transform: uppercase;
+}
+
+.cal-day {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Excrallik', cursive;
+  font-size: 0.88rem;
+  color: rgba(255, 255, 255, 0.28);
+  border-radius: 50%;
+}
+
+/* The 22nd — glowing green target date */
+.cal-day--on {
+  color: #8FEF4A;
+  background: rgba(143, 239, 74, 0.10);
+  border: 1px solid rgba(143, 239, 74, 0.45);
+  font-size: 0.95rem;
+  animation: date-pulse 2.8s ease-in-out infinite;
+}
+
+@keyframes date-pulse {
+  0%, 100% {
+    box-shadow:
+      0 0  8px rgba(143, 239, 74, 0.35),
+      0 0 20px rgba(143, 239, 74, 0.12);
+  }
+  50% {
+    box-shadow:
+      0 0 16px rgba(143, 239, 74, 0.65),
+      0 0 40px rgba(143, 239, 74, 0.25);
+  }
+}
+
+.cal-day--blank {
+  visibility: hidden;
+}
+
+/* "domain / initiated" text that floats in after the circle glows white */
+.domain-initiated-wrap {
+  position: absolute;
+  top: calc(100% + 36px);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.domain-text {
+  font-family: 'Excrallik', cursive;
+  font-size: clamp(1.1rem, 2vw, 1.5rem);
+  color: rgba(255, 255, 255, 0.9);
+  letter-spacing: 0.1em;
+  opacity: 0;
+}
+
+.initiated-text {
+  font-family: 'Akira Expanded', sans-serif;
+  font-size: clamp(0.5rem, 0.9vw, 0.7rem);
+  color: rgba(255, 255, 255, 0.55);
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  opacity: 0;
+}
+
+/* Full-screen white flash overlay */
+.flash-overlay {
+  position: fixed;
+  inset: 0;
+  background: #fff;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 999;
 }
 
 /* ── Accessibility ── */
