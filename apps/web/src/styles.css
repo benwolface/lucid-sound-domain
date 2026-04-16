@@ -347,32 +347,42 @@ body {
   pointer-events: none;
 }
 
-/* ── Home screen ── */
+/* ── Home page — scroll container ── */
 
-.home-screen {
+.home-page {
+  position: fixed;
+  inset: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+  background: #000;
+}
+
+/* Background stays fixed as sections scroll past */
+.home-bg {
+  position: fixed;
+  inset: 0;
+  background-repeat: no-repeat;
+  filter: brightness(0.38) saturate(0.68);
+  z-index: 0;
+}
+
+.home-veil {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.42);
+  z-index: 1;
+}
+
+/* ── First viewport ── */
+.home-first-view {
   position: relative;
-  height: 100%;
-  width: 100%;
+  z-index: 2;
+  height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: #000;
-  overflow: hidden;
-}
-
-/* Background image — separate element so filter doesn't bleed onto content */
-.home-bg {
-  position: absolute;
-  inset: 0;
-  background-repeat: no-repeat;
-  filter: brightness(0.42) saturate(0.72);
-}
-
-.home-veil {
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.38);
 }
 
 /* Floating logo at top */
@@ -385,7 +395,6 @@ body {
   flex-direction: column;
   align-items: center;
   gap: 0.05em;
-  z-index: 2;
   pointer-events: none;
 }
 
@@ -403,8 +412,6 @@ body {
 
 /* Center content */
 .home-center {
-  position: relative;
-  z-index: 2;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -430,79 +437,299 @@ body {
     0 0 32px rgba(143, 239, 74, 0.28);
 }
 
-/* ── Calendar ── */
-.cal-wrap {
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 18px;
-  padding: 24px 28px 20px;
-  backdrop-filter: blur(12px);
+/* ── Scroll hint — wide arc at bottom of first view ── */
+.scroll-hint {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: clamp(220px, 38vw, 400px);
+  height: clamp(44px, 6vw, 68px);
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 14px;
 }
 
-.cal-month {
-  font-family: 'Akira Expanded', sans-serif;
-  font-size: 0.56rem;
-  letter-spacing: 0.3em;
+.scroll-hint-arc {
+  position: absolute;
+  inset: 0;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-bottom: none;
+  border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+  background: transparent;
+  animation: arc-pulse 3.2s ease-in-out infinite;
+}
+
+.scroll-hint-chevron {
+  position: relative;
+  z-index: 1;
   color: rgba(255, 255, 255, 0.4);
-  text-align: center;
-  text-transform: uppercase;
-  margin-bottom: 16px;
+  width: 22px;
+  animation: chevron-bob 2.4s ease-in-out infinite;
 }
 
-.cal-grid {
-  display: grid;
-  grid-template-columns: repeat(7, 36px);
-  gap: 3px 0;
+@keyframes arc-pulse {
+  0%, 100% { border-color: rgba(255, 255, 255, 0.08); }
+  50%       { border-color: rgba(255, 255, 255, 0.38); }
 }
 
-.cal-dname {
-  height: 26px;
+@keyframes chevron-bob {
+  0%, 100% { transform: translateY(0);   opacity: 0.35; }
+  50%       { transform: translateY(6px); opacity: 0.8;  }
+}
+
+/* ── Journey layout ── */
+.journey-layout {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  min-height: 400vh;
+}
+
+/* Sticky timeline sidebar */
+.j-timeline-wrap {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  width: clamp(140px, 18vw, 200px);
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+/* Sections column */
+.journey-sections {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.j-section {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 0 clamp(24px, 6vw, 80px);
+}
+
+.j-section-heading {
   font-family: 'Akira Expanded', sans-serif;
-  font-size: 0.44rem;
+  font-size: clamp(1.4rem, 3.5vw, 3rem);
+  font-weight: 900;
   letter-spacing: 0.06em;
-  color: rgba(255, 255, 255, 0.18);
-  text-transform: uppercase;
+  color: #fff;
+  text-shadow:
+    0 0 24px rgba(255, 255, 255, 0.25);
+  margin: 0 0 18px 0;
 }
 
-.cal-day {
-  width: 36px;
-  height: 36px;
+.j-section-placeholder {
+  font-family: 'Excrallik', cursive;
+  font-size: clamp(0.75rem, 1.3vw, 1rem);
+  color: rgba(255, 255, 255, 0.28);
+  letter-spacing: 0.12em;
+  margin: 0;
+}
+
+/* ── Domain section content ── */
+.j-domain-intro {
+  font-family: 'Excrallik', cursive;
+  font-size: clamp(0.95rem, 1.6vw, 1.25rem);
+  color: rgba(255, 255, 255, 0.72);
+  line-height: 1.7;
+  max-width: 520px;
+  margin: 0 0 40px 0;
+  letter-spacing: 0.03em;
+}
+
+.j-space-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.j-space-lead {
+  font-family: 'Akira Expanded', sans-serif;
+  font-size: clamp(0.7rem, 1.2vw, 0.95rem);
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  color: rgba(255, 255, 255, 0.65);
+  text-shadow: 0 0 16px rgba(255, 255, 255, 0.2);
+  margin-bottom: 18px;
+  display: block;
+}
+
+.j-space-list ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.j-space-list li {
+  font-family: 'Excrallik', cursive;
+  font-size: clamp(1rem, 1.8vw, 1.4rem);
+  color: rgba(255, 255, 255, 0.82);
+  letter-spacing: 0.05em;
+  line-height: 1.3;
+}
+
+.j-green {
+  color: #8FEF4A;
+  font-weight: 900;
+  text-decoration: underline;
+  text-underline-offset: 8px;
+  text-decoration-thickness: 1px;
+}
+
+/* ── Journey timeline ── */
+.j-timeline {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  width: 100%;
+  padding: 0 0 0 40px;
+}
+
+/* Vertical track line */
+.j-track {
+  position: absolute;
+  left: 43px;  /* center of the dot */
+  top: 14px;
+  bottom: 14px;
+  width: 1px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Green fill that grows as sections are passed */
+.j-track-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  background: rgba(143, 239, 74, 0.55);
+  transition: height 0.6s ease;
+}
+
+.j-node {
+  position: relative;
   display: flex;
   align-items: center;
-  justify-content: center;
-  font-family: 'Excrallik', cursive;
-  font-size: 0.88rem;
-  color: rgba(255, 255, 255, 0.28);
+  gap: 14px;
+  padding: 28px 0;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.j-node-dot {
+  position: relative;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
+  background: rgba(255, 255, 255, 0.18);
+  flex-shrink: 0;
+  z-index: 1;
+  transition: background 0.4s ease, box-shadow 0.4s ease, transform 0.4s ease;
 }
 
-/* The 22nd — glowing green target date */
-.cal-day--on {
+/* Outer pulsing ring on active node */
+.j-node-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1px solid rgba(143, 239, 74, 0);
+  transition: border-color 0.4s ease, width 0.4s ease, height 0.4s ease;
+}
+
+.j-node.is-active .j-node-dot {
+  background: #8FEF4A;
+  transform: scale(1.35);
+  box-shadow:
+    0 0  8px rgba(143, 239, 74, 0.9),
+    0 0 20px rgba(143, 239, 74, 0.45);
+}
+
+.j-node.is-active .j-node-ring {
+  border-color: rgba(143, 239, 74, 0.38);
+  animation: ring-pulse 2.2s ease-in-out infinite;
+}
+
+.j-node.is-past .j-node-dot {
+  background: rgba(143, 239, 74, 0.6);
+}
+
+@keyframes ring-pulse {
+  0%, 100% { width: 20px; height: 20px; opacity: 1;   }
+  50%       { width: 28px; height: 28px; opacity: 0.4; }
+}
+
+.j-node-label {
+  font-family: 'Akira Expanded', sans-serif;
+  font-size: clamp(0.42rem, 0.75vw, 0.58rem);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.22);
+  transition: color 0.4s ease;
+  white-space: nowrap;
+}
+
+.j-node.is-active .j-node-label { color: #8FEF4A; }
+.j-node.is-past   .j-node-label { color: rgba(255, 255, 255, 0.42); }
+
+/* ── Calendar add buttons ── */
+.cal-btns {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+}
+
+.cal-btn {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 10px 22px;
+  border-radius: 99px;
+  border: 1px solid rgba(143, 239, 74, 0.35);
+  background: rgba(143, 239, 74, 0.06);
+  color: rgba(143, 239, 74, 0.82);
+  font-family: 'Akira Expanded', sans-serif;
+  font-size: clamp(0.44rem, 0.8vw, 0.6rem);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background  0.3s ease,
+    border-color 0.3s ease,
+    color        0.3s ease,
+    box-shadow   0.3s ease;
+}
+
+.cal-btn:hover {
+  background: rgba(143, 239, 74, 0.14);
+  border-color: rgba(143, 239, 74, 0.7);
   color: #8FEF4A;
-  background: rgba(143, 239, 74, 0.10);
-  border: 1px solid rgba(143, 239, 74, 0.45);
-  font-size: 0.95rem;
-  animation: date-pulse 2.8s ease-in-out infinite;
+  box-shadow:
+    0 0 12px rgba(143, 239, 74, 0.25),
+    0 0 28px rgba(143, 239, 74, 0.10);
 }
 
-@keyframes date-pulse {
-  0%, 100% {
-    box-shadow:
-      0 0  8px rgba(143, 239, 74, 0.35),
-      0 0 20px rgba(143, 239, 74, 0.12);
-  }
-  50% {
-    box-shadow:
-      0 0 16px rgba(143, 239, 74, 0.65),
-      0 0 40px rgba(143, 239, 74, 0.25);
-  }
-}
-
-.cal-day--blank {
-  visibility: hidden;
+.cal-btn:active {
+  transform: translateY(1px);
 }
 
 /* "domain / initiated" text that floats in after the circle glows white */

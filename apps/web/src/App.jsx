@@ -28,65 +28,245 @@ export default function App() {
   );
 }
 
+const JOURNEY_SECTIONS = [
+  { id: 'domain',     label: 'Understand'  },
+  { id: 'flow',       label: 'Attend'      },
+  { id: 'invitation', label: 'Invitation'  },
+  { id: 'contact',    label: 'Contribute'  },
+]
+
 function Home() {
   const [bg] = useState(
     () => HOME_BACKGROUNDS[Math.floor(Math.random() * HOME_BACKGROUNDS.length)],
-  );
+  )
+  const [active, setActive] = useState('domain')
+  const pageRef = useRef(null)
+
+  useEffect(() => {
+    const el = pageRef.current
+    if (!el) return
+    const sections = el.querySelectorAll('.j-section')
+    const ob = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (!e.isIntersecting) return
+        const id = e.target.dataset.section
+        setActive(id)
+        // anime.js: stagger the section's marked children in
+        const kids = Array.from(e.target.querySelectorAll('.j-animate'))
+        kids.forEach((child, i) => {
+          child.style.opacity = '0'
+          child.style.transform = 'translateY(28px)'
+          const s = { op: 0, ty: 28 }
+          animate(s, {
+            op: 1, ty: 0,
+            duration: 800, delay: i * 110, ease: 'out(3)',
+            onRender: () => {
+              child.style.opacity = s.op
+              child.style.transform = `translateY(${s.ty}px)`
+            },
+          })
+        })
+      })
+    }, { root: el, threshold: 0.35 })
+    sections.forEach(s => ob.observe(s))
+    return () => ob.disconnect()
+  }, [])
+
+  const scrollToJourney = () =>
+    pageRef.current
+      ?.querySelector('#j-domain')
+      ?.scrollIntoView({ behavior: 'smooth' })
+
   return (
-    <div className="home-screen">
-      <div
-        className="home-bg"
-        style={{
-          backgroundImage: `url(${bg.url})`,
-          backgroundPosition: bg.position,
-          backgroundSize: bg.size,
-        }}
-      />
+    <div ref={pageRef} className="home-page">
+      {/* Background fixed behind all scroll content */}
+      <div className="home-bg" style={{
+        backgroundImage:    `url(${bg.url})`,
+        backgroundPosition: bg.position,
+        backgroundSize:     bg.size,
+      }} />
       <div className="home-veil" />
 
-      <div className="home-logo">
-        <span className="home-logo-word">LUCID</span>
-        <span className="home-logo-word">SOUND</span>
-        <span className="home-logo-word">DOMAIN</span>
+      {/* ── First viewport ── */}
+      <div className="home-first-view">
+        <div className="home-logo">
+          <span className="home-logo-word">LUCID</span>
+          <span className="home-logo-word">SOUND</span>
+          <span className="home-logo-word">DOMAIN</span>
+        </div>
+        <div className="home-center">
+          <p className="home-next-label">next portal opening on</p>
+          <p className="home-next-date">Wednesday, April 22nd, 2026</p>
+          <CalendarButtons />
+        </div>
+        <ScrollHint onClick={scrollToJourney} />
       </div>
 
-      <div className="home-center">
-        <p className="home-next-label">next portal opening on</p>
-        <p className="home-next-date">Wednesday, April 22nd, 2026</p>
-        <CalendarView />
+      {/* ── Journey ── */}
+      <div className="journey-layout">
+        {/* Sticky timeline sidebar */}
+        <div className="j-timeline-wrap">
+          <JourneyTimeline active={active} />
+        </div>
+
+        {/* Sections */}
+        <div className="journey-sections">
+
+          {/* ── The Domain ── */}
+          <section id="j-domain" className="j-section" data-section="domain">
+            <h2 className="j-animate j-section-heading">Understand</h2>
+            <p className="j-animate j-domain-intro">
+              The Lucid Sound Domain is an intimate, deep listening dance floor
+              that requires nothing from you except your presence.
+            </p>
+            <div className="j-animate j-space-list">
+              <span className="j-space-lead">This is</span>
+              <ul>
+                <li>a space to rest</li>
+                <li>a space to recieve</li>
+                <li>a space to restore</li>
+                <li>a space to reconnect</li>
+                <li>a space to <span className="j-green">REGULATE</span></li>
+                <li>and release</li>
+              </ul>
+            </div>
+          </section>
+
+          {/* ── Flow ── */}
+          <section id="j-flow" className="j-section" data-section="flow">
+            <h2 className="j-animate j-section-heading">Attend</h2>
+            <p className="j-animate j-section-placeholder">— coming soon —</p>
+          </section>
+
+          {/* ── Invitation ── */}
+          <section id="j-invitation" className="j-section" data-section="invitation">
+            <h2 className="j-animate j-section-heading">Invitation</h2>
+            <p className="j-animate j-section-placeholder">— coming soon —</p>
+          </section>
+
+          {/* ── Contact ── */}
+          <section id="j-contact" className="j-section" data-section="contact">
+            <h2 className="j-animate j-section-heading">Contact</h2>
+            <p className="j-animate j-section-placeholder">— coming soon —</p>
+          </section>
+
+        </div>
       </div>
+    </div>
+  )
+}
+
+// ── Wide arc at the bottom of the first view ──
+function ScrollHint({ onClick }) {
+  return (
+    <button className="scroll-hint" onClick={onClick} aria-label="Scroll to explore">
+      <span className="scroll-hint-arc" />
+      <span className="scroll-hint-chevron">
+        <svg viewBox="0 0 24 12" fill="none">
+          <polyline points="2,1 12,10 22,1"
+            stroke="currentColor" strokeWidth="1.5"
+            strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      </span>
+    </button>
+  )
+}
+
+// ── Vertical timeline sidebar ──
+function JourneyTimeline({ active }) {
+  const activeIdx = JOURNEY_SECTIONS.findIndex(s => s.id === active)
+  const fillPct   = activeIdx <= 0 ? 0 : (activeIdx / (JOURNEY_SECTIONS.length - 1)) * 100
+
+  return (
+    <nav className="j-timeline">
+      {/* Track + fill line */}
+      <span className="j-track">
+        <span className="j-track-fill" style={{ height: `${fillPct}%` }} />
+      </span>
+
+      {JOURNEY_SECTIONS.map((s, i) => (
+        <a key={s.id}
+           href={`#j-${s.id}`}
+           className={`j-node${s.id === active ? ' is-active' : ''}${i < activeIdx ? ' is-past' : ''}`}
+        >
+          <span className="j-node-dot">
+            <span className="j-node-ring" />
+          </span>
+          <span className="j-node-label">{s.label}</span>
+        </a>
+      ))}
+    </nav>
+  )
+}
+
+const PORTAL_ICS = [
+  "BEGIN:VCALENDAR",
+  "VERSION:2.0",
+  "PRODID:-//Lucid Sound Domain//EN",
+  "BEGIN:VEVENT",
+  "DTSTART;VALUE=DATE:20260422",
+  "DTEND;VALUE=DATE:20260423",
+  "SUMMARY:Lucid Sound Domain — Portal Opening",
+  "DESCRIPTION:The next portal opens. lucidsounddomain.com",
+  "END:VEVENT",
+  "END:VCALENDAR",
+].join("\r\n");
+
+const GOOGLE_CAL_URL =
+  "https://calendar.google.com/calendar/render?action=TEMPLATE" +
+  "&text=Lucid+Sound+Domain+%E2%80%94+Portal+Opening" +
+  "&dates=20260422%2F20260423" +
+  "&details=The+next+portal+opens.+lucidsounddomain.com";
+
+function CalendarButtons() {
+  const icsHref =
+    "data:text/calendar;charset=utf-8," + encodeURIComponent(PORTAL_ICS);
+
+  return (
+    <div className="cal-btns">
+      <a
+        href={GOOGLE_CAL_URL}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="cal-btn"
+      >
+        <GoogleCalIcon />
+        add to google calendar
+      </a>
+      <a
+        href={icsHref}
+        download="lucid-sound-domain-portal.ics"
+        className="cal-btn"
+      >
+        <AppleCalIcon />
+        add to apple calendar
+      </a>
     </div>
   );
 }
 
-// April 2026 — 1st lands on a Wednesday
-function CalendarView() {
-  const weeks = [
-    [null, null, null, 1, 2, 3, 4],
-    [5, 6, 7, 8, 9, 10, 11],
-    [12, 13, 14, 15, 16, 17, 18],
-    [19, 20, 21, 22, 23, 24, 25],
-    [26, 27, 28, 29, 30, null, null],
-  ];
+function GoogleCalIcon() {
   return (
-    <div className="cal-wrap">
-      <div className="cal-month">April 2026</div>
-      <div className="cal-grid">
-        {["S", "M", "T", "W", "T", "F", "S"].map((d, i) => (
-          <span key={i} className="cal-dname">
-            {d}
-          </span>
-        ))}
-        {weeks.flat().map((day, i) => (
-          <span
-            key={`d${i}`}
-            className={`cal-day${day === 22 ? " cal-day--on" : ""}${!day ? " cal-day--blank" : ""}`}
-          >
-            {day ?? ""}
-          </span>
-        ))}
-      </div>
-    </div>
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <rect x="3" y="4" width="18" height="17" rx="2" stroke="currentColor" strokeWidth="1.8"/>
+      <line x1="3" y1="9" x2="21" y2="9" stroke="currentColor" strokeWidth="1.8"/>
+      <line x1="8" y1="2" x2="8" y2="6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+      <line x1="16" y1="2" x2="16" y2="6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+    </svg>
+  );
+}
+
+function AppleCalIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <rect x="3" y="4" width="18" height="17" rx="2" stroke="currentColor" strokeWidth="1.8"/>
+      <line x1="3" y1="9" x2="21" y2="9" stroke="currentColor" strokeWidth="1.8"/>
+      <line x1="8" y1="2" x2="8" y2="6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+      <line x1="16" y1="2" x2="16" y2="6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+      <text x="12" y="19" textAnchor="middle" fontSize="7" fill="currentColor" fontFamily="system-ui">
+        22
+      </text>
+    </svg>
   );
 }
 
