@@ -315,7 +315,7 @@ function Home() {
           >
             <h2 className="j-animate j-section-heading">Invitation</h2>
             <p className="j-animate j-section-copy">
-              if you&apos;d like to bring a friend into the domain for our next
+              if you&apos;d like to bring a friend into the domain for the next
               portal, click here for your unique invite link
             </p>
             <InviteLinkButton />
