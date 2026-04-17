@@ -549,15 +549,17 @@ function JourneyTimeline({ active, pageRef }) {
       {JOURNEY_SECTIONS.map((s, i) => (
         <a
           key={s.id}
-          href={s.id === "home" ? "#" : `#j-${s.id}`}
-          onClick={
-            s.id === "home"
-              ? (e) => {
-                  e.preventDefault();
-                  pageRef.current?.scrollTo({ top: 0, behavior: "smooth" });
-                }
-              : undefined
-          }
+          href="#"
+          onClick={(e) => {
+            e.preventDefault();
+            if (s.id === "home") {
+              pageRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+            } else {
+              pageRef.current
+                ?.querySelector(`#j-${s.id}`)
+                ?.scrollIntoView({ behavior: "smooth" });
+            }
+          }}
           className={`j-node${s.id === active ? " is-active" : ""}${i < activeIdx ? " is-past" : ""}`}
         >
           <span className="j-node-dot">
@@ -584,15 +586,17 @@ function MobileTimeline({ active, pageRef, navReady }) {
       {JOURNEY_SECTIONS.map((s, i) => (
         <a
           key={s.id}
-          href={s.id === "home" ? "#" : `#j-${s.id}`}
-          onClick={
-            s.id === "home"
-              ? (e) => {
-                  e.preventDefault();
-                  pageRef.current?.scrollTo({ top: 0, behavior: "smooth" });
-                }
-              : undefined
-          }
+          href="#"
+          onClick={(e) => {
+            e.preventDefault();
+            if (s.id === "home") {
+              pageRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+            } else {
+              pageRef.current
+                ?.querySelector(`#j-${s.id}`)
+                ?.scrollIntoView({ behavior: "smooth" });
+            }
+          }}
           className={`j-mnode${s.id === active ? " is-active" : ""}${i < activeIdx ? " is-past" : ""}`}
         >
           <span className="j-mnode-label">{s.label}</span>
@@ -818,18 +822,23 @@ function Landing({ onHome }) {
       ],
   );
 
-  // step: 'name' → 'contact' → 'referral' → 'done'
-  const [step, setStep] = useState("name");
+  // step: 'arrival' → ('name' → 'contact' → 'referral') | ('returning')
+  const [step, setStep] = useState("arrival");
   const [name, setName] = useState("");
   const [contact, setContact] = useState("");
   const [referrer, setReferrer] = useState("");
+  const [returningName, setReturningName] = useState("");
 
   const showSubmit =
     step === "name"
       ? name.trim().length > 0
       : step === "contact"
         ? isContactReady(contact)
-        : referrer.trim().length > 0;
+        : step === "referral"
+          ? referrer.trim().length > 0
+          : step === "returning"
+            ? returningName.trim().length > 0
+            : false;
 
   // ── Refs ──
   const bgSlideRef = useRef(null);
@@ -882,6 +891,82 @@ function Landing({ onHome }) {
     fadeToStep("referral");
   }
 
+  // ── Arrival choice: first arrival → name step ──
+  function handleFirstArrival() {
+    const wtEl = welcomeTextRef.current;
+    if (wtEl) {
+      wtEl.style.transition = "opacity 0.4s ease, transform 0.4s ease";
+      wtEl.style.opacity = "0";
+      wtEl.style.transform = "translateY(-10px)";
+    }
+    setStep("name");
+    const wqEl = whoTextRef.current;
+    if (wqEl) {
+      wqEl.style.opacity = "0";
+      wqEl.style.transform = "translateY(12px)";
+      setTimeout(() => {
+        if (wqEl) {
+          wqEl.style.transition = "opacity 0.5s ease, transform 0.5s ease";
+          wqEl.style.opacity = "1";
+          wqEl.style.transform = "translateY(0)";
+        }
+      }, 350);
+    }
+    setTimeout(() => {
+      const lineEl = lineRef.current;
+      if (lineEl) {
+        lineEl.style.transform = "scaleX(0)";
+        const ln = { sx: 0 };
+        animate(ln, {
+          sx: 1,
+          duration: 800,
+          ease: "out(1.5)",
+          onRender: () => {
+            lineEl.style.transform = `scaleX(${ln.sx})`;
+          },
+        });
+      }
+    }, 100);
+  }
+
+  // ── Arrival choice: returning → check name in DB ──
+  function handleArrivalReturning() {
+    const wtEl = welcomeTextRef.current;
+    if (wtEl) {
+      wtEl.style.transition = "opacity 0.4s ease, transform 0.4s ease";
+      wtEl.style.opacity = "0";
+      wtEl.style.transform = "translateY(-10px)";
+    }
+    setStep("returning");
+    const wqEl = whoTextRef.current;
+    if (wqEl) {
+      wqEl.style.opacity = "0";
+      wqEl.style.transform = "translateY(12px)";
+      setTimeout(() => {
+        if (wqEl) {
+          wqEl.style.transition = "opacity 0.5s ease, transform 0.5s ease";
+          wqEl.style.opacity = "1";
+          wqEl.style.transform = "translateY(0)";
+        }
+      }, 350);
+    }
+    setTimeout(() => {
+      const lineEl = lineRef.current;
+      if (lineEl) {
+        lineEl.style.transform = "scaleX(0)";
+        const ln = { sx: 0 };
+        animate(ln, {
+          sx: 1,
+          duration: 800,
+          ease: "out(1.5)",
+          onRender: () => {
+            lineEl.style.transform = `scaleX(${ln.sx})`;
+          },
+        });
+      }
+    }, 100);
+  }
+
   const [isPressing, setIsPressing] = useState(false);
   const [rejectionMode, setRejectionMode] = useState(false);
 
@@ -906,6 +991,7 @@ function Landing({ onHome }) {
     fade(true, () => {
       setRejectionMode(true);
       setReferrer("");
+      setReturningName("");
       setTimeout(() => {
         fade(true, () => {
           setRejectionMode(false);
@@ -934,11 +1020,30 @@ function Landing({ onHome }) {
     }
   }
 
+  async function triggerReturning() {
+    if (isPressing) return;
+    setIsPressing(true);
+    try {
+      const { found } = await apiCheckReferrer({ name: returningName.trim() });
+      if (!found) {
+        setIsPressing(false);
+        handleRejection();
+        return;
+      }
+      setIsPressing(false);
+      handlePowerPress();
+    } catch {
+      setIsPressing(false);
+      handleRejection();
+    }
+  }
+
   function handleSubmit(e) {
     e?.preventDefault();
     if (step === "name") handleNameSubmit();
     else if (step === "contact") handleContactSubmit();
     else if (step === "referral" && referrer.trim().length > 0) triggerPower();
+    else if (step === "returning" && returningName.trim().length > 0) triggerReturning();
   }
 
   // ── Power button: full shutdown sequence ──
@@ -1243,38 +1348,6 @@ function Landing({ onHome }) {
             },
           }),
         );
-        const wto = { opacity: 1, ty: 0 };
-        animations.push(
-          animate(wto, {
-            opacity: 0,
-            ty: -10,
-            duration: 700,
-            delay: 13200,
-            ease: "in(2)",
-            onRender: () => {
-              wtEl.style.opacity = wto.opacity;
-              wtEl.style.transform = `translateY(${wto.ty}px)`;
-            },
-          }),
-        );
-      }
-
-      const wqEl = whoTextRef.current;
-      if (wqEl) {
-        const wq = { opacity: 0, ty: 12 };
-        animations.push(
-          animate(wq, {
-            opacity: 1,
-            ty: 0,
-            duration: 900,
-            delay: 14100,
-            ease: "out(2)",
-            onRender: () => {
-              wqEl.style.opacity = wq.opacity;
-              wqEl.style.transform = `translateY(${wq.ty}px)`;
-            },
-          }),
-        );
       }
 
       const inputWrapEl = inputWrapRef.current;
@@ -1371,19 +1444,19 @@ function Landing({ onHome }) {
             welcome
           </span>
           <span ref={whoTextRef} className="circle-text">
-            {step === "name" ? (
+            {rejectionMode ? (
+              "this is the right place. that's not the right person"
+            ) : step === "name" || step === "returning" ? (
               "who are you?"
             ) : step === "contact" ? (
               "how do we reach you?"
-            ) : rejectionMode ? (
-              "this is the right place. that's not the right person"
-            ) : (
+            ) : step === "referral" ? (
               <>
                 who brought you to
                 <br />
                 the domain?
               </>
-            )}
+            ) : null}
           </span>
         </div>
 
@@ -1401,42 +1474,70 @@ function Landing({ onHome }) {
           className="waitlist-input-wrap"
           onSubmit={handleSubmit}
         >
-          <input
-            className="waitlist-input"
-            type={step === "contact" ? "tel" : "text"}
-            placeholder={
-              step === "name"
-                ? "your name"
-                : step === "contact"
-                  ? "phone number"
-                  : "name..."
-            }
-            value={
-              step === "name" ? name : step === "contact" ? contact : referrer
-            }
-            onChange={(e) =>
-              step === "name"
-                ? setName(e.target.value)
-                : step === "contact"
-                  ? setContact(e.target.value)
-                  : setReferrer(e.target.value)
-            }
-          />
-          <div ref={lineRef} className="welcome-line" />
-          <button
-            type="submit"
-            onClick={
-              step === "referral"
-                ? (e) => {
-                    e.preventDefault();
-                    triggerPower();
-                  }
-                : undefined
-            }
-            className={`submit-btn${showSubmit ? " visible" : ""}${step === "referral" ? " submit-btn--power" : ""}${isPressing ? " is-pressing" : ""}`}
-          >
-            {step === "referral" ? <PowerIcon /> : "enter"}
-          </button>
+          {step === "arrival" ? (
+            <div className="arrival-choice">
+              <button
+                type="button"
+                className="arrival-btn"
+                onClick={handleFirstArrival}
+              >
+                first arrival
+              </button>
+              <button
+                type="button"
+                className="arrival-btn"
+                onClick={handleArrivalReturning}
+              >
+                returning
+              </button>
+            </div>
+          ) : (
+            <>
+              <input
+                className="waitlist-input"
+                type={step === "contact" ? "tel" : "text"}
+                placeholder={
+                  step === "name" || step === "returning"
+                    ? "your name"
+                    : step === "contact"
+                      ? "phone number"
+                      : "name..."
+                }
+                value={
+                  step === "name"
+                    ? name
+                    : step === "contact"
+                      ? contact
+                      : step === "returning"
+                        ? returningName
+                        : referrer
+                }
+                onChange={(e) =>
+                  step === "name"
+                    ? setName(e.target.value)
+                    : step === "contact"
+                      ? setContact(e.target.value)
+                      : step === "returning"
+                        ? setReturningName(e.target.value)
+                        : setReferrer(e.target.value)
+                }
+              />
+              <div ref={lineRef} className="welcome-line" />
+              <button
+                type="submit"
+                onClick={
+                  step === "referral"
+                    ? (e) => { e.preventDefault(); triggerPower(); }
+                    : step === "returning"
+                      ? (e) => { e.preventDefault(); triggerReturning(); }
+                      : undefined
+                }
+                className={`submit-btn${showSubmit ? " visible" : ""}${step === "referral" || step === "returning" ? " submit-btn--power" : ""}${isPressing ? " is-pressing" : ""}`}
+              >
+                {step === "referral" || step === "returning" ? <PowerIcon /> : "enter"}
+              </button>
+            </>
+          )}
         </form>
       </div>
       <div ref={flashOverlayRef} className="flash-overlay" />
