@@ -5,6 +5,7 @@ const {
   findParticipant,
   findParticipantByPhone,
   findParticipantByName,
+  findParticipantByReferralCode,
 } = require("../store");
 
 const twilioClient =
@@ -60,21 +61,21 @@ function waitlistRouter() {
       }
 
       // New participant — insert (DB trigger handles updating referrer's array)
-      await createParticipant({ name, phone, referredBy: referredBy || null });
+      const participant = await createParticipant({ name, phone, referredBy: referredBy || null });
 
       // Fire-and-forget SMS to owner — don't block the response
       notifyOwner(name, phone, referredBy).catch((err) =>
         console.error("[waitlist/sms]", err)
       );
 
-      return res.json({ status: "joined" });
+      return res.json({ status: "joined", referralCode: participant.referral_code });
     } catch (err) {
       console.error("[waitlist]", err);
       return res.status(500).json({ error: "Something went wrong." });
     }
   });
 
-  // Check if a referrer name exists
+  // Check if a referrer name exists — also returns their referral code
   router.post("/check-referrer", async (req, res) => {
     const { name } = req.body || {};
     if (!name || typeof name !== "string") {
@@ -83,9 +84,24 @@ function waitlistRouter() {
 
     try {
       const entry = await findParticipantByName(name);
-      return res.json({ found: !!entry });
+      return res.json({
+        found: !!entry,
+        referralCode: entry?.referral_code ?? null,
+      });
     } catch (err) {
       console.error("[waitlist/check-referrer]", err);
+      return res.status(500).json({ error: "Something went wrong." });
+    }
+  });
+
+  // Look up who owns a referral code (used when landing with ?ref=)
+  router.get("/referral/:code", async (req, res) => {
+    try {
+      const entry = await findParticipantByReferralCode(req.params.code);
+      if (!entry) return res.json({ found: false });
+      return res.json({ found: true, name: entry.name, referralCode: entry.referral_code });
+    } catch (err) {
+      console.error("[waitlist/referral]", err);
       return res.status(500).json({ error: "Something went wrong." });
     }
   });

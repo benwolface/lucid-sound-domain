@@ -56,3 +56,7 @@ export function apiCheckReferrer({ name }) {
     body: JSON.stringify({ name })
   });
 }
+
+export function apiLookupRefCode(code) {
+  return apiRequest(`/waitlist/referral/${encodeURIComponent(code)}`);
+}

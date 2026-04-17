@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { animate } from "animejs";
-import { apiJoinWaitlist, apiCheckReferrer } from "./lib/api";
+import { apiJoinWaitlist, apiCheckReferrer, apiLookupRefCode } from "./lib/api";
 import "./styles.css";
 
 // ── Dev flag — skip the intro so the circle shows immediately ──
@@ -21,10 +21,11 @@ const HOME_BACKGROUNDS = [
 
 export default function App() {
   const [screen, setScreen] = useState("landing");
-  if (screen === "home") return <Home />;
+  const [referralCode, setReferralCode] = useState(null);
+  if (screen === "home") return <Home referralCode={referralCode} />;
   return (
     <div className="app">
-      <Landing onHome={() => setScreen("home")} />
+      <Landing onHome={(code) => { setReferralCode(code ?? null); setScreen("home"); }} />
     </div>
   );
 }
@@ -37,7 +38,7 @@ const JOURNEY_SECTIONS = [
   { id: "contact", label: "Contribute" },
 ];
 
-function Home() {
+function Home({ referralCode }) {
   const [bg] = useState(
     () => HOME_BACKGROUNDS[Math.floor(Math.random() * HOME_BACKGROUNDS.length)],
   );
@@ -311,7 +312,7 @@ function Home() {
               if you&apos;d like to bring a friend into the domain for the next
               portal, click here for your unique invite link
             </p>
-            <InviteLinkButton />
+            <InviteLinkButton referralCode={referralCode} />
           </section>
 
           {/* ── Contact ── */}
@@ -781,14 +782,15 @@ function PowerIcon() {
   );
 }
 
-const INVITE_LINK_URL = "https://lucidsounddomain.com/invite/coming-soon";
-
-function InviteLinkButton() {
+function InviteLinkButton({ referralCode }) {
   const [copied, setCopied] = useState(false);
+  const inviteUrl = referralCode
+    ? `https://lucidsounddomain.com/?ref=${referralCode}`
+    : "https://lucidsounddomain.com";
 
   async function handleCopy() {
     try {
-      await navigator.clipboard.writeText(INVITE_LINK_URL);
+      await navigator.clipboard.writeText(inviteUrl);
       setCopied(true);
       window.setTimeout(() => setCopied(false), 1800);
     } catch {
@@ -828,6 +830,23 @@ function Landing({ onHome }) {
   const [contact, setContact] = useState("");
   const [referrer, setReferrer] = useState("");
   const [returningName, setReturningName] = useState("");
+  // ref code from ?ref= URL param — skips the referral step if present
+  const [inboundRefCode, setInboundRefCode] = useState(null);
+  const [inboundRefName, setInboundRefName] = useState(null);
+
+  // Read ?ref= on mount and look up who owns it
+  useEffect(() => {
+    const code = new URLSearchParams(window.location.search).get("ref");
+    if (!code) return;
+    apiLookupRefCode(code)
+      .then(({ found, name: refName }) => {
+        if (found) {
+          setInboundRefCode(code);
+          setInboundRefName(refName);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const showSubmit =
     step === "name"
@@ -885,10 +904,15 @@ function Landing({ onHome }) {
     fadeToStep("contact");
   }
 
-  // ── Submit: contact step → transition to referral (no API call yet) ──
+  // ── Submit: contact step → skip referral if we have an inbound ref code ──
   function handleContactSubmit() {
     if (!isContactReady(contact)) return;
-    fadeToStep("referral");
+    if (inboundRefCode) {
+      // Already know the referrer — submit directly
+      triggerPower();
+    } else {
+      fadeToStep("referral");
+    }
   }
 
   // ── Arrival choice: first arrival → name step ──
@@ -1037,17 +1061,24 @@ function Landing({ onHome }) {
     if (isPressing) return;
     setIsPressing(true);
     try {
-      const { found } = await apiCheckReferrer({ name: referrer.trim() });
-      if (!found) {
-        setIsPressing(false);
-        handleRejection("referral");
-        return;
+      let resolvedReferrer = referrer.trim();
+
+      // If we came in via ?ref= link, skip the name check and use the code directly
+      if (inboundRefCode) {
+        resolvedReferrer = inboundRefName || "";
+      } else {
+        const { found } = await apiCheckReferrer({ name: resolvedReferrer });
+        if (!found) {
+          setIsPressing(false);
+          handleRejection("referral");
+          return;
+        }
       }
-      await apiJoinWaitlist({ name, contact, referredBy: referrer.trim() });
+
+      const { referralCode } = await apiJoinWaitlist({ name, contact, referredBy: resolvedReferrer || undefined });
       setIsPressing(false);
-      handlePowerPress();
+      handlePowerPress(referralCode);
     } catch {
-      // API error — treat as invalid referrer, don't let through
       setIsPressing(false);
       handleRejection("referral");
     }
@@ -1057,14 +1088,14 @@ function Landing({ onHome }) {
     if (isPressing) return;
     setIsPressing(true);
     try {
-      const { found } = await apiCheckReferrer({ name: returningName.trim() });
+      const { found, referralCode } = await apiCheckReferrer({ name: returningName.trim() });
       if (!found) {
         setIsPressing(false);
         handleRejection("returning");
         return;
       }
       setIsPressing(false);
-      handlePowerPress();
+      handlePowerPress(referralCode);
     } catch {
       setIsPressing(false);
       handleRejection("returning");
@@ -1080,7 +1111,7 @@ function Landing({ onHome }) {
   }
 
   // ── Power button: full shutdown sequence ──
-  function handlePowerPress() {
+  function handlePowerPress(referralCode) {
     // 1 — fade out everything except the circle
     const fadeEls = [
       bgSlideRef.current,
@@ -1168,7 +1199,7 @@ function Landing({ onHome }) {
     }
 
     // 6 — navigate to home after holding white for 0.5s
-    setTimeout(() => onHome(), 5200);
+    setTimeout(() => onHome(referralCode), 5200);
   }
 
   // ── Intro animation ──

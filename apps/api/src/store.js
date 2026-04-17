@@ -1,4 +1,8 @@
-const { randomUUID } = require("node:crypto");
+const { randomUUID, randomBytes } = require("node:crypto");
+
+function generateReferralCode() {
+  return randomBytes(5).toString("hex"); // 10-char hex, e.g. "a3f8b29c1d"
+}
 const { createClient } = require("@supabase/supabase-js");
 
 const supabase = createClient(
@@ -177,16 +181,26 @@ async function findParticipantByPhone(phone) {
 async function findParticipantByName(name) {
   const { data } = await supabase
     .from("participants")
-    .select("id, name")
+    .select("id, name, referral_code")
     .ilike("name", name)
     .maybeSingle();
   return data ?? null;
 }
 
+async function findParticipantByReferralCode(code) {
+  const { data } = await supabase
+    .from("participants")
+    .select("id, name, referral_code")
+    .eq("referral_code", code)
+    .maybeSingle();
+  return data ?? null;
+}
+
 async function createParticipant({ name, phone, referredBy = null }) {
+  const referral_code = generateReferralCode();
   const { data, error } = await supabase
     .from("participants")
-    .insert({ name, phone_number: phone, referred_by: referredBy })
+    .insert({ name, phone_number: phone, referred_by: referredBy, referral_code })
     .select()
     .single();
   if (error) throw error;
@@ -204,6 +218,7 @@ module.exports = {
   findParticipant,
   findParticipantByName,
   findParticipantByPhone,
+  findParticipantByReferralCode,
   findSessionWithUser,
   findVisitorById,
   findWaitlistEntry,
