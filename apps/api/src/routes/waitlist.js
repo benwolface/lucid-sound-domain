@@ -7,6 +7,21 @@ const {
   findParticipantByName,
 } = require("../store");
 
+const twilioClient =
+  process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN
+    ? require("twilio")(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN)
+    : null;
+
+async function notifyOwner(name, phone, referredBy) {
+  if (!twilioClient || !process.env.TWILIO_TO || !process.env.TWILIO_FROM) return;
+  const ref = referredBy ? ` (referred by ${referredBy})` : "";
+  await twilioClient.messages.create({
+    to: process.env.TWILIO_TO,
+    from: process.env.TWILIO_FROM,
+    body: `LSD: ${name} (${phone}) just joined the domain${ref}.`,
+  });
+}
+
 const joinSchema = z.object({
   name: z.string().min(1),
   contact: z.string().min(1),
@@ -46,6 +61,12 @@ function waitlistRouter() {
 
       // New participant — insert (DB trigger handles updating referrer's array)
       await createParticipant({ name, phone, referredBy: referredBy || null });
+
+      // Fire-and-forget SMS to owner — don't block the response
+      notifyOwner(name, phone, referredBy).catch((err) =>
+        console.error("[waitlist/sms]", err)
+      );
+
       return res.json({ status: "joined" });
     } catch (err) {
       console.error("[waitlist]", err);

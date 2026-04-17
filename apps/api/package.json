@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "commonjs",
   "scripts": {
-    "dev": "nodemon src/index.js",
+    "dev": "nodemon --delay 1 src/index.js",
     "build": "node -e \"console.log('No build step for API')\"",
     "vercel-build": "node -e \"console.log('Skipping database generation for preview deploy')\"",
     "lint": "node -e \"console.log('skip lint for scaffold')\"",
@@ -18,6 +18,7 @@
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "nanoid": "^5.0.7",
+    "twilio": "^5.13.1",
     "zod": "^3.24.1"
   },
   "devDependencies": {
