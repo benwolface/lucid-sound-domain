@@ -970,7 +970,7 @@ function Landing({ onHome }) {
   const [isPressing, setIsPressing] = useState(false);
   const [rejectionMode, setRejectionMode] = useState(false);
 
-  function handleRejection() {
+  function handleRejection(type = "referral") {
     const whoEl = whoTextRef.current;
     if (!whoEl) return;
     const fade = (out, cb) => {
@@ -989,7 +989,7 @@ function Landing({ onHome }) {
       }, 380);
     };
     fade(true, () => {
-      setRejectionMode(true);
+      setRejectionMode(type);
       setReferrer("");
       setReturningName("");
       setTimeout(() => {
@@ -1007,7 +1007,7 @@ function Landing({ onHome }) {
       const { found } = await apiCheckReferrer({ name: referrer.trim() });
       if (!found) {
         setIsPressing(false);
-        handleRejection();
+        handleRejection("referral");
         return;
       }
       await apiJoinWaitlist({ name, contact, referredBy: referrer.trim() });
@@ -1016,7 +1016,7 @@ function Landing({ onHome }) {
     } catch {
       // API error — treat as invalid referrer, don't let through
       setIsPressing(false);
-      handleRejection();
+      handleRejection("referral");
     }
   }
 
@@ -1027,14 +1027,14 @@ function Landing({ onHome }) {
       const { found } = await apiCheckReferrer({ name: returningName.trim() });
       if (!found) {
         setIsPressing(false);
-        handleRejection();
+        handleRejection("returning");
         return;
       }
       setIsPressing(false);
       handlePowerPress();
     } catch {
       setIsPressing(false);
-      handleRejection();
+      handleRejection("returning");
     }
   }
 
@@ -1444,7 +1444,9 @@ function Landing({ onHome }) {
             welcome
           </span>
           <span ref={whoTextRef} className="circle-text">
-            {rejectionMode ? (
+            {rejectionMode === "returning" ? (
+              "you're in the right place. we're just having trouble finding you"
+            ) : rejectionMode ? (
               "this is the right place. that's not the right person"
             ) : step === "name" || step === "returning" ? (
               "who are you?"
