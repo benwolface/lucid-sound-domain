@@ -1,6 +1,6 @@
 const { Router } = require("express");
 const { z } = require("zod");
-const { nanoid } = require("nanoid");
+const { randomUUID: nanoid } = require("node:crypto");
 
 const { sha256, randomToken } = require("../lib/crypto");
 const {
