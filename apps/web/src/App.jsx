@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { animate } from "animejs";
-import { apiJoinWaitlist } from "./lib/api";
+import { apiJoinWaitlist, apiCheckReferrer } from "./lib/api";
 import "./styles.css";
 
 // ── Dev flag — skip the intro so the circle shows immediately ──
@@ -44,11 +44,26 @@ function Home() {
   const [active, setActive] = useState("home");
   const [logoVisible, setLogoVisible] = useState(true);
   const [heroHintVisible, setHeroHintVisible] = useState(true);
+  const [bgReady, setBgReady] = useState(false);
+  const [contentReady, setContentReady] = useState(false);
+  const [navReady, setNavReady] = useState(false);
   const pageRef = useRef(null);
   const intersecting = useRef(new Set());
   const activeRef = useRef("home");
   const logoVisibleRef = useRef(true);
   const heroHintVisibleRef = useRef(true);
+
+  // Entrance sequence: bg → content → nav bar
+  useEffect(() => {
+    const t1 = setTimeout(() => setBgReady(true), 80);
+    const t2 = setTimeout(() => setContentReady(true), 1400);
+    const t3 = setTimeout(() => setNavReady(true), 2600);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
+    };
+  }, []);
 
   // Section activation + one-time reveal
   useEffect(() => {
@@ -131,14 +146,14 @@ function Home() {
     <div ref={pageRef} className="home-page">
       {/* Background fixed behind all scroll content */}
       <div
-        className="home-bg"
+        className={`home-bg${bgReady ? " is-entered" : ""}`}
         style={{
           backgroundImage: `url(${bg.url})`,
           backgroundPosition: bg.position,
           backgroundSize: bg.size,
         }}
       />
-      <div className="home-veil" />
+      <div className={`home-veil${bgReady ? " is-entered" : ""}`} />
 
       {/* ── Fixed logo — visible when in a section, hidden between ── */}
       <div className={`home-logo${logoVisible ? " is-visible" : ""}`}>
@@ -148,7 +163,10 @@ function Home() {
       </div>
 
       {/* ── First viewport ── */}
-      <div className="home-first-view" data-section="home">
+      <div
+        className={`home-first-view${contentReady ? " is-entered" : ""}`}
+        data-section="home"
+      >
         <div className="home-center">
           <p className="home-regulation-title">( Regulation )</p>
           <p className="home-next-label">next portal opening on</p>
@@ -175,13 +193,7 @@ function Home() {
             >
               <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
               <circle cx="12" cy="12" r="4" />
-              <circle
-                cx="17.5"
-                cy="6.5"
-                r="0.6"
-                fill="currentColor"
-                stroke="none"
-              />
+              <circle cx="17.5" cy="6.5" r="0.6" fill="currentColor" stroke="none" />
             </svg>
           </a>
         </div>
@@ -199,13 +211,14 @@ function Home() {
         <div className="journey-sections">
           {/* ── The Domain ── */}
           <section id="j-domain" className="j-section" data-section="domain">
-            <div className="j-domain-layout">
+            <div className="j-domain-cols">
+              {/* Left: all text */}
               <div className="j-domain-text">
                 <h2 className="j-animate j-section-heading">Understand</h2>
                 <p className="j-animate j-domain-intro">
                   The Lucid Sound Domain is an intimate, deep listening dance
-                  floor that requires nothing from you except your presence.
-                  This is:
+                  floor that requires nothing from you except your presence. This
+                  is:
                 </p>
                 <div className="j-animate j-space-list">
                   <ul>
@@ -219,6 +232,8 @@ function Home() {
                   </ul>
                 </div>
               </div>
+
+              {/* Right: big image */}
               <div className="j-animate j-domain-image-wrap">
                 <ZoomableImage
                   src="/soundsystem-boundary.jpg"
@@ -254,33 +269,10 @@ function Home() {
                 </a>
               </div>
             </div>
-            <SectionScrollHint
-              nextId="j-flow"
-              containerRef={pageRef}
-              visible={active === "domain"}
-            />
           </section>
 
-          <div
-            className="j-artist-statement-wrap"
-            aria-label="Artist statement"
-          >
-            <img
-              src="/artist-statement.jpg"
-              alt="Artist statement"
-              className="j-artist-statement-image"
-            />
-            <p className="j-image-subcaption j-artist-subcaption">
-              questions to consider within the domain
-            </p>
-          </div>
-
           {/* ── Flow ── */}
-          <section
-            id="j-flow"
-            className="j-section j-section--after-image"
-            data-section="flow"
-          >
+          <section id="j-flow" className="j-section" data-section="flow">
             <h2 className="j-animate j-section-heading">Attend</h2>
             <div className="j-animate j-attend-schedule">
               <p className="j-attend-slot">7:00p - Arrival + Settle</p>
@@ -300,11 +292,6 @@ function Home() {
               </p>
               <p className="j-attend-note">dance release expression</p>
             </div>
-            <SectionScrollHint
-              nextId="j-invitation"
-              containerRef={pageRef}
-              visible={active === "flow"}
-            />
           </section>
 
           {/* ── Invitation ── */}
@@ -319,11 +306,6 @@ function Home() {
               portal, click here for your unique invite link
             </p>
             <InviteLinkButton />
-            <SectionScrollHint
-              nextId="j-contact"
-              containerRef={pageRef}
-              visible={active === "invitation"}
-            />
           </section>
 
           {/* ── Contact ── */}
@@ -338,39 +320,48 @@ function Home() {
               </a>
               .
             </p>
-            <footer className="home-footer">
-              <a
-                href="https://www.instagram.com/lucidsounddomain/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="home-footer-ig"
-              >
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  style={{ width: 16, height: 16 }}
-                >
-                  <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
-                  <circle cx="12" cy="12" r="4" />
-                  <circle
-                    cx="17.5"
-                    cy="6.5"
-                    r="0.6"
-                    fill="currentColor"
-                    stroke="none"
-                  />
-                </svg>
-              </a>
-              <p className="home-footer-tagline">remain present</p>
-              <p className="home-footer-copy">Lucid Sound Domain &copy; 2026</p>
-            </footer>
+            <SectionScrollHint
+              nextId="j-outro"
+              containerRef={pageRef}
+              visible={active === "contact"}
+              alwaysShow
+            />
           </section>
         </div>
-        <MobileTimeline active={active} pageRef={pageRef} />
+        <MobileTimeline active={active} pageRef={pageRef} navReady={navReady} />
+      </div>
+
+      {/* ── Artist statement + footer — snaps as its own final screen ── */}
+      <div id="j-outro" className="j-outro">
+        <div
+          className="j-artist-statement-wrap"
+          aria-label="Artist statement"
+        >
+          <img
+            src="/artist-statement.jpg"
+            alt="Artist statement"
+            className="j-artist-statement-image"
+          />
+          <p className="j-image-subcaption j-artist-subcaption">
+            questions to consider within the domain
+          </p>
+        </div>
+        <footer className="home-fixed-footer">
+          <a
+            href="https://www.instagram.com/lucidsounddomain/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="home-footer-ig"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: 16, height: 16 }}>
+              <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+              <circle cx="12" cy="12" r="4" />
+              <circle cx="17.5" cy="6.5" r="0.6" fill="currentColor" stroke="none" />
+            </svg>
+          </a>
+          <p className="home-footer-tagline">remain present</p>
+          <p className="home-footer-copy">Lucid Sound Domain &copy; 2026</p>
+        </footer>
       </div>
     </div>
   );
@@ -400,7 +391,7 @@ function ScrollHint({ onClick, visible }) {
 }
 
 // ── Scroll hint at the bottom of each journey section ──
-function SectionScrollHint({ nextId, containerRef, visible }) {
+function SectionScrollHint({ nextId, containerRef, visible, alwaysShow }) {
   const handleClick = () => {
     containerRef.current
       ?.querySelector(`#${nextId}`)
@@ -408,7 +399,7 @@ function SectionScrollHint({ nextId, containerRef, visible }) {
   };
   return (
     <button
-      className={`section-scroll-hint${visible ? " is-visible" : ""}`}
+      className={`section-scroll-hint${visible ? " is-visible" : ""}${alwaysShow ? " always-show" : ""}`}
       onClick={handleClick}
       aria-label="Next section"
     >
@@ -563,13 +554,13 @@ function JourneyTimeline({ active, pageRef }) {
 }
 
 // ── Horizontal bottom timeline for mobile ──
-function MobileTimeline({ active, pageRef }) {
+function MobileTimeline({ active, pageRef, navReady }) {
   const activeIdx = JOURNEY_SECTIONS.findIndex((s) => s.id === active);
   const fillPct =
     activeIdx <= 0 ? 0 : (activeIdx / (JOURNEY_SECTIONS.length - 1)) * 100;
 
   return (
-    <nav className="j-timeline-mobile">
+    <nav className={`j-timeline-mobile${navReady ? " is-entered" : ""}`}>
       <span className="j-track-h">
         <span className="j-track-h-fill" style={{ width: `${fillPct}%` }} />
       </span>
@@ -810,13 +801,18 @@ function Landing({ onHome }) {
       ],
   );
 
-  // step: 'contact' → 'referral' → 'done'
-  const [step, setStep] = useState("contact");
+  // step: 'name' → 'contact' → 'referral' → 'done'
+  const [step, setStep] = useState("name");
+  const [name, setName] = useState("");
   const [contact, setContact] = useState("");
   const [referrer, setReferrer] = useState("");
 
   const showSubmit =
-    step === "contact" ? isContactReady(contact) : referrer.trim().length > 0;
+    step === "name"
+      ? name.trim().length > 0
+      : step === "contact"
+        ? isContactReady(contact)
+        : referrer.trim().length > 0;
 
   // ── Refs ──
   const bgSlideRef = useRef(null);
@@ -833,23 +829,15 @@ function Landing({ onHome }) {
   const initiatedTextRef = useRef(null);
   const flashOverlayRef = useRef(null);
 
-  // ── Submit: contact step → save to DB, transition to referral ──
-  async function handleContactSubmit() {
-    if (!isContactReady(contact)) return;
-    try {
-      await apiJoinWaitlist({ contact });
-    } catch {
-      /* silent */
-    }
-
-    // Fade out "who are you?", update text, float back in
+  // ── Fade the circle text to a new step ──
+  function fadeToStep(nextStep) {
     const whoEl = whoTextRef.current;
     if (whoEl) {
       whoEl.style.transition = "opacity 0.35s ease, transform 0.35s ease";
       whoEl.style.opacity = "0";
       whoEl.style.transform = "translateY(-10px)";
       setTimeout(() => {
-        setStep("referral");
+        setStep(nextStep);
         if (whoEl) {
           whoEl.style.transform = "translateY(10px)";
           requestAnimationFrame(() =>
@@ -861,13 +849,77 @@ function Landing({ onHome }) {
         }
       }, 380);
     } else {
-      setStep("referral");
+      setStep(nextStep);
     }
+  }
+
+  // ── Submit: name step → go to contact ──
+  function handleNameSubmit() {
+    if (!name.trim()) return;
+    fadeToStep("contact");
+  }
+
+  // ── Submit: contact step → transition to referral (no API call yet) ──
+  function handleContactSubmit() {
+    if (!isContactReady(contact)) return;
+    fadeToStep("referral");
+  }
+
+  const [isPressing, setIsPressing] = useState(false);
+  const [rejectionMode, setRejectionMode] = useState(false);
+
+  function handleRejection() {
+    const whoEl = whoTextRef.current;
+    if (!whoEl) return;
+    const fade = (out, cb) => {
+      whoEl.style.transition = "opacity 0.35s ease, transform 0.35s ease";
+      whoEl.style.opacity = "0";
+      whoEl.style.transform = `translateY(${out ? -10 : -10}px)`;
+      setTimeout(() => {
+        cb();
+        whoEl.style.transform = "translateY(10px)";
+        requestAnimationFrame(() =>
+          requestAnimationFrame(() => {
+            whoEl.style.opacity = "1";
+            whoEl.style.transform = "translateY(0)";
+          }),
+        );
+      }, 380);
+    };
+    fade(true, () => {
+      setRejectionMode(true);
+      setReferrer("");
+      setTimeout(() => {
+        fade(true, () => {
+          setRejectionMode(false);
+        });
+      }, 2800);
+    });
+  }
+
+  async function triggerPower() {
+    if (isPressing) return;
+    setIsPressing(true);
+    try {
+      const { found } = await apiCheckReferrer({ name: referrer.trim() });
+      if (!found) {
+        setIsPressing(false);
+        handleRejection();
+        return;
+      }
+      await apiJoinWaitlist({ name, contact, referredBy: referrer.trim() });
+    } catch {
+      /* silent — still proceed */
+    }
+    setIsPressing(false);
+    handlePowerPress();
   }
 
   function handleSubmit(e) {
     e?.preventDefault();
-    if (step === "contact") handleContactSubmit();
+    if (step === "name") handleNameSubmit();
+    else if (step === "contact") handleContactSubmit();
+    else if (step === "referral" && referrer.trim().length > 0) triggerPower();
   }
 
   // ── Power button: full shutdown sequence ──
@@ -958,8 +1010,8 @@ function Landing({ onHome }) {
       });
     }
 
-    // 6 — navigate to home once fully white
-    setTimeout(() => onHome(), 4800);
+    // 6 — navigate to home after holding white for 0.5s
+    setTimeout(() => onHome(), 5200);
   }
 
   // ── Intro animation ──
@@ -1300,11 +1352,15 @@ function Landing({ onHome }) {
             welcome
           </span>
           <span ref={whoTextRef} className="circle-text">
-            {step === "contact" ? (
+            {step === "name" ? (
               "who are you?"
+            ) : step === "contact" ? (
+              "how do we reach you?"
+            ) : rejectionMode ? (
+              "this is the right place. that's not the right person"
             ) : (
               <>
-                who invited you to
+                who brought you to
                 <br />
                 the domain?
               </>
@@ -1328,20 +1384,37 @@ function Landing({ onHome }) {
         >
           <input
             className="waitlist-input"
-            type="text"
-            placeholder={step === "contact" ? "phone number" : "name..."}
-            value={step === "contact" ? contact : referrer}
+            type={step === "contact" ? "tel" : "text"}
+            placeholder={
+              step === "name"
+                ? "your name"
+                : step === "contact"
+                  ? "phone number"
+                  : "name..."
+            }
+            value={
+              step === "name" ? name : step === "contact" ? contact : referrer
+            }
             onChange={(e) =>
-              step === "contact"
-                ? setContact(e.target.value)
-                : setReferrer(e.target.value)
+              step === "name"
+                ? setName(e.target.value)
+                : step === "contact"
+                  ? setContact(e.target.value)
+                  : setReferrer(e.target.value)
             }
           />
           <div ref={lineRef} className="welcome-line" />
           <button
-            type={step === "referral" ? "button" : "submit"}
-            onClick={step === "referral" ? handlePowerPress : undefined}
-            className={`submit-btn${showSubmit ? " visible" : ""}${step === "referral" ? " submit-btn--power" : ""}`}
+            type="submit"
+            onClick={
+              step === "referral"
+                ? (e) => {
+                    e.preventDefault();
+                    triggerPower();
+                  }
+                : undefined
+            }
+            className={`submit-btn${showSubmit ? " visible" : ""}${step === "referral" ? " submit-btn--power" : ""}${isPressing ? " is-pressing" : ""}`}
           >
             {step === "referral" ? <PowerIcon /> : "enter"}
           </button>

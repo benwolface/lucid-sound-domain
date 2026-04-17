@@ -43,9 +43,16 @@ export function apiTrackEvent({ type, properties }) {
   });
 }
 
-export function apiJoinWaitlist({ contact }) {
+export function apiJoinWaitlist({ name, contact, referredBy }) {
   return apiRequest("/waitlist", {
     method: "POST",
-    body: JSON.stringify({ contact })
+    body: JSON.stringify({ name, contact, referredBy: referredBy || undefined })
+  });
+}
+
+export function apiCheckReferrer({ name }) {
+  return apiRequest("/waitlist/check-referrer", {
+    method: "POST",
+    body: JSON.stringify({ name })
   });
 }

@@ -12,6 +12,7 @@
     "prisma:migrate": "node -e \"console.log('Prisma removed from preview API')\""
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.103.3",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",

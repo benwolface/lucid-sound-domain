@@ -1,4 +1,10 @@
 const { randomUUID } = require("node:crypto");
+const { createClient } = require("@supabase/supabase-js");
+
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_ANON_KEY
+);
 
 function createStore() {
   return {
@@ -8,6 +14,7 @@ function createStore() {
     sessionsByTokenHash: new Map(),
     waitlistByEmail: new Map(),
     waitlistByPhone: new Map(),
+    waitlistByName: new Map(),
     events: []
   };
 }
@@ -126,9 +133,10 @@ async function findWaitlistEntry({ email = null, phone = null }) {
   return null;
 }
 
-async function createWaitlistEntry({ email = null, phone = null }) {
+async function createWaitlistEntry({ name = null, email = null, phone = null }) {
   const entry = {
     id: randomUUID(),
+    name,
     email,
     phone,
     createdAt: new Date(),
@@ -137,18 +145,68 @@ async function createWaitlistEntry({ email = null, phone = null }) {
 
   if (email) store.waitlistByEmail.set(email, entry);
   if (phone) store.waitlistByPhone.set(phone, entry);
+  if (name) store.waitlistByName.set(name.toLowerCase().trim(), entry);
   return entry;
+}
+
+async function findWaitlistEntryByName(name) {
+  return store.waitlistByName.get(name.toLowerCase().trim()) ?? null;
+}
+
+// ---------- Participants (Supabase) ----------
+
+async function findParticipant({ name, phone }) {
+  const { data } = await supabase
+    .from("participants")
+    .select("id, name, phone_number, referrals, referred_by")
+    .eq("phone_number", phone)
+    .ilike("name", name)
+    .maybeSingle();
+  return data ?? null;
+}
+
+async function findParticipantByPhone(phone) {
+  const { data } = await supabase
+    .from("participants")
+    .select("id, name, phone_number, referrals, referred_by")
+    .eq("phone_number", phone)
+    .maybeSingle();
+  return data ?? null;
+}
+
+async function findParticipantByName(name) {
+  const { data } = await supabase
+    .from("participants")
+    .select("id, name")
+    .ilike("name", name)
+    .maybeSingle();
+  return data ?? null;
+}
+
+async function createParticipant({ name, phone, referredBy = null }) {
+  const { data, error } = await supabase
+    .from("participants")
+    .insert({ name, phone_number: phone, referred_by: referredBy })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
 }
 
 module.exports = {
   attachVisitorUser,
   createEvent,
+  createParticipant,
   createSession,
   createWaitlistEntry,
   deleteSessionByTokenHash,
   ensureVisitor,
+  findParticipant,
+  findParticipantByName,
+  findParticipantByPhone,
   findSessionWithUser,
   findVisitorById,
   findWaitlistEntry,
+  findWaitlistEntryByName,
   upsertUser
 };
