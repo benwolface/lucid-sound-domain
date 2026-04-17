@@ -395,6 +395,25 @@ body {
   transform: translateY(1px);
 }
 
+/* ── Back button ── */
+.back-btn {
+  margin-top: 10px;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.3);
+  font-family: inherit;
+  font-size: 0.55rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  cursor: pointer;
+  padding: 4px 8px;
+  transition: color 0.2s ease;
+}
+
+.back-btn:hover {
+  color: rgba(255, 255, 255, 0.65);
+}
+
 .circle-text {
   line-height: 1.4;
   width: min(80%, 260px);

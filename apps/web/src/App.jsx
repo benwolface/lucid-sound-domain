@@ -970,6 +970,39 @@ function Landing({ onHome }) {
   const [isPressing, setIsPressing] = useState(false);
   const [rejectionMode, setRejectionMode] = useState(false);
 
+  // ── Back: return to previous step ──
+  function handleBack() {
+    setRejectionMode(false);
+    if (step === "name" || step === "returning") {
+      // Restore "welcome" in the circle and go back to arrival buttons
+      const wqEl = whoTextRef.current;
+      if (wqEl) {
+        wqEl.style.transition = "opacity 0.35s ease, transform 0.35s ease";
+        wqEl.style.opacity = "0";
+        wqEl.style.transform = "translateY(-10px)";
+      }
+      const wtEl = welcomeTextRef.current;
+      setTimeout(() => {
+        setStep("arrival");
+        if (wtEl) {
+          wtEl.style.opacity = "0";
+          wtEl.style.transform = "translateY(10px)";
+          requestAnimationFrame(() =>
+            requestAnimationFrame(() => {
+              wtEl.style.transition = "opacity 0.5s ease, transform 0.5s ease";
+              wtEl.style.opacity = "1";
+              wtEl.style.transform = "translateY(0)";
+            }),
+          );
+        }
+      }, 350);
+    } else if (step === "contact") {
+      fadeToStep("name");
+    } else if (step === "referral") {
+      fadeToStep("contact");
+    }
+  }
+
   function handleRejection(type = "referral") {
     const whoEl = whoTextRef.current;
     if (!whoEl) return;
@@ -1525,6 +1558,9 @@ function Landing({ onHome }) {
                 }
               />
               <div ref={lineRef} className="welcome-line" />
+              <button type="button" className="back-btn" onClick={handleBack}>
+                ← back
+              </button>
               <button
                 type="submit"
                 onClick={
