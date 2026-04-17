@@ -387,6 +387,7 @@ body {
   scroll-behavior: smooth;
   background: #000;
   scroll-snap-type: y mandatory;
+  scrollbar-gutter: stable;
 }
 
 /* Background stays fixed as sections scroll past */
@@ -1546,6 +1547,11 @@ body {
   /* Home first-view chevron above mobile nav bar */
   .scroll-hint {
     bottom: calc(62px + env(safe-area-inset-bottom));
+  }
+
+  /* Footer clears the mobile nav bar */
+  .home-fixed-footer {
+    bottom: calc(58px + env(safe-area-inset-bottom) + 12px);
   }
 
   /* Artist statement: no sidebar offset on mobile */

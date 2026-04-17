@@ -1,3 +1,4 @@
+require("dotenv").config();
 const { createApp } = require("./app");
 
 // PORT is injected by Railway/Render; API_PORT for local dev

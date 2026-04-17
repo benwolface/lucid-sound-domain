@@ -193,7 +193,13 @@ function Home() {
             >
               <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
               <circle cx="12" cy="12" r="4" />
-              <circle cx="17.5" cy="6.5" r="0.6" fill="currentColor" stroke="none" />
+              <circle
+                cx="17.5"
+                cy="6.5"
+                r="0.6"
+                fill="currentColor"
+                stroke="none"
+              />
             </svg>
           </a>
         </div>
@@ -217,8 +223,8 @@ function Home() {
                 <h2 className="j-animate j-section-heading">Understand</h2>
                 <p className="j-animate j-domain-intro">
                   The Lucid Sound Domain is an intimate, deep listening dance
-                  floor that requires nothing from you except your presence. This
-                  is:
+                  floor that requires nothing from you except your presence.
+                  This is:
                 </p>
                 <div className="j-animate j-space-list">
                   <ul>
@@ -290,7 +296,7 @@ function Home() {
               <p className="j-attend-slot">
                 9:30 - 10:30p - Low-end Ritual (Movement)
               </p>
-              <p className="j-attend-note">dance release expression</p>
+              <p className="j-attend-note">dance release express</p>
             </div>
           </section>
 
@@ -333,10 +339,7 @@ function Home() {
 
       {/* ── Artist statement + footer — snaps as its own final screen ── */}
       <div id="j-outro" className="j-outro">
-        <div
-          className="j-artist-statement-wrap"
-          aria-label="Artist statement"
-        >
+        <div className="j-artist-statement-wrap" aria-label="Artist statement">
           <img
             src="/artist-statement.jpg"
             alt="Artist statement"
@@ -353,10 +356,24 @@ function Home() {
             rel="noopener noreferrer"
             className="home-footer-ig"
           >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: 16, height: 16 }}>
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              style={{ width: 16, height: 16 }}
+            >
               <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
               <circle cx="12" cy="12" r="4" />
-              <circle cx="17.5" cy="6.5" r="0.6" fill="currentColor" stroke="none" />
+              <circle
+                cx="17.5"
+                cy="6.5"
+                r="0.6"
+                fill="currentColor"
+                stroke="none"
+              />
             </svg>
           </a>
           <p className="home-footer-tagline">remain present</p>
@@ -908,11 +925,13 @@ function Landing({ onHome }) {
         return;
       }
       await apiJoinWaitlist({ name, contact, referredBy: referrer.trim() });
+      setIsPressing(false);
+      handlePowerPress();
     } catch {
-      /* silent — still proceed */
+      // API error — treat as invalid referrer, don't let through
+      setIsPressing(false);
+      handleRejection();
     }
-    setIsPressing(false);
-    handlePowerPress();
   }
 
   function handleSubmit(e) {
