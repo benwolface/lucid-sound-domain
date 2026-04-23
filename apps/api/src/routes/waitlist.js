@@ -45,7 +45,12 @@ function waitlistRouter() {
       return res.status(400).json({ error: "Please enter a valid phone number." });
     }
 
-    const phone = contact.replace(/\s/g, "");
+    // Normalize to E.164 — strip everything except digits and leading +
+    let phone = contact.replace(/[\s\-().]/g, "");
+    // If it's a 10-digit US number with no country code, prepend +1
+    if (/^\d{10}$/.test(phone)) phone = "+1" + phone;
+    // If it starts with 1 and is 11 digits, add the +
+    else if (/^1\d{10}$/.test(phone)) phone = "+" + phone;
 
     try {
       // If name + phone both match an existing row, they're already in — skip referral entirely

@@ -207,6 +207,32 @@ async function createParticipant({ name, phone, referredBy = null }) {
   return data;
 }
 
+async function getAllParticipants() {
+  const { data, error } = await supabase
+    .from("participants")
+    .select("id, name, phone_number, referral_code, referred_by, created_at")
+    .order("created_at", { ascending: true });
+  if (error) throw error;
+  return data ?? [];
+}
+
+async function logBlast({ message, sent, failed, total, dryRun, results }) {
+  const { error } = await supabase
+    .from("blast_logs")
+    .insert({ message, sent, failed, total, dry_run: dryRun, results });
+  if (error) console.error("[logBlast]", error);
+}
+
+async function getBlastLogs() {
+  const { data, error } = await supabase
+    .from("blast_logs")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .limit(50);
+  if (error) throw error;
+  return data ?? [];
+}
+
 module.exports = {
   attachVisitorUser,
   createEvent,
@@ -223,5 +249,8 @@ module.exports = {
   findVisitorById,
   findWaitlistEntry,
   findWaitlistEntryByName,
+  getAllParticipants,
+  getBlastLogs,
+  logBlast,
   upsertUser
 };

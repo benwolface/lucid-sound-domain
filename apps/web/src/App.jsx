@@ -23,9 +23,13 @@ export default function App() {
   const [screen, setScreen] = useState("landing");
   const [referralCode, setReferralCode] = useState(null);
   if (screen === "home") return <Home referralCode={referralCode} />;
+  if (screen === "domain") return <DomainScreen onBack={() => setScreen("landing")} />;
   return (
     <div className="app">
-      <Landing onHome={(code) => { setReferralCode(code ?? null); setScreen("home"); }} />
+      <Landing
+        onHome={(code) => { setReferralCode(code ?? null); setScreen("home"); }}
+        onDomainScreen={() => setScreen("domain")}
+      />
     </div>
   );
 }
@@ -811,12 +815,74 @@ function InviteLinkButton({ referralCode }) {
   );
 }
 
+const DOMAIN_MESSAGE =
+  "hello.....can you hear me through the portal......is anyone there...........if you can, im leaving instructions on how to find me. when you arrive text or call (408) 409-4482 or +1 (408) 821-2952 to enter. the first portal will close promptly at 8pm. if you plan to arrive past 8pm the next portal window is at 9pm......";
+
+function DomainScreen({ onBack }) {
+  const [visible, setVisible] = useState(false);
+  const [displayed, setDisplayed] = useState("");
+  const [showCursor, setShowCursor] = useState(true);
+  const indexRef = useRef(0);
+  const timeoutRef = useRef(null);
+
+  useEffect(() => {
+    const t = setTimeout(() => setVisible(true), 80);
+    return () => clearTimeout(t);
+  }, []);
+
+  // Start typing after fade-in settles
+  useEffect(() => {
+    if (!visible) return;
+
+    function typeNext() {
+      if (indexRef.current >= DOMAIN_MESSAGE.length) {
+        // Done — blink cursor a few times then hide it
+        setTimeout(() => setShowCursor(false), 2800);
+        return;
+      }
+
+      const char = DOMAIN_MESSAGE[indexRef.current];
+      indexRef.current += 1;
+      setDisplayed(DOMAIN_MESSAGE.slice(0, indexRef.current));
+
+      // Variable delay: slower on dots/spaces for dramatic pauses, faster on regular chars
+      const prev = DOMAIN_MESSAGE[indexRef.current - 2];
+      let delay = 42 + Math.random() * 35; // base ~42-77ms
+      if (char === ".") delay = 320 + Math.random() * 180;
+      else if (char === " " && prev === ".") delay = 600 + Math.random() * 400; // long pause after dot runs
+      else if (char === " ") delay = 60 + Math.random() * 35;
+      else if (char === ",") delay = 180 + Math.random() * 80;
+
+      timeoutRef.current = setTimeout(typeNext, delay);
+    }
+
+    const startDelay = setTimeout(typeNext, 900);
+    return () => {
+      clearTimeout(startDelay);
+      clearTimeout(timeoutRef.current);
+    };
+  }, [visible]);
+
+  return (
+    <div className={`domain-screen${visible ? " is-visible" : ""}`}>
+      <div className="domain-screen-glow" />
+      <div className="domain-screen-content">
+        <p className="domain-screen-text">
+          {displayed}
+          {showCursor && <span className="domain-cursor">|</span>}
+        </p>
+      </div>
+      <button className="domain-screen-back" onClick={onBack}>← back</button>
+    </div>
+  );
+}
+
 function isContactReady(value) {
   const digits = value.replace(/\D/g, "");
   return digits.length >= 10 || value.includes(".com");
 }
 
-function Landing({ onHome }) {
+function Landing({ onHome, onDomainScreen }) {
   const [bg] = useState(
     () =>
       LANDING_BACKGROUNDS[
@@ -1111,7 +1177,7 @@ function Landing({ onHome }) {
   }
 
   // ── Power button: full shutdown sequence ──
-  function handlePowerPress(referralCode) {
+  function handlePowerPress(referralCode, onComplete = null) {
     // 1 — fade out everything except the circle
     const fadeEls = [
       bgSlideRef.current,
@@ -1198,8 +1264,8 @@ function Landing({ onHome }) {
       });
     }
 
-    // 6 — navigate to home after holding white for 0.5s
-    setTimeout(() => onHome(referralCode), 5200);
+    // 6 — navigate after holding white for 0.5s
+    setTimeout(() => (onComplete ? onComplete() : onHome(referralCode)), 5200);
   }
 
   // ── Intro animation ──
@@ -1555,6 +1621,13 @@ function Landing({ onHome }) {
                 onClick={handleArrivalReturning}
               >
                 returning
+              </button>
+              <button
+                type="button"
+                className="arrival-btn arrival-btn--here"
+                onClick={() => handlePowerPress(null, onDomainScreen)}
+              >
+                i'm here
               </button>
             </div>
           ) : (

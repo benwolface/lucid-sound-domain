@@ -10,6 +10,8 @@ const { trackRouter } = require("./routes/track");
 const { meRouter } = require("./routes/me");
 const { healthRouter } = require("./routes/health");
 const { waitlistRouter } = require("./routes/waitlist");
+const { adminRouter } = require("./routes/admin");
+const { adminPortalRouter } = require("./routes/adminPortal");
 
 dotenv.config();
 
@@ -41,6 +43,8 @@ function createApp() {
   app.use("/api/track", trackRouter());
   app.use("/api/me", meRouter());
   app.use("/api/waitlist", waitlistRouter());
+  app.use("/api/admin", adminRouter());
+  app.use("/admin", adminPortalRouter());
 
   // Basic 404
   app.use((req, res) => {

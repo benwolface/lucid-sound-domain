@@ -1,0 +1,507 @@
+const { Router } = require("express");
+
+const HTML = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LSD Admin</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #0a0a0a;
+      color: #e5e5e5;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    #app { width: 100%; max-width: 640px; }
+
+    /* LOGIN */
+    #login { text-align: center; }
+    #login h1 { font-size: 1.5rem; font-weight: 600; margin-bottom: 8px; }
+    #login p { color: #888; margin-bottom: 24px; font-size: 0.9rem; }
+    .input {
+      width: 100%;
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      border-radius: 8px;
+      color: #e5e5e5;
+      padding: 12px 14px;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .input:focus { border-color: #555; }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      padding: 11px 20px;
+      border-radius: 8px;
+      border: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn-primary { background: #e5e5e5; color: #0a0a0a; }
+    .btn-primary:hover:not(:disabled) { opacity: 0.85; }
+    .btn-danger { background: #dc2626; color: #fff; }
+    .btn-danger:hover:not(:disabled) { opacity: 0.85; }
+    .btn-ghost {
+      background: transparent;
+      border: 1px solid #2a2a2a;
+      color: #aaa;
+    }
+    .btn-ghost:hover:not(:disabled) { border-color: #555; color: #e5e5e5; }
+    #login .input { margin-bottom: 12px; }
+    #login .btn { width: 100%; }
+    .error-msg { color: #f87171; font-size: 0.85rem; margin-top: 8px; }
+
+    /* MAIN */
+    #main { display: none; }
+    .header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 28px;
+    }
+    .header h1 { font-size: 1.25rem; font-weight: 600; }
+
+    .section {
+      background: #111;
+      border: 1px solid #1e1e1e;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .section-title {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #666;
+    }
+    .selection-controls { display: flex; align-items: center; gap: 10px; }
+    .link-btn {
+      background: none; border: none; color: #aaa;
+      font-size: 0.8rem; cursor: pointer; padding: 0;
+      text-decoration: underline; text-underline-offset: 2px;
+    }
+    .link-btn:hover { color: #e5e5e5; }
+
+    /* PARTICIPANTS */
+    .participant-list { max-height: 260px; overflow-y: auto; }
+    .participant-list::-webkit-scrollbar { width: 4px; }
+    .participant-list::-webkit-scrollbar-track { background: transparent; }
+    .participant-list::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
+    .participant-row {
+      display: flex; align-items: center; gap: 12px;
+      padding: 9px 0; border-bottom: 1px solid #1a1a1a;
+      font-size: 0.88rem; cursor: pointer; user-select: none;
+    }
+    .participant-row:last-child { border-bottom: none; }
+    .participant-row:hover { background: #161616; margin: 0 -20px; padding-left: 20px; padding-right: 20px; }
+    .participant-row.deselected { opacity: 0.35; }
+    .participant-name { color: #e5e5e5; flex: 1; }
+    .participant-phone { color: #666; font-family: monospace; font-size: 0.82rem; }
+    .cb {
+      width: 16px; height: 16px; border: 1.5px solid #444;
+      border-radius: 4px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.1s, border-color 0.1s;
+    }
+    .cb.checked { background: #e5e5e5; border-color: #e5e5e5; }
+    .cb.checked::after {
+      content: ""; width: 9px; height: 5px;
+      border-left: 1.5px solid #0a0a0a; border-bottom: 1.5px solid #0a0a0a;
+      transform: rotate(-45deg) translateY(-1px);
+    }
+    .count-badge {
+      display: inline-block; background: #1e1e1e;
+      border-radius: 20px; padding: 2px 10px;
+      font-size: 0.8rem; color: #aaa; margin-left: 6px;
+    }
+
+    /* MESSAGE */
+    textarea.input { resize: vertical; min-height: 100px; line-height: 1.5; }
+    .char-count { text-align: right; font-size: 0.78rem; color: #666; margin-top: 6px; }
+    .char-count.warn { color: #f59e0b; }
+    .char-count.over { color: #f87171; }
+    .actions { display: flex; gap: 10px; margin-top: 14px; }
+    .actions .btn { flex: 1; }
+
+    /* RESULTS */
+    #results { display: none; }
+    .result-summary { display: flex; gap: 16px; margin-bottom: 14px; }
+    .stat { flex: 1; background: #1a1a1a; border-radius: 8px; padding: 12px; text-align: center; }
+    .stat-num { font-size: 1.5rem; font-weight: 700; }
+    .stat-label { font-size: 0.75rem; color: #666; margin-top: 2px; }
+    .stat.success .stat-num { color: #4ade80; }
+    .stat.failure .stat-num { color: #f87171; }
+    .result-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 7px 0; border-bottom: 1px solid #1a1a1a; font-size: 0.85rem;
+    }
+    .result-row:last-child { border-bottom: none; }
+    .badge { font-size: 0.72rem; padding: 2px 8px; border-radius: 20px; font-weight: 500; }
+    .badge.sent { background: #14532d; color: #4ade80; }
+    .badge.failed { background: #450a0a; color: #f87171; }
+    .badge.dry { background: #1e3a5f; color: #60a5fa; }
+    .result-list { max-height: 200px; overflow-y: auto; }
+
+    /* ARCHIVE */
+    #archive { }
+    .archive-empty { color: #666; font-size: 0.9rem; }
+    .archive-entry {
+      border: 1px solid #1e1e1e;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      overflow: hidden;
+    }
+    .archive-entry:last-child { margin-bottom: 0; }
+    .archive-summary {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 14px; cursor: pointer;
+      background: #161616;
+    }
+    .archive-summary:hover { background: #1c1c1c; }
+    .archive-meta { flex: 1; min-width: 0; }
+    .archive-msg {
+      font-size: 0.88rem; color: #e5e5e5;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .archive-time { font-size: 0.75rem; color: #555; margin-top: 2px; }
+    .archive-stats { display: flex; gap: 8px; flex-shrink: 0; }
+    .archive-stat { font-size: 0.75rem; padding: 2px 8px; border-radius: 20px; }
+    .archive-stat.s { background: #14532d; color: #4ade80; }
+    .archive-stat.f { background: #450a0a; color: #f87171; }
+    .archive-chevron { color: #444; font-size: 0.75rem; transition: transform 0.2s; flex-shrink: 0; }
+    .archive-entry.open .archive-chevron { transform: rotate(90deg); }
+    .archive-detail {
+      display: none; padding: 0 14px 12px;
+      background: #0e0e0e;
+    }
+    .archive-entry.open .archive-detail { display: block; }
+    .archive-full-msg {
+      font-size: 0.85rem; color: #aaa; line-height: 1.5;
+      padding: 10px 0 10px; border-bottom: 1px solid #1a1a1a;
+      white-space: pre-wrap; word-break: break-word;
+    }
+
+    .spinner {
+      display: inline-block; width: 14px; height: 14px;
+      border: 2px solid #444; border-top-color: #e5e5e5;
+      border-radius: 50%; animation: spin 0.6s linear infinite; margin-right: 6px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+<div id="app">
+
+  <!-- LOGIN -->
+  <div id="login">
+    <h1>LSD Admin</h1>
+    <p>Enter your admin secret to continue.</p>
+    <input id="secret-input" class="input" type="password" placeholder="Admin secret" />
+    <div id="login-error" class="error-msg"></div>
+    <br/>
+    <button class="btn btn-primary" onclick="doLogin()">Unlock</button>
+  </div>
+
+  <!-- MAIN -->
+  <div id="main">
+    <div class="header">
+      <h1>LSD Admin</h1>
+      <button class="btn btn-ghost" style="font-size:0.8rem;padding:7px 12px" onclick="doLogout()">Log out</button>
+    </div>
+
+    <!-- PARTICIPANTS -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">
+          Recipients
+          <span id="selected-badge" class="count-badge">0 selected</span>
+        </div>
+        <div class="selection-controls">
+          <button class="link-btn" onclick="selectAll()">Select all</button>
+          <button class="link-btn" onclick="selectNone()">None</button>
+        </div>
+      </div>
+      <div id="participants-loading" style="color:#666;font-size:0.9rem">Loading...</div>
+      <div id="participant-list" class="participant-list"></div>
+    </div>
+
+    <!-- COMPOSE -->
+    <div class="section">
+      <div class="section-title">Message</div>
+      <textarea id="message" class="input" placeholder="Type your message here…" oninput="updateCharCount()"></textarea>
+      <div id="char-count" class="char-count">0 / 160</div>
+      <div class="actions">
+        <button class="btn btn-ghost" onclick="doBlast(true)">Dry Run</button>
+        <button class="btn btn-danger" onclick="confirmBlast()">Send Blast</button>
+      </div>
+    </div>
+
+    <!-- RESULTS -->
+    <div class="section" id="results">
+      <div class="section-title" id="results-title">Results</div>
+      <div class="result-summary">
+        <div class="stat success"><div class="stat-num" id="stat-sent">—</div><div class="stat-label">Sent</div></div>
+        <div class="stat failure"><div class="stat-num" id="stat-failed">—</div><div class="stat-label">Failed</div></div>
+        <div class="stat"><div class="stat-num" id="stat-total">—</div><div class="stat-label">Total</div></div>
+      </div>
+      <div class="result-list" id="result-list"></div>
+    </div>
+
+    <!-- ARCHIVE -->
+    <div class="section" id="archive">
+      <div class="section-header">
+        <div class="section-title">Blast Archive</div>
+        <button class="link-btn" onclick="loadArchive()">Refresh</button>
+      </div>
+      <div id="archive-content"><div class="archive-empty">Loading...</div></div>
+    </div>
+  </div>
+
+</div>
+<script>
+  let adminSecret = sessionStorage.getItem("lsd_admin_secret") || "";
+  let allParticipants = [];
+  let selected = new Set();
+
+  if (adminSecret) tryAutoLogin();
+
+  async function tryAutoLogin() {
+    const ok = await verifySecret(adminSecret);
+    if (ok) showMain();
+  }
+
+  async function verifySecret(secret) {
+    try {
+      const r = await fetch("/api/admin/participants", { headers: { "x-admin-secret": secret } });
+      return r.ok;
+    } catch { return false; }
+  }
+
+  async function doLogin() {
+    const secret = document.getElementById("secret-input").value.trim();
+    if (!secret) return;
+    const ok = await verifySecret(secret);
+    if (!ok) { document.getElementById("login-error").textContent = "Invalid secret."; return; }
+    adminSecret = secret;
+    sessionStorage.setItem("lsd_admin_secret", secret);
+    showMain();
+  }
+
+  document.getElementById("secret-input").addEventListener("keydown", e => {
+    if (e.key === "Enter") doLogin();
+  });
+
+  function doLogout() {
+    sessionStorage.removeItem("lsd_admin_secret");
+    adminSecret = "";
+    document.getElementById("main").style.display = "none";
+    document.getElementById("login").style.display = "block";
+    document.getElementById("secret-input").value = "";
+  }
+
+  function showMain() {
+    document.getElementById("login").style.display = "none";
+    document.getElementById("main").style.display = "block";
+    loadParticipants();
+    loadArchive();
+  }
+
+  async function loadParticipants() {
+    const res = await fetch("/api/admin/participants", { headers: { "x-admin-secret": adminSecret } });
+    const data = await res.json();
+    document.getElementById("participants-loading").style.display = "none";
+    allParticipants = data.participants || [];
+    selected = new Set(allParticipants.map(p => p.phone_number));
+    renderParticipants();
+  }
+
+  function renderParticipants() {
+    const list = document.getElementById("participant-list");
+    if (!allParticipants.length) {
+      list.innerHTML = '<p style="color:#666;font-size:0.9rem">No participants yet.</p>';
+      return;
+    }
+    list.innerHTML = allParticipants.map(p => \`
+      <div class="participant-row \${selected.has(p.phone_number) ? "" : "deselected"}"
+           onclick="toggleParticipant('\${esc(p.phone_number)}')"
+           data-phone="\${esc(p.phone_number)}">
+        <div class="cb \${selected.has(p.phone_number) ? "checked" : ""}"></div>
+        <span class="participant-name">\${esc(p.name)}</span>
+        <span class="participant-phone">\${esc(p.phone_number)}</span>
+      </div>
+    \`).join("");
+    updateSelectedBadge();
+  }
+
+  function toggleParticipant(phone) {
+    if (selected.has(phone)) selected.delete(phone);
+    else selected.add(phone);
+    const row = document.querySelector(\`.participant-row[data-phone="\${CSS.escape(phone)}"]\`);
+    if (row) {
+      const isSelected = selected.has(phone);
+      row.classList.toggle("deselected", !isSelected);
+      row.querySelector(".cb").classList.toggle("checked", isSelected);
+    }
+    updateSelectedBadge();
+  }
+
+  function selectAll() { selected = new Set(allParticipants.map(p => p.phone_number)); renderParticipants(); }
+  function selectNone() { selected = new Set(); renderParticipants(); }
+  function updateSelectedBadge() { document.getElementById("selected-badge").textContent = selected.size + " selected"; }
+
+  function updateCharCount() {
+    const len = document.getElementById("message").value.length;
+    const el = document.getElementById("char-count");
+    const segments = Math.ceil(len / 160) || 1;
+    el.textContent = len + " chars" + (segments > 1 ? " (" + segments + " SMS segments)" : " / 160");
+    el.className = "char-count" + (len > 320 ? " over" : len > 160 ? " warn" : "");
+  }
+
+  async function doBlast(dryRun = false) {
+    const message = document.getElementById("message").value.trim();
+    if (!message) { alert("Write a message first."); return; }
+    if (selected.size === 0) { alert("No recipients selected."); return; }
+
+    const btns = document.querySelectorAll(".actions .btn");
+    btns.forEach(b => { b.disabled = true; b.dataset.orig = b.textContent; b.innerHTML = '<span class="spinner"></span>' + b.textContent; });
+
+    const res = await fetch("/api/admin/blast", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-admin-secret": adminSecret },
+      body: JSON.stringify({ message, dryRun, phoneNumbers: [...selected] })
+    });
+    const data = await res.json();
+
+    btns.forEach(b => { b.disabled = false; b.textContent = b.dataset.orig; });
+
+    showResults(data, dryRun);
+    if (!dryRun) loadArchive();
+  }
+
+  function confirmBlast() {
+    const message = document.getElementById("message").value.trim();
+    if (!message) { alert("Write a message first."); return; }
+    if (selected.size === 0) { alert("No recipients selected."); return; }
+    if (confirm("Send to " + selected.size + " " + (selected.size === 1 ? "person" : "people") + "?\\n\\n\\"" + message + "\\"")) {
+      doBlast(false);
+    }
+  }
+
+  function showResults(data, dryRun) {
+    const el = document.getElementById("results");
+    el.style.display = "block";
+    el.scrollIntoView({ behavior: "smooth" });
+
+    if (dryRun) {
+      document.getElementById("results-title").textContent = "Dry Run — Recipients";
+      document.getElementById("stat-sent").textContent = "—";
+      document.getElementById("stat-failed").textContent = "—";
+      document.getElementById("stat-total").textContent = data.count ?? "—";
+      document.getElementById("result-list").innerHTML = (data.recipients || []).map(r => \`
+        <div class="result-row">
+          <span>\${esc(r.name)}</span>
+          <span style="display:flex;align-items:center;gap:8px">
+            <span style="color:#666;font-family:monospace;font-size:0.82rem">\${esc(r.phone)}</span>
+            <span class="badge dry">dry run</span>
+          </span>
+        </div>
+      \`).join("");
+      return;
+    }
+
+    document.getElementById("results-title").textContent = "Blast Results";
+    document.getElementById("stat-sent").textContent = data.sent ?? "—";
+    document.getElementById("stat-failed").textContent = data.failed ?? "—";
+    document.getElementById("stat-total").textContent = data.total ?? "—";
+    document.getElementById("result-list").innerHTML = (data.results || []).map(r => \`
+      <div class="result-row">
+        <span>\${esc(r.name)}</span>
+        <span style="display:flex;align-items:center;gap:8px">
+          <span style="color:#666;font-family:monospace;font-size:0.82rem">\${esc(r.phone)}</span>
+          <span class="badge \${r.status}">\${r.status}</span>
+        </span>
+      </div>
+    \`).join("");
+  }
+
+  async function loadArchive() {
+    const res = await fetch("/api/admin/blasts", { headers: { "x-admin-secret": adminSecret } });
+    const data = await res.json();
+    const el = document.getElementById("archive-content");
+
+    if (!data.logs?.length) {
+      el.innerHTML = '<div class="archive-empty">No blasts sent yet.</div>';
+      return;
+    }
+
+    el.innerHTML = data.logs.map((log, i) => \`
+      <div class="archive-entry" id="arc-\${i}">
+        <div class="archive-summary" onclick="toggleArchive(\${i})">
+          <div class="archive-meta">
+            <div class="archive-msg">\${esc(log.message)}</div>
+            <div class="archive-time">\${fmtDate(log.created_at)}</div>
+          </div>
+          <div class="archive-stats">
+            <span class="archive-stat s">\${log.sent} sent</span>
+            \${log.failed > 0 ? \`<span class="archive-stat f">\${log.failed} failed</span>\` : ""}
+          </div>
+          <span class="archive-chevron">▶</span>
+        </div>
+        <div class="archive-detail">
+          <div class="archive-full-msg">\${esc(log.message)}</div>
+          \${(log.results || []).map(r => \`
+            <div class="result-row">
+              <span>\${esc(r.name)}</span>
+              <span style="display:flex;align-items:center;gap:8px">
+                <span style="color:#666;font-family:monospace;font-size:0.82rem">\${esc(r.phone)}</span>
+                <span class="badge \${r.status}">\${r.status}</span>
+              </span>
+            </div>
+          \`).join("")}
+        </div>
+      </div>
+    \`).join("");
+  }
+
+  function toggleArchive(i) {
+    document.getElementById("arc-" + i).classList.toggle("open");
+  }
+
+  function fmtDate(iso) {
+    const d = new Date(iso);
+    return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+      + " at " + d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+  }
+
+  function esc(s) {
+    return String(s ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  }
+</script>
+</body>
+</html>`;
+
+function adminPortalRouter() {
+  const router = Router();
+  router.get("/", (req, res) => {
+    res.setHeader("Content-Type", "text/html");
+    res.send(HTML);
+  });
+  return router;
+}
+
+module.exports = { adminPortalRouter };
