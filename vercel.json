@@ -3,14 +3,16 @@
   "outputDirectory": "dist",
   "installCommand": "npm install",
   "framework": null,
-  "rewrites": [
+  "routes": [
     {
-      "source": "/api/:path*",
-      "destination": "https://lucid-sound-domain-api-lucidsounddomain.vercel.app/api/:path*"
+      "src": "/api/(.*)",
+      "dest": "https://lucid-sound-domain-api-lucidsounddomain.vercel.app/api/$1"
     },
     {
-      "source": "/admin",
-      "destination": "https://lucid-sound-domain-api-lucidsounddomain.vercel.app/admin"
-    }
+      "src": "/admin",
+      "dest": "https://lucid-sound-domain-api-lucidsounddomain.vercel.app/admin"
+    },
+    { "handle": "filesystem" },
+    { "src": "/(.*)", "dest": "/index.html" }
   ]
 }
