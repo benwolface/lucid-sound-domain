@@ -60,3 +60,7 @@ export function apiCheckReferrer({ name }) {
 export function apiLookupRefCode(code) {
   return apiRequest(`/waitlist/referral/${encodeURIComponent(code)}`);
 }
+
+export function apiGetSettings() {
+  return apiRequest("/settings");
+}

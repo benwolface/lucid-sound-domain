@@ -138,6 +138,32 @@ const HTML = `<!DOCTYPE html>
     .actions { display: flex; gap: 10px; margin-top: 14px; }
     .actions .btn { flex: 1; }
 
+    /* TOGGLE */
+    .toggle-row {
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .toggle-label { font-size: 0.9rem; color: #e5e5e5; }
+    .toggle-sub { font-size: 0.78rem; color: #666; margin-top: 3px; }
+    .toggle-switch {
+      position: relative; width: 44px; height: 24px; flex-shrink: 0;
+    }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .toggle-track {
+      position: absolute; inset: 0; background: #2a2a2a;
+      border-radius: 99px; cursor: pointer;
+      transition: background 0.2s ease;
+    }
+    .toggle-track::before {
+      content: ""; position: absolute;
+      width: 18px; height: 18px; border-radius: 50%;
+      background: #666; top: 3px; left: 3px;
+      transition: transform 0.2s ease, background 0.2s ease;
+    }
+    .toggle-switch input:checked + .toggle-track { background: #1a3a12; }
+    .toggle-switch input:checked + .toggle-track::before {
+      background: #4ade80; transform: translateX(20px);
+    }
+
     /* RESULTS */
     #results { display: none; }
     .result-summary { display: flex; gap: 16px; margin-bottom: 14px; }
@@ -222,6 +248,21 @@ const HTML = `<!DOCTYPE html>
     <div class="header">
       <h1>LSD Admin</h1>
       <button class="btn btn-ghost" style="font-size:0.8rem;padding:7px 12px" onclick="doLogout()">Log out</button>
+    </div>
+
+    <!-- CONTROLS -->
+    <div class="section">
+      <div class="section-title" style="margin-bottom:14px">Controls</div>
+      <div class="toggle-row">
+        <div>
+          <div class="toggle-label">i'm here button</div>
+          <div class="toggle-sub">Show the arrival button on the landing page</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="im-here-toggle" onchange="setImHere(this.checked)" />
+          <span class="toggle-track"></span>
+        </label>
+      </div>
     </div>
 
     <!-- PARTICIPANTS -->
@@ -319,6 +360,21 @@ const HTML = `<!DOCTYPE html>
     document.getElementById("main").style.display = "block";
     loadParticipants();
     loadArchive();
+    loadSettings();
+  }
+
+  async function loadSettings() {
+    const res = await fetch("/api/admin/settings", { headers: { "x-admin-secret": adminSecret } });
+    const data = await res.json();
+    document.getElementById("im-here-toggle").checked = !!data.imHereEnabled;
+  }
+
+  async function setImHere(enabled) {
+    await fetch("/api/admin/settings", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-admin-secret": adminSecret },
+      body: JSON.stringify({ imHereEnabled: enabled })
+    });
   }
 
   async function loadParticipants() {

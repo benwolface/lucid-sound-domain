@@ -216,6 +216,23 @@ async function getAllParticipants() {
   return data ?? [];
 }
 
+async function getSettings() {
+  const { data, error } = await supabase
+    .from("app_settings")
+    .select("im_here_enabled")
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+async function updateImHereEnabled(enabled) {
+  const { error } = await supabase
+    .from("app_settings")
+    .update({ im_here_enabled: enabled })
+    .eq("id", true);
+  if (error) throw error;
+}
+
 async function logBlast({ message, sent, failed, total, dryRun, results }) {
   const { error } = await supabase
     .from("blast_logs")
@@ -251,6 +268,8 @@ module.exports = {
   findWaitlistEntryByName,
   getAllParticipants,
   getBlastLogs,
+  getSettings,
   logBlast,
+  updateImHereEnabled,
   upsertUser
 };

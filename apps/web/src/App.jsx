@@ -1,6 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { animate } from "animejs";
-import { apiJoinWaitlist, apiCheckReferrer, apiLookupRefCode } from "./lib/api";
+import {
+  apiJoinWaitlist,
+  apiCheckReferrer,
+  apiLookupRefCode,
+  apiGetSettings,
+} from "./lib/api";
 import "./styles.css";
 
 // ── Dev flag — skip the intro so the circle shows immediately ──
@@ -22,6 +27,14 @@ const HOME_BACKGROUNDS = [
 export default function App() {
   const [screen, setScreen] = useState("landing");
   const [referralCode, setReferralCode] = useState(null);
+  const [imHereEnabled, setImHereEnabled] = useState(false);
+
+  useEffect(() => {
+    apiGetSettings()
+      .then(({ imHereEnabled }) => setImHereEnabled(!!imHereEnabled))
+      .catch(() => {});
+  }, []);
+
   if (screen === "home") return <Home referralCode={referralCode} />;
   if (screen === "domain")
     return <DomainScreen onBack={() => setScreen("landing")} />;
@@ -33,6 +46,7 @@ export default function App() {
           setScreen("home");
         }}
         onDomainScreen={() => setScreen("domain")}
+        imHereEnabled={imHereEnabled}
       />
     </div>
   );
@@ -889,7 +903,7 @@ function isContactReady(value) {
   return digits.length >= 10 || value.includes(".com");
 }
 
-function Landing({ onHome, onDomainScreen }) {
+function Landing({ onHome, onDomainScreen, imHereEnabled }) {
   const [bg] = useState(
     () =>
       LANDING_BACKGROUNDS[
@@ -1636,13 +1650,15 @@ function Landing({ onHome, onDomainScreen }) {
               >
                 returning
               </button>
-              <button
-                type="button"
-                className="arrival-btn arrival-btn--here"
-                onClick={() => handlePowerPress(null, onDomainScreen)}
-              >
-                i'm here
-              </button>
+              {imHereEnabled && (
+                <button
+                  type="button"
+                  className="arrival-btn arrival-btn--here"
+                  onClick={() => handlePowerPress(null, onDomainScreen)}
+                >
+                  i'm here
+                </button>
+              )}
             </div>
           ) : (
             <>
