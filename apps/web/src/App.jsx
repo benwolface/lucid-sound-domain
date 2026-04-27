@@ -72,6 +72,7 @@ export default function App() {
         }}
         onDomainScreen={() => setScreen("domain")}
         imHereEnabled={imHereEnabled}
+        nextPortalDate={nextPortalDate}
       />
     </div>
   );
@@ -946,7 +947,7 @@ function isContactReady(value) {
   return digits.length >= 10 || value.includes(".com");
 }
 
-function Landing({ onHome, onDomainScreen, imHereEnabled }) {
+function Landing({ onHome, onDomainScreen, imHereEnabled, nextPortalDate }) {
   const [bg] = useState(
     () =>
       LANDING_BACKGROUNDS[
@@ -1003,6 +1004,7 @@ function Landing({ onHome, onDomainScreen, imHereEnabled }) {
   const domainTextRef = useRef(null);
   const initiatedTextRef = useRef(null);
   const flashOverlayRef = useRef(null);
+  const portalInfoRef = useRef(null);
 
   // ── Fade the circle text to a new step ──
   function fadeToStep(nextStep) {
@@ -1257,6 +1259,7 @@ function Landing({ onHome, onDomainScreen, imHereEnabled }) {
       ringRef.current,
       inputWrapRef.current,
       whoTextRef.current,
+      portalInfoRef.current,
     ].filter(Boolean);
 
     fadeEls.forEach((el) => {
@@ -1496,8 +1499,11 @@ function Landing({ onHome, onDomainScreen, imHereEnabled }) {
     logoTimeout = setTimeout(() => {
       const splashEl = splashRef.current;
       if (!splashEl) return;
-      const LOGO_SCALE = 0.28,
-        LOGO_TOP_PX = 32;
+      const LOGO_SCALE = 0.28;
+      const sat = parseFloat(
+        getComputedStyle(document.documentElement).getPropertyValue("--sat")
+      ) || 0;
+      const LOGO_TOP_PX = 32 + sat;
       const rect = splashEl.getBoundingClientRect();
       const targetTY =
         LOGO_TOP_PX +
@@ -1637,6 +1643,13 @@ function Landing({ onHome, onDomainScreen, imHereEnabled }) {
       </div>
 
       <div ref={welcomeRef} className="welcome-wrap">
+        {nextPortalDate && (
+          <div ref={portalInfoRef} className="landing-portal-info">
+            <p className="landing-portal-title">( Regulation )</p>
+            <p className="landing-portal-label">next portal opening on</p>
+            <p className="landing-portal-date">{fmtPortalDate(nextPortalDate)}</p>
+          </div>
+        )}
         <div ref={diskRef} className="accretion-disk" />
         <div ref={ringRef} className="welcome-ring" />
         <div className="welcome-circle">

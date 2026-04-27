@@ -6,6 +6,11 @@
   box-sizing: border-box;
 }
 
+:root {
+  --sat: env(safe-area-inset-top, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+}
+
 html,
 body {
   height: 100%;
@@ -147,7 +152,8 @@ body {
 
 .welcome-wrap {
   position: absolute;
-  top: 50%;
+  /* Center within the safe area (accounts for status bar + home indicator in standalone PWA) */
+  top: calc(var(--sat) + (100% - var(--sat) - var(--sab)) / 2);
   left: 50%;
   transform: translate(-50%, -50%);
   z-index: 3;
@@ -249,6 +255,7 @@ body {
   align-items: center;
   gap: 0;
   opacity: 0;
+  padding-bottom: var(--sab);
 }
 
 .waitlist-input {
@@ -1627,6 +1634,53 @@ body {
     padding: 24px 16px calc(24px + 58px + env(safe-area-inset-bottom));
     gap: 0;
   }
+}
+
+/* ── Portal info above the landing circle ── */
+.landing-portal-info {
+  position: absolute;
+  bottom: calc(100% + 28px);
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.landing-portal-title {
+  font-family: "Akira Expanded", sans-serif;
+  font-size: clamp(1.05rem, 5.6vw, 2rem);
+  letter-spacing: 0.16em;
+  color: rgba(255, 255, 255, 0.94);
+  line-height: 1.05;
+  margin: 0 0 14px 0;
+  text-shadow:
+    0 0 16px rgba(255, 255, 255, 0.78),
+    0 0 34px rgba(255, 255, 255, 0.42),
+    0 0 72px rgba(255, 255, 255, 0.22);
+}
+
+.landing-portal-label {
+  font-family: "Akira Expanded", sans-serif;
+  font-size: clamp(0.42rem, 2.2vw, 0.6rem);
+  letter-spacing: 0.22em;
+  color: rgba(255, 255, 255, 0.84);
+  text-transform: uppercase;
+  margin: 0 0 10px 0;
+  text-shadow:
+    0 0 8px rgba(255, 255, 255, 0.42),
+    0 0 18px rgba(255, 255, 255, 0.16);
+}
+
+.landing-portal-date {
+  font-family: "Excrallik", cursive;
+  font-size: clamp(0.95rem, 5vw, 1.7rem);
+  color: #8fef4a;
+  letter-spacing: 0.06em;
+  margin: 0;
+  text-shadow:
+    0 0 12px rgba(143, 239, 74, 0.65),
+    0 0 32px rgba(143, 239, 74, 0.28);
 }
 
 /* ── "i'm here" variant arrival button ── */
