@@ -1643,13 +1643,11 @@ function Landing({ onHome, onDomainScreen, imHereEnabled, nextPortalDate }) {
       </div>
 
       <div ref={welcomeRef} className="welcome-wrap">
-        {nextPortalDate && (
-          <div ref={portalInfoRef} className="landing-portal-info">
-            <p className="landing-portal-title">( Regulation )</p>
-            <p className="landing-portal-label">next portal opening on</p>
-            <p className="landing-portal-date">{fmtPortalDate(nextPortalDate)}</p>
-          </div>
-        )}
+        <div ref={portalInfoRef} className="landing-portal-info">
+          <p className="landing-portal-title">( Regulation )</p>
+          <p className="landing-portal-label">next portal opening on</p>
+          <p className="landing-portal-date">{nextPortalDate ? fmtPortalDate(nextPortalDate) : "date TBD"}</p>
+        </div>
         <div ref={diskRef} className="accretion-disk" />
         <div ref={ringRef} className="welcome-ring" />
         <div className="welcome-circle">
