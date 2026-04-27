@@ -155,12 +155,16 @@ body {
   /* Center within the safe area (accounts for status bar + home indicator in standalone PWA) */
   top: calc(var(--sat) + (100% - var(--sat) - var(--sab)) / 2);
   left: 50%;
-  --landing-content-offset-y: clamp(58px, 8svh, 104px);
+  --landing-content-offset-y: 0px;
   transform: translate(-50%, calc(-50% + var(--landing-content-offset-y)));
   z-index: 3;
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.landing--has-here .welcome-wrap {
+  --landing-content-offset-y: 0px;
 }
 
 /* Accretion disk — flat rotating ellipse of hot glowing gas */
@@ -372,6 +376,11 @@ body {
   align-items: center;
   width: 100%;
   transform: translateY(clamp(4px, 1.2svh, 14px));
+}
+
+.arrival-choice--has-here {
+  gap: 12px;
+  transform: translateY(clamp(-8px, -1svh, -2px));
 }
 
 .arrival-btn {
@@ -1687,7 +1696,11 @@ body {
 
 @media (max-width: 768px) {
   .welcome-wrap {
-    --landing-content-offset-y: clamp(28px, 6svh, 54px);
+    --landing-content-offset-y: 0px;
+  }
+
+  .landing--has-here .welcome-wrap {
+    --landing-content-offset-y: 0px;
   }
 
   .accretion-disk {
@@ -1725,6 +1738,11 @@ body {
 
   .arrival-choice {
     transform: translateY(clamp(4px, 1.5svh, 12px));
+  }
+
+  .arrival-choice--has-here {
+    gap: 12px;
+    transform: translateY(clamp(-6px, -1svh, -2px));
   }
 }
 

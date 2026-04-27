@@ -1499,11 +1499,11 @@ function Landing({ onHome, onDomainScreen, imHereEnabled, nextPortalDate }) {
     logoTimeout = setTimeout(() => {
       const splashEl = splashRef.current;
       if (!splashEl) return;
-      const LOGO_SCALE = 0.28;
+      const LOGO_SCALE = 0.2;
       const sat = parseFloat(
         getComputedStyle(document.documentElement).getPropertyValue("--sat")
       ) || 0;
-      const LOGO_TOP_PX = 32 + sat;
+      const LOGO_TOP_PX = 12 + sat;
       const rect = splashEl.getBoundingClientRect();
       const targetTY =
         LOGO_TOP_PX +
@@ -1618,7 +1618,7 @@ function Landing({ onHome, onDomainScreen, imHereEnabled, nextPortalDate }) {
   }, []);
 
   return (
-    <div className="landing">
+    <div className={`landing${imHereEnabled ? " landing--has-here" : ""}`}>
       <div
         ref={bgSlideRef}
         className="bg-slide"
@@ -1689,7 +1689,7 @@ function Landing({ onHome, onDomainScreen, imHereEnabled, nextPortalDate }) {
           onSubmit={handleSubmit}
         >
           {step === "arrival" ? (
-            <div className="arrival-choice">
+            <div className={`arrival-choice${imHereEnabled ? " arrival-choice--has-here" : ""}`}>
               <button
                 type="button"
                 className="arrival-btn"
