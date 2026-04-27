@@ -298,6 +298,7 @@ const HTML = `<!DOCTYPE html>
         <div class="date-input-row">
           <input type="date" id="next-portal-date" class="input" oninput="updateDatePreview('next')" />
           <button class="date-save-btn" id="next-portal-save" onclick="savePortalDate('next')">Save</button>
+          <button class="date-save-btn" id="next-portal-clear" onclick="clearPortalDate('next')">Clear</button>
         </div>
         <div class="date-preview" id="next-portal-preview"></div>
       </div>
@@ -307,6 +308,7 @@ const HTML = `<!DOCTYPE html>
         <div class="date-input-row">
           <input type="date" id="upcoming-portal-date" class="input" oninput="updateDatePreview('upcoming')" />
           <button class="date-save-btn" id="upcoming-portal-save" onclick="savePortalDate('upcoming')">Save</button>
+          <button class="date-save-btn" id="upcoming-portal-clear" onclick="clearPortalDate('upcoming')">Clear</button>
         </div>
         <div class="date-preview" id="upcoming-portal-preview"></div>
       </div>
@@ -464,6 +466,30 @@ const HTML = `<!DOCTYPE html>
       btn.disabled = false;
       btn.classList.remove("saved");
       btn.textContent = "Save";
+    }, 2000);
+  }
+
+  async function clearPortalDate(which) {
+    const input = document.getElementById(which === "next" ? "next-portal-date" : "upcoming-portal-date");
+    const preview = document.getElementById(which === "next" ? "next-portal-preview" : "upcoming-portal-preview");
+    const btn = document.getElementById(which === "next" ? "next-portal-clear" : "upcoming-portal-clear");
+    const key = which === "next" ? "nextPortalDate" : "upcomingPortalDate";
+
+    btn.disabled = true;
+    await fetch("/api/admin/settings", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-admin-secret": adminSecret },
+      body: JSON.stringify({ [key]: null })
+    });
+
+    input.value = "";
+    preview.textContent = "";
+    btn.classList.add("saved");
+    btn.textContent = "Cleared ✓";
+    setTimeout(() => {
+      btn.disabled = false;
+      btn.classList.remove("saved");
+      btn.textContent = "Clear";
     }, 2000);
   }
 
