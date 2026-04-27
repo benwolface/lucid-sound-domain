@@ -155,7 +155,8 @@ body {
   /* Center within the safe area (accounts for status bar + home indicator in standalone PWA) */
   top: calc(var(--sat) + (100% - var(--sat) - var(--sab)) / 2);
   left: 50%;
-  transform: translate(-50%, -50%);
+  --landing-content-offset-y: clamp(58px, 8svh, 104px);
+  transform: translate(-50%, calc(-50% + var(--landing-content-offset-y)));
   z-index: 3;
   display: flex;
   align-items: center;
@@ -247,7 +248,7 @@ body {
 /* Input box below the circle */
 .waitlist-input-wrap {
   position: absolute;
-  top: calc(100% + 48px);
+  top: calc(100% + clamp(22px, 3.4svh, 38px));
   left: 50%;
   transform: translateX(-50%);
   display: flex;
@@ -370,6 +371,7 @@ body {
   gap: 14px;
   align-items: center;
   width: 100%;
+  transform: translateY(clamp(4px, 1.2svh, 14px));
 }
 
 .arrival-btn {
@@ -1681,6 +1683,49 @@ body {
   text-shadow:
     0 0 12px rgba(143, 239, 74, 0.65),
     0 0 32px rgba(143, 239, 74, 0.28);
+}
+
+@media (max-width: 768px) {
+  .welcome-wrap {
+    --landing-content-offset-y: clamp(28px, 6svh, 54px);
+  }
+
+  .accretion-disk {
+    width: clamp(230px, 70vw, 300px);
+    height: clamp(230px, 70vw, 300px);
+  }
+
+  .welcome-ring,
+  .welcome-circle {
+    width: clamp(210px, 64vw, 250px);
+    height: clamp(210px, 64vw, 250px);
+  }
+
+  .landing-portal-info {
+    bottom: calc(100% + clamp(18px, 3.5svh, 26px));
+  }
+
+  .landing-portal-title {
+    font-size: clamp(1rem, 5.4vw, 1.45rem);
+    margin-bottom: 10px;
+  }
+
+  .landing-portal-label {
+    font-size: clamp(0.42rem, 2.1vw, 0.56rem);
+    margin-bottom: 8px;
+  }
+
+  .landing-portal-date {
+    font-size: clamp(1rem, 5.2vw, 1.5rem);
+  }
+
+  .waitlist-input-wrap {
+    top: calc(100% + clamp(18px, 3.5svh, 28px));
+  }
+
+  .arrival-choice {
+    transform: translateY(clamp(4px, 1.5svh, 12px));
+  }
 }
 
 /* ── "i'm here" variant arrival button ── */
