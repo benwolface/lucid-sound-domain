@@ -164,6 +164,33 @@ const HTML = `<!DOCTYPE html>
       background: #4ade80; transform: translateX(20px);
     }
 
+    /* PORTAL DATES */
+    .divider { border: none; border-top: 1px solid #1e1e1e; margin: 16px 0; }
+    .date-row { margin-top: 14px; }
+    .date-row + .date-row { margin-top: 12px; }
+    .date-label { font-size: 0.78rem; color: #666; margin-bottom: 6px; }
+    .date-input-row { display: flex; gap: 8px; align-items: center; }
+    input[type="date"].input {
+      flex: 1;
+      color-scheme: dark;
+      cursor: pointer;
+    }
+    .date-save-btn {
+      flex-shrink: 0;
+      padding: 11px 16px;
+      border-radius: 8px;
+      border: 1px solid #2a2a2a;
+      background: transparent;
+      color: #aaa;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s;
+      white-space: nowrap;
+    }
+    .date-save-btn:hover { border-color: #555; color: #e5e5e5; }
+    .date-save-btn.saved { border-color: #14532d; color: #4ade80; }
+    .date-preview { font-size: 0.78rem; color: #555; margin-top: 5px; min-height: 1em; }
+
     /* RESULTS */
     #results { display: none; }
     .result-summary { display: flex; gap: 16px; margin-bottom: 14px; }
@@ -262,6 +289,26 @@ const HTML = `<!DOCTYPE html>
           <input type="checkbox" id="im-here-toggle" onchange="setImHere(this.checked)" />
           <span class="toggle-track"></span>
         </label>
+      </div>
+
+      <hr class="divider" />
+
+      <div class="date-row">
+        <div class="date-label">NEXT PORTAL DATE</div>
+        <div class="date-input-row">
+          <input type="date" id="next-portal-date" class="input" oninput="updateDatePreview('next')" />
+          <button class="date-save-btn" id="next-portal-save" onclick="savePortalDate('next')">Save</button>
+        </div>
+        <div class="date-preview" id="next-portal-preview"></div>
+      </div>
+
+      <div class="date-row">
+        <div class="date-label">UPCOMING PORTAL DATE</div>
+        <div class="date-input-row">
+          <input type="date" id="upcoming-portal-date" class="input" oninput="updateDatePreview('upcoming')" />
+          <button class="date-save-btn" id="upcoming-portal-save" onclick="savePortalDate('upcoming')">Save</button>
+        </div>
+        <div class="date-preview" id="upcoming-portal-preview"></div>
       </div>
     </div>
 
@@ -367,6 +414,14 @@ const HTML = `<!DOCTYPE html>
     const res = await fetch("/api/admin/settings", { headers: { "x-admin-secret": adminSecret } });
     const data = await res.json();
     document.getElementById("im-here-toggle").checked = !!data.imHereEnabled;
+    if (data.nextPortalDate) {
+      document.getElementById("next-portal-date").value = data.nextPortalDate;
+      updateDatePreview("next");
+    }
+    if (data.upcomingPortalDate) {
+      document.getElementById("upcoming-portal-date").value = data.upcomingPortalDate;
+      updateDatePreview("upcoming");
+    }
   }
 
   async function setImHere(enabled) {
@@ -375,6 +430,41 @@ const HTML = `<!DOCTYPE html>
       headers: { "Content-Type": "application/json", "x-admin-secret": adminSecret },
       body: JSON.stringify({ imHereEnabled: enabled })
     });
+  }
+
+  function fmtPortalDate(isoDate) {
+    if (!isoDate) return "";
+    // Parse as local date to avoid UTC offset shifting the day
+    const [year, month, day] = isoDate.split("-").map(Number);
+    const d = new Date(year, month - 1, day);
+    return d.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
+  }
+
+  function updateDatePreview(which) {
+    const input = document.getElementById(which === "next" ? "next-portal-date" : "upcoming-portal-date");
+    const preview = document.getElementById(which === "next" ? "next-portal-preview" : "upcoming-portal-preview");
+    preview.textContent = input.value ? fmtPortalDate(input.value) : "";
+  }
+
+  async function savePortalDate(which) {
+    const input = document.getElementById(which === "next" ? "next-portal-date" : "upcoming-portal-date");
+    const btn = document.getElementById(which === "next" ? "next-portal-save" : "upcoming-portal-save");
+    const key = which === "next" ? "nextPortalDate" : "upcomingPortalDate";
+
+    btn.disabled = true;
+    await fetch("/api/admin/settings", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-admin-secret": adminSecret },
+      body: JSON.stringify({ [key]: input.value || null })
+    });
+
+    btn.classList.add("saved");
+    btn.textContent = "Saved ✓";
+    setTimeout(() => {
+      btn.disabled = false;
+      btn.classList.remove("saved");
+      btn.textContent = "Save";
+    }, 2000);
   }
 
   async function loadParticipants() {

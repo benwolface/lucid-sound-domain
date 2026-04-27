@@ -1,6 +1,6 @@
 const { Router } = require("express");
 const { z } = require("zod");
-const { getAllParticipants, getBlastLogs, logBlast, getSettings, updateImHereEnabled } = require("../store");
+const { getAllParticipants, getBlastLogs, logBlast, getSettings, updateImHereEnabled, updatePortalDates } = require("../store");
 
 function requireAdminSecret(req, res, next) {
   const secret = process.env.ADMIN_SECRET;
@@ -40,7 +40,11 @@ function adminRouter() {
   router.get("/settings", async (req, res) => {
     try {
       const settings = await getSettings();
-      return res.json({ imHereEnabled: settings.im_here_enabled });
+      return res.json({
+        imHereEnabled: settings.im_here_enabled,
+        nextPortalDate: settings.next_portal_date ?? null,
+        upcomingPortalDate: settings.upcoming_portal_date ?? null,
+      });
     } catch (err) {
       console.error("[admin/settings]", err);
       return res.status(500).json({ error: "Failed to fetch settings." });
@@ -49,13 +53,20 @@ function adminRouter() {
 
   // POST /api/admin/settings — update settings
   router.post("/settings", async (req, res) => {
-    const { imHereEnabled } = req.body;
-    if (typeof imHereEnabled !== "boolean") {
-      return res.status(400).json({ error: "imHereEnabled must be a boolean." });
-    }
+    const { imHereEnabled, nextPortalDate, upcomingPortalDate } = req.body;
     try {
-      await updateImHereEnabled(imHereEnabled);
-      return res.json({ imHereEnabled });
+      if (typeof imHereEnabled === "boolean") {
+        await updateImHereEnabled(imHereEnabled);
+      }
+      if (nextPortalDate !== undefined || upcomingPortalDate !== undefined) {
+        await updatePortalDates({ nextPortalDate, upcomingPortalDate });
+      }
+      const settings = await getSettings();
+      return res.json({
+        imHereEnabled: settings.im_here_enabled,
+        nextPortalDate: settings.next_portal_date ?? null,
+        upcomingPortalDate: settings.upcoming_portal_date ?? null,
+      });
     } catch (err) {
       console.error("[admin/settings]", err);
       return res.status(500).json({ error: "Failed to update settings." });

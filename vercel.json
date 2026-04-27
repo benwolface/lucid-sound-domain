@@ -10,7 +10,7 @@
     },
     {
       "src": "/admin",
-      "dest": "https://lucid-sound-domain-api-lucidsounddomain.vercel.app/admin"
+      "dest": "https://lucid-sound-domain-api-lucidsounddomain.vercel.app/api/admin-portal"
     },
     { "handle": "filesystem" },
     { "src": "/(.*)", "dest": "/index.html" }

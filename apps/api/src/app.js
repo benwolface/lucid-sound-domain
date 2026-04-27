@@ -46,6 +46,7 @@ function createApp() {
   app.use("/api/waitlist", waitlistRouter());
   app.use("/api/admin", adminRouter());
   app.use("/api/settings", settingsRouter());
+  app.use("/api/admin-portal", adminPortalRouter());
   app.use("/admin", adminPortalRouter());
 
   // Basic 404

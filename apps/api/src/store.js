@@ -219,7 +219,7 @@ async function getAllParticipants() {
 async function getSettings() {
   const { data, error } = await supabase
     .from("app_settings")
-    .select("im_here_enabled")
+    .select("im_here_enabled, next_portal_date, upcoming_portal_date")
     .single();
   if (error) throw error;
   return data;
@@ -229,6 +229,17 @@ async function updateImHereEnabled(enabled) {
   const { error } = await supabase
     .from("app_settings")
     .update({ im_here_enabled: enabled })
+    .eq("id", true);
+  if (error) throw error;
+}
+
+async function updatePortalDates({ nextPortalDate, upcomingPortalDate }) {
+  const updates = {};
+  if (nextPortalDate !== undefined) updates.next_portal_date = nextPortalDate || null;
+  if (upcomingPortalDate !== undefined) updates.upcoming_portal_date = upcomingPortalDate || null;
+  const { error } = await supabase
+    .from("app_settings")
+    .update(updates)
     .eq("id", true);
   if (error) throw error;
 }
@@ -271,5 +282,6 @@ module.exports = {
   getSettings,
   logBlast,
   updateImHereEnabled,
+  updatePortalDates,
   upsertUser
 };

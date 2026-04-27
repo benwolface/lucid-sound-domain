@@ -24,18 +24,43 @@ const HOME_BACKGROUNDS = [
   { url: "/bg-3-red.jpg", position: "center center", size: "cover" },
 ];
 
+function fmtPortalDate(isoDate) {
+  if (!isoDate) return null;
+  const [year, month, day] = isoDate.split("-").map(Number);
+  const d = new Date(year, month - 1, day);
+  return d.toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
 export default function App() {
   const [screen, setScreen] = useState("landing");
   const [referralCode, setReferralCode] = useState(null);
   const [imHereEnabled, setImHereEnabled] = useState(false);
+  const [nextPortalDate, setNextPortalDate] = useState(null);
+  const [upcomingPortalDate, setUpcomingPortalDate] = useState(null);
 
   useEffect(() => {
     apiGetSettings()
-      .then(({ imHereEnabled }) => setImHereEnabled(!!imHereEnabled))
+      .then(({ imHereEnabled, nextPortalDate, upcomingPortalDate }) => {
+        setImHereEnabled(!!imHereEnabled);
+        setNextPortalDate(nextPortalDate ?? null);
+        setUpcomingPortalDate(upcomingPortalDate ?? null);
+      })
       .catch(() => {});
   }, []);
 
-  if (screen === "home") return <Home referralCode={referralCode} />;
+  if (screen === "home")
+    return (
+      <Home
+        referralCode={referralCode}
+        nextPortalDate={nextPortalDate}
+        upcomingPortalDate={upcomingPortalDate}
+      />
+    );
   if (screen === "domain")
     return <DomainScreen onBack={() => setScreen("landing")} />;
   return (
@@ -60,7 +85,7 @@ const JOURNEY_SECTIONS = [
   { id: "contact", label: "Contribute" },
 ];
 
-function Home({ referralCode }) {
+function Home({ referralCode, nextPortalDate, upcomingPortalDate }) {
   const [bg] = useState(
     () => HOME_BACKGROUNDS[Math.floor(Math.random() * HOME_BACKGROUNDS.length)],
   );
@@ -193,13 +218,17 @@ function Home({ referralCode }) {
         <div className="home-center">
           <p className="home-regulation-title">( Regulation )</p>
           <p className="home-next-label">next portal opening on</p>
-          <p className="home-next-date">Wednesday, April 22nd, 2026</p>
+          <p className="home-next-date">
+            {nextPortalDate ? fmtPortalDate(nextPortalDate) : "date TBD"}
+          </p>
           <p className="home-next-address">
             1340 Turk St Apt 418 · San Francisco CA
           </p>
-          <CalendarButtons />
+          <CalendarButtons nextPortalDate={nextPortalDate} />
           <p className="home-upcoming-title">Upcoming portals</p>
-          <p className="home-upcoming-date">Wednesday, April 29th, 2026</p>
+          <p className="home-upcoming-date">
+            {upcomingPortalDate ? fmtPortalDate(upcomingPortalDate) : "date TBD"}
+          </p>
           <a
             href="https://www.instagram.com/lucidsounddomain/"
             target="_blank"
@@ -632,35 +661,49 @@ function MobileTimeline({ active, pageRef, navReady }) {
   );
 }
 
-const PORTAL_ICS = [
-  "BEGIN:VCALENDAR",
-  "VERSION:2.0",
-  "PRODID:-//Lucid Sound Domain//EN",
-  "BEGIN:VEVENT",
-  "DTSTART:20260423T020000Z",
-  "DTEND:20260423T053000Z",
-  "SUMMARY:Lucid Sound Domain — Portal Opening",
-  "DESCRIPTION:The next portal opens. lucidsounddomain.com",
-  "LOCATION:1340 Turk St Apt 418\\, San Francisco\\, CA 94115",
-  "END:VEVENT",
-  "END:VCALENDAR",
-].join("\r\n");
+function portalCalDates(isoDate) {
+  if (!isoDate) return null;
+  const [year, month, day] = isoDate.split("-").map(Number);
+  // Event: 7pm–10:30pm PDT (UTC-7) = next calendar day 02:00–05:30 UTC
+  const start = new Date(Date.UTC(year, month - 1, day + 1, 2, 0, 0));
+  const end = new Date(Date.UTC(year, month - 1, day + 1, 5, 30, 0));
+  const fmt = (d) => d.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
+  return { start: fmt(start), end: fmt(end) };
+}
 
-const GOOGLE_CAL_URL =
-  "https://calendar.google.com/calendar/render?action=TEMPLATE" +
-  "&text=Lucid+Sound+Domain+%E2%80%94+Portal+Opening" +
-  "&dates=20260423T020000Z%2F20260423T053000Z" +
-  "&details=The+next+portal+opens.+lucidsounddomain.com" +
-  "&location=1340+Turk+St+Apt+418%2C+San+Francisco%2C+CA+94115";
+function CalendarButtons({ nextPortalDate }) {
+  const cal = portalCalDates(nextPortalDate);
 
-function CalendarButtons() {
-  const icsHref =
-    "data:text/calendar;charset=utf-8," + encodeURIComponent(PORTAL_ICS);
+  const ics = cal
+    ? [
+        "BEGIN:VCALENDAR",
+        "VERSION:2.0",
+        "PRODID:-//Lucid Sound Domain//EN",
+        "BEGIN:VEVENT",
+        `DTSTART:${cal.start}`,
+        `DTEND:${cal.end}`,
+        "SUMMARY:Lucid Sound Domain — Portal Opening",
+        "DESCRIPTION:The next portal opens. lucidsounddomain.com",
+        "LOCATION:1340 Turk St Apt 418\\, San Francisco\\, CA 94115",
+        "END:VEVENT",
+        "END:VCALENDAR",
+      ].join("\r\n")
+    : null;
+
+  const googleUrl = cal
+    ? "https://calendar.google.com/calendar/render?action=TEMPLATE" +
+      "&text=Lucid+Sound+Domain+%E2%80%94+Portal+Opening" +
+      `&dates=${cal.start}%2F${cal.end}` +
+      "&details=The+next+portal+opens.+lucidsounddomain.com" +
+      "&location=1340+Turk+St+Apt+418%2C+San+Francisco%2C+CA+94115"
+    : null;
+
+  if (!cal) return null;
 
   return (
     <div className="cal-btns">
       <a
-        href={GOOGLE_CAL_URL}
+        href={googleUrl}
         target="_blank"
         rel="noopener noreferrer"
         className="cal-btn"
@@ -669,7 +712,7 @@ function CalendarButtons() {
         add to google calendar
       </a>
       <a
-        href={icsHref}
+        href={"data:text/calendar;charset=utf-8," + encodeURIComponent(ics)}
         download="lucid-sound-domain-portal.ics"
         className="cal-btn"
       >
