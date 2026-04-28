@@ -994,6 +994,7 @@ function Landing({ onHome, onDomainScreen, imHereEnabled, nextPortalDate }) {
             : false;
 
   // ── Refs ──
+  const skipIntroRef = useRef(null);
   const bgSlideRef = useRef(null);
   const splashRef = useRef(null);
   const welcomeRef = useRef(null);
@@ -1594,7 +1595,32 @@ function Landing({ onHome, onDomainScreen, imHereEnabled, nextPortalDate }) {
       }
     }
 
+    skipIntroRef.current = () => {
+      skipIntroRef.current = null;
+      animations.forEach((a) => { try { a.pause(); } catch (_) {} });
+      clearTimeout(flickerStart);
+      clearTimeout(logoTimeout);
+      if (flickerTick) { clearInterval(flickerTick); flickerTick = null; }
+      words.forEach((w) => {
+        w.style.transition = "opacity 0.25s ease, filter 0.25s ease";
+        w.style.opacity = "0";
+        w.style.filter = "none";
+        w.classList.remove("no-grid");
+      });
+      if (splashRef.current) {
+        splashRef.current.style.transition = "opacity 0.25s ease";
+        splashRef.current.style.opacity = "0";
+        splashRef.current.style.transform = "";
+      }
+      if (slide) { slide.style.transition = "opacity 0.3s ease"; slide.style.opacity = "1"; }
+      if (welcomeRef.current) { welcomeRef.current.style.transition = "opacity 0.35s ease 0.1s"; welcomeRef.current.style.opacity = "1"; }
+      if (welcomeTextRef.current) { welcomeTextRef.current.style.transition = "opacity 0.35s ease 0.15s, transform 0.35s ease 0.15s"; welcomeTextRef.current.style.opacity = "1"; welcomeTextRef.current.style.transform = "translateY(0)"; }
+      if (inputWrapRef.current) { inputWrapRef.current.style.transition = "opacity 0.35s ease 0.2s"; inputWrapRef.current.style.opacity = "1"; }
+      if (lineRef.current) { lineRef.current.style.transition = "transform 0.35s ease 0.2s"; lineRef.current.style.transform = "scaleX(1)"; }
+    };
+
     return () => {
+      skipIntroRef.current = null;
       clearTimeout(flickerStart);
       clearTimeout(logoTimeout);
       if (flickerTick) clearInterval(flickerTick);
@@ -1634,7 +1660,7 @@ function Landing({ onHome, onDomainScreen, imHereEnabled, nextPortalDate }) {
       />
       <div className="bg-veil" />
 
-      <div ref={splashRef} className="splash">
+      <div ref={splashRef} className="splash" onClick={() => skipIntroRef.current?.()}>
         <span className="splash-word" data-word="LUCID">
           LUCID
         </span>
