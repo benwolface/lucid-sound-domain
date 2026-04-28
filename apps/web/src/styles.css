@@ -155,12 +155,16 @@ body {
   /* Center within the safe area (accounts for status bar + home indicator in standalone PWA) */
   top: calc(var(--sat) + (100% - var(--sat) - var(--sab)) / 2);
   left: 50%;
-  --landing-content-offset-y: clamp(58px, 8svh, 104px);
+  --landing-content-offset-y: 0px;
   transform: translate(-50%, calc(-50% + var(--landing-content-offset-y)));
   z-index: 3;
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.landing--has-here .welcome-wrap {
+  --landing-content-offset-y: 0px;
 }
 
 /* Accretion disk — flat rotating ellipse of hot glowing gas */
@@ -372,6 +376,11 @@ body {
   align-items: center;
   width: 100%;
   transform: translateY(clamp(4px, 1.2svh, 14px));
+}
+
+.arrival-choice--has-here {
+  gap: 12px;
+  transform: translateY(clamp(-8px, -1svh, -2px));
 }
 
 .arrival-btn {
@@ -620,6 +629,18 @@ body {
   letter-spacing: 0.14em;
   color: #8fef4a;
   margin: 0 0 26px 0;
+  text-shadow:
+    0 0 8px rgba(143, 239, 74, 0.6),
+    0 0 22px rgba(143, 239, 74, 0.28);
+}
+
+.home-timing {
+  font-family: "Akira Expanded", sans-serif;
+  font-size: clamp(0.4rem, 0.68vw, 0.69rem);
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  color: #8fef4a;
+  margin: 0 0 0 0;
   text-shadow:
     0 0 8px rgba(143, 239, 74, 0.6),
     0 0 22px rgba(143, 239, 74, 0.28);
@@ -1017,16 +1038,36 @@ body {
 .j-attend-note,
 .j-section-copy {
   font-family: "Excrallik", cursive;
-  font-size: clamp(0.95rem, 1.45vw, 1.18rem);
-  color: rgba(255, 255, 255, 0.72);
-  line-height: 1.7;
+  font-size: clamp(1.2rem, 2.2vw, 1.6rem);
+  color: rgba(255, 255, 255, 0.9);
+  line-height: 1.6;
   letter-spacing: 0.03em;
-  max-width: 760px;
+  max-width: 600px;
   margin: 0 0 8px 0;
 }
 
 .j-attend-note {
   padding-left: clamp(14px, 2vw, 22px);
+}
+
+.j-artist-bios {
+  margin-top: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.j-artist-bio {
+  font-family: "Excrallik", cursive;
+  font-size: clamp(0.88rem, 1.3vw, 1.05rem);
+  color: rgba(255, 255, 255, 0.65);
+  line-height: 1.5;
+  letter-spacing: 0.03em;
+}
+
+.j-artist-bio-name {
+  color: #fff;
+  font-weight: 700;
 }
 
 .j-inline-link {
@@ -1119,18 +1160,13 @@ body {
 /* ── Domain section content ── */
 .j-domain-intro {
   font-family: "Excrallik", cursive;
-  font-size: clamp(0.95rem, 1.6vw, 1.25rem);
-  color: rgba(255, 255, 255, 0.72);
-  line-height: 1.7;
-  max-width: 520px;
+  font-size: clamp(1.2rem, 2.2vw, 1.6rem);
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.9);
+  line-height: 1.6;
+  max-width: 600px;
   margin: 0 0 40px 0;
   letter-spacing: 0.03em;
-}
-
-.j-space-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
 }
 
 .j-space-lead {
@@ -1154,10 +1190,11 @@ body {
 
 .j-space-list li {
   font-family: "Excrallik", cursive;
-  font-size: clamp(1rem, 1.8vw, 1.4rem);
-  color: rgba(255, 255, 255, 0.72);
-  letter-spacing: 0.05em;
-  line-height: 1.3;
+  font-size: clamp(1.2rem, 2.2vw, 1.6rem);
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.9);
+  letter-spacing: 0.03em;
+  line-height: 1.5;
 }
 
 .j-green {
@@ -1687,7 +1724,11 @@ body {
 
 @media (max-width: 768px) {
   .welcome-wrap {
-    --landing-content-offset-y: clamp(28px, 6svh, 54px);
+    --landing-content-offset-y: 0px;
+  }
+
+  .landing--has-here .welcome-wrap {
+    --landing-content-offset-y: 0px;
   }
 
   .accretion-disk {
@@ -1726,6 +1767,11 @@ body {
   .arrival-choice {
     transform: translateY(clamp(4px, 1.5svh, 12px));
   }
+
+  .arrival-choice--has-here {
+    gap: 12px;
+    transform: translateY(clamp(-6px, -1svh, -2px));
+  }
 }
 
 /* ── "i'm here" variant arrival button ── */
@@ -1750,7 +1796,8 @@ body {
 }
 
 @keyframes here-btn-pulse {
-  0%, 100% {
+  0%,
+  100% {
     box-shadow:
       0 0 8px 2px rgba(255, 130, 10, 0.14),
       0 0 20px 5px rgba(255, 80, 8, 0.08),
@@ -1793,7 +1840,8 @@ body {
 }
 
 @keyframes domain-glow-pulse {
-  0%, 100% {
+  0%,
+  100% {
     box-shadow:
       inset 0 0 55px 12px rgba(255, 120, 8, 0.17),
       inset 0 0 130px 50px rgba(200, 60, 4, 0.09),
@@ -1837,8 +1885,13 @@ body {
 }
 
 @keyframes cursor-blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
 }
 
 .domain-screen-back {

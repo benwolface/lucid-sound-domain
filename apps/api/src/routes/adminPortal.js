@@ -314,6 +314,45 @@ const HTML = `<!DOCTYPE html>
       </div>
     </div>
 
+    <!-- ARTISTS -->
+    <div class="section">
+      <div class="section-title" style="margin-bottom:14px">Artists</div>
+
+      <div class="date-row">
+        <div class="date-label">ARTIST 1 NAME (Regulation set)</div>
+        <div class="date-input-row">
+          <input type="text" id="artist1-name" class="input" placeholder="e.g. trytab" />
+          <button class="date-save-btn" id="artist1-name-save" onclick="saveArtistField('artist1Name', 'artist1-name', 'artist1-name-save')">Save</button>
+        </div>
+      </div>
+
+      <div class="date-row">
+        <div class="date-label">ARTIST 1 BIO</div>
+        <div class="date-input-row">
+          <input type="text" id="artist1-bio" class="input" placeholder="one-line bio" />
+          <button class="date-save-btn" id="artist1-bio-save" onclick="saveArtistField('artist1Bio', 'artist1-bio', 'artist1-bio-save')">Save</button>
+        </div>
+      </div>
+
+      <hr class="divider" />
+
+      <div class="date-row">
+        <div class="date-label">ARTIST 2 NAME (Movement set)</div>
+        <div class="date-input-row">
+          <input type="text" id="artist2-name" class="input" placeholder="e.g. dotnine" />
+          <button class="date-save-btn" id="artist2-name-save" onclick="saveArtistField('artist2Name', 'artist2-name', 'artist2-name-save')">Save</button>
+        </div>
+      </div>
+
+      <div class="date-row">
+        <div class="date-label">ARTIST 2 BIO</div>
+        <div class="date-input-row">
+          <input type="text" id="artist2-bio" class="input" placeholder="one-line bio" />
+          <button class="date-save-btn" id="artist2-bio-save" onclick="saveArtistField('artist2Bio', 'artist2-bio', 'artist2-bio-save')">Save</button>
+        </div>
+      </div>
+    </div>
+
     <!-- PARTICIPANTS -->
     <div class="section">
       <div class="section-header">
@@ -424,6 +463,24 @@ const HTML = `<!DOCTYPE html>
       document.getElementById("upcoming-portal-date").value = data.upcomingPortalDate;
       updateDatePreview("upcoming");
     }
+    if (data.artist1Name) document.getElementById("artist1-name").value = data.artist1Name;
+    if (data.artist1Bio) document.getElementById("artist1-bio").value = data.artist1Bio;
+    if (data.artist2Name) document.getElementById("artist2-name").value = data.artist2Name;
+    if (data.artist2Bio) document.getElementById("artist2-bio").value = data.artist2Bio;
+  }
+
+  async function saveArtistField(key, inputId, btnId) {
+    const input = document.getElementById(inputId);
+    const btn = document.getElementById(btnId);
+    btn.disabled = true;
+    await fetch("/api/admin/settings", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-admin-secret": adminSecret },
+      body: JSON.stringify({ [key]: input.value.trim() || null })
+    });
+    btn.classList.add("saved");
+    btn.textContent = "Saved ✓";
+    setTimeout(() => { btn.disabled = false; btn.classList.remove("saved"); btn.textContent = "Save"; }, 2000);
   }
 
   async function setImHere(enabled) {

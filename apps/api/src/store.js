@@ -219,7 +219,7 @@ async function getAllParticipants() {
 async function getSettings() {
   const { data, error } = await supabase
     .from("app_settings")
-    .select("im_here_enabled, next_portal_date, upcoming_portal_date")
+    .select("im_here_enabled, next_portal_date, upcoming_portal_date, artist1_name, artist1_bio, artist2_name, artist2_bio")
     .single();
   if (error) throw error;
   return data;
@@ -241,6 +241,16 @@ async function updatePortalDates({ nextPortalDate, upcomingPortalDate }) {
     .from("app_settings")
     .update(updates)
     .eq("id", true);
+  if (error) throw error;
+}
+
+async function updateArtists({ artist1Name, artist1Bio, artist2Name, artist2Bio }) {
+  const updates = {};
+  if (artist1Name !== undefined) updates.artist1_name = artist1Name || null;
+  if (artist1Bio !== undefined) updates.artist1_bio = artist1Bio || null;
+  if (artist2Name !== undefined) updates.artist2_name = artist2Name || null;
+  if (artist2Bio !== undefined) updates.artist2_bio = artist2Bio || null;
+  const { error } = await supabase.from("app_settings").update(updates).eq("id", true);
   if (error) throw error;
 }
 
@@ -281,6 +291,7 @@ module.exports = {
   getBlastLogs,
   getSettings,
   logBlast,
+  updateArtists,
   updateImHereEnabled,
   updatePortalDates,
   upsertUser

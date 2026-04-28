@@ -1,6 +1,6 @@
 const { Router } = require("express");
 const { z } = require("zod");
-const { getAllParticipants, getBlastLogs, logBlast, getSettings, updateImHereEnabled, updatePortalDates } = require("../store");
+const { getAllParticipants, getBlastLogs, logBlast, getSettings, updateImHereEnabled, updatePortalDates, updateArtists } = require("../store");
 
 function requireAdminSecret(req, res, next) {
   const secret = process.env.ADMIN_SECRET;
@@ -44,6 +44,10 @@ function adminRouter() {
         imHereEnabled: settings.im_here_enabled,
         nextPortalDate: settings.next_portal_date ?? null,
         upcomingPortalDate: settings.upcoming_portal_date ?? null,
+        artist1Name: settings.artist1_name ?? null,
+        artist1Bio: settings.artist1_bio ?? null,
+        artist2Name: settings.artist2_name ?? null,
+        artist2Bio: settings.artist2_bio ?? null,
       });
     } catch (err) {
       console.error("[admin/settings]", err);
@@ -53,7 +57,7 @@ function adminRouter() {
 
   // POST /api/admin/settings — update settings
   router.post("/settings", async (req, res) => {
-    const { imHereEnabled, nextPortalDate, upcomingPortalDate } = req.body;
+    const { imHereEnabled, nextPortalDate, upcomingPortalDate, artist1Name, artist1Bio, artist2Name, artist2Bio } = req.body;
     try {
       if (typeof imHereEnabled === "boolean") {
         await updateImHereEnabled(imHereEnabled);
@@ -61,11 +65,18 @@ function adminRouter() {
       if (nextPortalDate !== undefined || upcomingPortalDate !== undefined) {
         await updatePortalDates({ nextPortalDate, upcomingPortalDate });
       }
+      if (artist1Name !== undefined || artist1Bio !== undefined || artist2Name !== undefined || artist2Bio !== undefined) {
+        await updateArtists({ artist1Name, artist1Bio, artist2Name, artist2Bio });
+      }
       const settings = await getSettings();
       return res.json({
         imHereEnabled: settings.im_here_enabled,
         nextPortalDate: settings.next_portal_date ?? null,
         upcomingPortalDate: settings.upcoming_portal_date ?? null,
+        artist1Name: settings.artist1_name ?? null,
+        artist1Bio: settings.artist1_bio ?? null,
+        artist2Name: settings.artist2_name ?? null,
+        artist2Bio: settings.artist2_bio ?? null,
       });
     } catch (err) {
       console.error("[admin/settings]", err);
