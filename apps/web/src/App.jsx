@@ -228,7 +228,9 @@ function Home({ referralCode, nextPortalDate, upcomingPortalDate }) {
           <CalendarButtons nextPortalDate={nextPortalDate} />
           <p className="home-upcoming-title">Upcoming portals</p>
           <p className="home-upcoming-date">
-            {upcomingPortalDate ? fmtPortalDate(upcomingPortalDate) : "date TBD"}
+            {upcomingPortalDate
+              ? fmtPortalDate(upcomingPortalDate)
+              : "date TBD"}
           </p>
           <a
             href="https://www.instagram.com/lucidsounddomain/"
@@ -334,14 +336,15 @@ function Home({ referralCode, nextPortalDate, upcomingPortalDate }) {
           <section id="j-flow" className="j-section" data-section="flow">
             <h2 className="j-animate j-section-heading">Attend</h2>
             <div className="j-animate j-attend-schedule">
-              <p className="j-attend-slot">7:00p - Arrival + Settle</p>
-              <p className="j-attend-slot">
-                8:00p - Regulation (Deep Listening Session)
-              </p>
+              <p className="j-attend-slot">7:00 - 7:45p - Arrival</p>
               <p className="j-attend-note">
-                during this part, we ask that the room be silent for full
-                immersion. you&apos;re welcome to step into a room or the roof
-                to chat, smoke, or use your phone
+                get cozy, peruse the wares, settle into the space
+              </p>
+              <p className="j-attend-slot">7:50p - Doors Close</p>
+              <p className="j-attend-note">
+                doors will close at 8pm. during this part, we ask that the room
+                be silent for full immersion. you&apos;re welcome to step into a
+                room or the roof to chat, smoke, or use your phone
               </p>
               <p className="j-attend-slot">
                 9:00 - 9:30p - Transition Time (Ambient)
@@ -1500,9 +1503,10 @@ function Landing({ onHome, onDomainScreen, imHereEnabled, nextPortalDate }) {
       const splashEl = splashRef.current;
       if (!splashEl) return;
       const LOGO_SCALE = 0.2;
-      const sat = parseFloat(
-        getComputedStyle(document.documentElement).getPropertyValue("--sat")
-      ) || 0;
+      const sat =
+        parseFloat(
+          getComputedStyle(document.documentElement).getPropertyValue("--sat"),
+        ) || 0;
       const LOGO_TOP_PX = 12 + sat;
       const rect = splashEl.getBoundingClientRect();
       const targetTY =
@@ -1646,7 +1650,12 @@ function Landing({ onHome, onDomainScreen, imHereEnabled, nextPortalDate }) {
         <div ref={portalInfoRef} className="landing-portal-info">
           <p className="landing-portal-title">( Regulation )</p>
           <p className="landing-portal-label">next portal opening on</p>
-          <p className="landing-portal-date">{nextPortalDate ? fmtPortalDate(nextPortalDate) : "date TBD"}</p>
+          <p className="landing-portal-date">
+            {nextPortalDate ? fmtPortalDate(nextPortalDate) : "date TBD"}
+          </p>
+          <p className="home-timing">
+            Doors close at 7:50p. Late Entry Not Guaranteed. 
+          </p>
         </div>
         <div ref={diskRef} className="accretion-disk" />
         <div ref={ringRef} className="welcome-ring" />
@@ -1689,7 +1698,9 @@ function Landing({ onHome, onDomainScreen, imHereEnabled, nextPortalDate }) {
           onSubmit={handleSubmit}
         >
           {step === "arrival" ? (
-            <div className={`arrival-choice${imHereEnabled ? " arrival-choice--has-here" : ""}`}>
+            <div
+              className={`arrival-choice${imHereEnabled ? " arrival-choice--has-here" : ""}`}
+            >
               <button
                 type="button"
                 className="arrival-btn"
