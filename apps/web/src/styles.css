@@ -1141,7 +1141,8 @@ body {
 .j-domain-intro {
   font-family: "Excrallik", cursive;
   font-size: clamp(0.95rem, 1.6vw, 1.25rem);
-  color: rgba(255, 255, 255, 0.72);
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.9);
   line-height: 1.7;
   max-width: 520px;
   margin: 0 0 40px 0;
@@ -1176,7 +1177,8 @@ body {
 .j-space-list li {
   font-family: "Excrallik", cursive;
   font-size: clamp(1rem, 1.8vw, 1.4rem);
-  color: rgba(255, 255, 255, 0.72);
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.9);
   letter-spacing: 0.05em;
   line-height: 1.3;
 }
