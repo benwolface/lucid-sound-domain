@@ -42,13 +42,21 @@ export default function App() {
   const [imHereEnabled, setImHereEnabled] = useState(false);
   const [nextPortalDate, setNextPortalDate] = useState(null);
   const [upcomingPortalDate, setUpcomingPortalDate] = useState(null);
+  const [artist1Name, setArtist1Name] = useState(null);
+  const [artist1Bio, setArtist1Bio] = useState(null);
+  const [artist2Name, setArtist2Name] = useState(null);
+  const [artist2Bio, setArtist2Bio] = useState(null);
 
   useEffect(() => {
     apiGetSettings()
-      .then(({ imHereEnabled, nextPortalDate, upcomingPortalDate }) => {
+      .then(({ imHereEnabled, nextPortalDate, upcomingPortalDate, artist1Name, artist1Bio, artist2Name, artist2Bio }) => {
         setImHereEnabled(!!imHereEnabled);
         setNextPortalDate(nextPortalDate ?? null);
         setUpcomingPortalDate(upcomingPortalDate ?? null);
+        setArtist1Name(artist1Name ?? null);
+        setArtist1Bio(artist1Bio ?? null);
+        setArtist2Name(artist2Name ?? null);
+        setArtist2Bio(artist2Bio ?? null);
       })
       .catch(() => {});
   }, []);
@@ -59,6 +67,10 @@ export default function App() {
         referralCode={referralCode}
         nextPortalDate={nextPortalDate}
         upcomingPortalDate={upcomingPortalDate}
+        artist1Name={artist1Name}
+        artist1Bio={artist1Bio}
+        artist2Name={artist2Name}
+        artist2Bio={artist2Bio}
       />
     );
   if (screen === "domain")
@@ -86,7 +98,7 @@ const JOURNEY_SECTIONS = [
   { id: "contact", label: "Contribute" },
 ];
 
-function Home({ referralCode, nextPortalDate, upcomingPortalDate }) {
+function Home({ referralCode, nextPortalDate, upcomingPortalDate, artist1Name, artist1Bio, artist2Name, artist2Bio }) {
   const [bg] = useState(
     () => HOME_BACKGROUNDS[Math.floor(Math.random() * HOME_BACKGROUNDS.length)],
   );
@@ -279,19 +291,14 @@ function Home({ referralCode, nextPortalDate, upcomingPortalDate }) {
                 <p className="j-animate j-domain-intro">
                   The Lucid Sound Domain is an intimate, deep listening dance
                   floor that requires nothing from you except your presence.
-                  This is:
                 </p>
-                <div className="j-animate j-space-list">
-                  <ul>
-                    <li>a space to receive</li>
-                    <li>a space to restore</li>
-                    <li>a space to reconnect</li>
-                    <li>
-                      a space to <span className="j-green">Regulate</span>
-                    </li>
-                    <li>and release</li>
-                  </ul>
-                </div>
+                <p className="j-animate j-domain-intro">
+                  A space to find respite from the chaos of life in the city and share a moment of intentional relaxation. 
+                </p>
+                <p className="j-animate j-domain-intro">
+                  You may have quiet conversation in side rooms or socialize to your heart’s content on the roof, but the intention here is to cultivate a space to explore the concept of mind expansion through deep listening.  
+                </p>
+                We request there be no talking or cell phone use in the listening room during Regulation (8-9p).
               </div>
 
               {/* Right: big image */}
@@ -334,26 +341,28 @@ function Home({ referralCode, nextPortalDate, upcomingPortalDate }) {
 
           {/* ── Flow ── */}
           <section id="j-flow" className="j-section" data-section="flow">
-            <h2 className="j-animate j-section-heading">Attend</h2>
+            <h2 className="j-animate j-section-heading">Program</h2>
             <div className="j-animate j-attend-schedule">
-              <p className="j-attend-slot">7:00 - 7:45p - Arrival</p>
+              <p className="j-attend-slot">7:00p - Arrival</p>
               <p className="j-attend-note">
-                get cozy, peruse the wares, settle into the space
+                Doors - get cozy, peruse the wares, settle into the space
               </p>
-              <p className="j-attend-slot">7:50p - Doors Close</p>
-              <p className="j-attend-note">
-                doors will close at 8pm. during this part, we ask that the room
-                be silent for full immersion. you&apos;re welcome to step into a
-                room or the roof to chat, smoke, or use your phone
-              </p>
+              <p className="j-attend-slot">7:50p - Doors Close. Late Entry Cannot Be Guaranteed</p>
+              <p className="j-attend-slot">8:00p - Regulation w/ {artist1Name || "trytab"}</p>
               <p className="j-attend-slot">
                 9:00 - 9:30p - Transition Time (Ambient)
               </p>
               <p className="j-attend-slot">
-                9:30 - 10:30p - Low-end Ritual (Movement)
+                9:30 - 10:30p - Low-end Ritual w/ {artist2Name || "dotnine"} (Movement)
               </p>
-              <p className="j-attend-note">dance release express</p>
+              <p className="j-attend-note">guiding us from meditative deep listening into low end movement</p>
             </div>
+            {(artist1Bio || artist2Bio) && (
+              <div className="j-artist-bios">
+                {artist1Bio && <p className="j-artist-bio"><span className="j-artist-bio-name">{artist1Name || "trytab"}</span> — {artist1Bio}</p>}
+                {artist2Bio && <p className="j-artist-bio"><span className="j-artist-bio-name">{artist2Name || "dotnine"}</span> — {artist2Bio}</p>}
+              </div>
+            )}
           </section>
 
           {/* ── Invitation ── */}
