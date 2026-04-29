@@ -509,8 +509,8 @@ function Home({
             />
           </section>
         </div>
-        <MobileTimeline active={active} pageRef={pageRef} navReady={navReady} />
       </div>
+      <MobileTimeline active={active} pageRef={pageRef} navReady={navReady} />
 
       {/* ── Artist statement + footer — snaps as its own final screen ── */}
       <div id="j-outro" className="j-outro">
