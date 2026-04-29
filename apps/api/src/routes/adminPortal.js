@@ -111,7 +111,7 @@ const HTML = `<!DOCTYPE html>
     .participant-row:hover { background: #161616; margin: 0 -20px; padding-left: 20px; padding-right: 20px; }
     .participant-row.deselected { opacity: 0.35; }
     .participant-name { color: #e5e5e5; flex: 1; }
-    .participant-phone { color: #666; font-family: monospace; font-size: 0.82rem; }
+    .participant-email { color: #666; font-family: monospace; font-size: 0.82rem; }
     .cb {
       width: 16px; height: 16px; border: 1.5px solid #444;
       border-radius: 4px; flex-shrink: 0;
@@ -132,6 +132,35 @@ const HTML = `<!DOCTYPE html>
 
     /* MESSAGE */
     textarea.input { resize: vertical; min-height: 100px; line-height: 1.5; }
+    #blast-html { min-height: 180px; font-family: monospace; font-size: 0.82rem; }
+    .bio-input-row { display: flex; gap: 8px; align-items: flex-start; }
+    textarea.bio-input { min-height: 72px; resize: vertical; }
+    .bio-btn-col { display: flex; flex-direction: column; gap: 6px; flex-shrink: 0; }
+    .btn-clear { color: #888; }
+    .btn-clear:hover { border-color: #555; color: #f87171; }
+
+    /* PHOTO UPLOAD */
+    .photo-upload-row { display: flex; gap: 14px; align-items: flex-start; margin-top: 2px; }
+    .photo-preview {
+      width: 72px; height: 72px; border-radius: 6px; object-fit: cover;
+      border: 1px solid #2a2a2a; flex-shrink: 0; background: #1a1a1a;
+      display: none;
+    }
+    .photo-placeholder {
+      width: 72px; height: 72px; border-radius: 6px; border: 1px dashed #333;
+      flex-shrink: 0; background: #111; display: flex; align-items: center;
+      justify-content: center; color: #444; font-size: 1.4rem;
+    }
+    .photo-upload-col { display: flex; flex-direction: column; gap: 6px; flex: 1; }
+    input[type="file"].input-file {
+      display: block; color: #888; font-size: 0.82rem;
+      background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 8px;
+      padding: 8px 10px; cursor: pointer; width: 100%;
+    }
+    input[type="file"].input-file::file-selector-button {
+      background: #2a2a2a; border: none; color: #aaa; border-radius: 4px;
+      padding: 4px 10px; margin-right: 10px; cursor: pointer; font-size: 0.8rem;
+    }
     .char-count { text-align: right; font-size: 0.78rem; color: #666; margin-top: 6px; }
     .char-count.warn { color: #f59e0b; }
     .char-count.over { color: #f87171; }
@@ -314,6 +343,75 @@ const HTML = `<!DOCTYPE html>
       </div>
     </div>
 
+    <!-- ARTISTS -->
+    <div class="section">
+      <div class="section-title" style="margin-bottom:14px">Artists</div>
+
+      <div class="date-row">
+        <div class="date-label">ARTIST 1 — Regulation set</div>
+        <div class="photo-upload-row">
+          <div class="photo-placeholder" id="artist1-photo-placeholder">＋</div>
+          <img id="artist1-photo-preview" class="photo-preview" alt="Artist 1" />
+          <div class="photo-upload-col">
+            <input type="file" id="artist1-photo-file" class="input-file" accept="image/*" onchange="uploadArtistPhoto('1', 'artist1-photo-file', 'artist1-photo-preview', 'artist1-photo-placeholder')" />
+            <button class="date-save-btn btn-clear" onclick="clearArtistPhoto('1','artist1-photo-preview','artist1-photo-placeholder')">Remove photo</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="date-row">
+        <div class="date-label">ARTIST 1 NAME</div>
+        <div class="date-input-row">
+          <input type="text" id="artist1-name" class="input" placeholder="e.g. trytab" />
+          <button class="date-save-btn" id="artist1-name-save" onclick="saveArtistField('artist1Name', 'artist1-name', 'artist1-name-save')">Save</button>
+        </div>
+      </div>
+
+      <div class="date-row">
+        <div class="date-label">ARTIST 1 BIO</div>
+        <div class="bio-input-row">
+          <textarea id="artist1-bio" class="input bio-input" placeholder="bio..."></textarea>
+          <div class="bio-btn-col">
+            <button class="date-save-btn" id="artist1-bio-save" onclick="saveArtistField('artist1Bio', 'artist1-bio', 'artist1-bio-save')">Save</button>
+            <button class="date-save-btn btn-clear" onclick="clearArtistField('artist1Bio', 'artist1-bio')">Clear</button>
+          </div>
+        </div>
+      </div>
+
+      <hr class="divider" />
+
+      <div class="date-row">
+        <div class="date-label">ARTIST 2 — Movement set</div>
+        <div class="photo-upload-row">
+          <div class="photo-placeholder" id="artist2-photo-placeholder">＋</div>
+          <img id="artist2-photo-preview" class="photo-preview" alt="Artist 2" />
+          <div class="photo-upload-col">
+            <input type="file" id="artist2-photo-file" class="input-file" accept="image/*" onchange="uploadArtistPhoto('2', 'artist2-photo-file', 'artist2-photo-preview', 'artist2-photo-placeholder')" />
+            <button class="date-save-btn btn-clear" onclick="clearArtistPhoto('2','artist2-photo-preview','artist2-photo-placeholder')">Remove photo</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="date-row">
+        <div class="date-label">ARTIST 2 NAME</div>
+        <div class="date-input-row">
+          <input type="text" id="artist2-name" class="input" placeholder="e.g. dotnine" />
+          <button class="date-save-btn" id="artist2-name-save" onclick="saveArtistField('artist2Name', 'artist2-name', 'artist2-name-save')">Save</button>
+        </div>
+      </div>
+
+      <div class="date-row">
+        <div class="date-label">ARTIST 2 BIO</div>
+        <div class="bio-input-row">
+          <textarea id="artist2-bio" class="input bio-input" placeholder="bio..."></textarea>
+          <div class="bio-btn-col">
+            <button class="date-save-btn" id="artist2-bio-save" onclick="saveArtistField('artist2Bio', 'artist2-bio', 'artist2-bio-save')">Save</button>
+            <button class="date-save-btn btn-clear" onclick="clearArtistField('artist2Bio', 'artist2-bio')">Clear</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- PARTICIPANTS -->
     <div class="section">
       <div class="section-header">
@@ -332,9 +430,15 @@ const HTML = `<!DOCTYPE html>
 
     <!-- COMPOSE -->
     <div class="section">
-      <div class="section-title">Message</div>
-      <textarea id="message" class="input" placeholder="Type your message here…" oninput="updateCharCount()"></textarea>
-      <div id="char-count" class="char-count">0 / 160</div>
+      <div class="section-title">Email Blast</div>
+      <div class="date-row" style="margin-top:0">
+        <div class="date-label">SUBJECT</div>
+        <input type="text" id="blast-subject" class="input" placeholder="e.g. You're invited to LSD Portal" />
+      </div>
+      <div class="date-row">
+        <div class="date-label">HTML BODY</div>
+        <textarea id="blast-html" class="input" placeholder="&lt;p&gt;Your message here...&lt;/p&gt;"></textarea>
+      </div>
       <div class="actions">
         <button class="btn btn-ghost" onclick="doBlast(true)">Dry Run</button>
         <button class="btn btn-danger" onclick="confirmBlast()">Send Blast</button>
@@ -424,6 +528,78 @@ const HTML = `<!DOCTYPE html>
       document.getElementById("upcoming-portal-date").value = data.upcomingPortalDate;
       updateDatePreview("upcoming");
     }
+    if (data.artist1Name) document.getElementById("artist1-name").value = data.artist1Name;
+    if (data.artist1Bio) document.getElementById("artist1-bio").value = data.artist1Bio;
+    if (data.artist2Name) document.getElementById("artist2-name").value = data.artist2Name;
+    if (data.artist2Bio) document.getElementById("artist2-bio").value = data.artist2Bio;
+    if (data.artist1PhotoUrl) {
+      const p = document.getElementById("artist1-photo-preview");
+      p.src = data.artist1PhotoUrl; p.style.display = "block";
+      document.getElementById("artist1-photo-placeholder").style.display = "none";
+    }
+    if (data.artist2PhotoUrl) {
+      const p = document.getElementById("artist2-photo-preview");
+      p.src = data.artist2PhotoUrl; p.style.display = "block";
+      document.getElementById("artist2-photo-placeholder").style.display = "none";
+    }
+  }
+
+  async function uploadArtistPhoto(artist, fileInputId, previewId, placeholderId) {
+    const file = document.getElementById(fileInputId).files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      const res = await fetch("/api/admin/upload-artist-photo", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-admin-secret": adminSecret },
+        body: JSON.stringify({ artist, dataUrl: e.target.result })
+      });
+      if (!res.ok) return;
+      const { url } = await res.json();
+      const preview = document.getElementById(previewId);
+      const placeholder = document.getElementById(placeholderId);
+      preview.src = url + "?t=" + Date.now();
+      preview.style.display = "block";
+      placeholder.style.display = "none";
+    };
+    reader.readAsDataURL(file);
+  }
+
+  async function clearArtistPhoto(artist, previewId, placeholderId) {
+    await fetch("/api/admin/upload-artist-photo", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-admin-secret": adminSecret },
+      body: JSON.stringify({ artist, dataUrl: null, clear: true })
+    });
+    const preview = document.getElementById(previewId);
+    const placeholder = document.getElementById(placeholderId);
+    preview.style.display = "none";
+    preview.src = "";
+    placeholder.style.display = "flex";
+  }
+
+  async function clearArtistField(key, inputId) {
+    const input = document.getElementById(inputId);
+    input.value = "";
+    await fetch("/api/admin/settings", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-admin-secret": adminSecret },
+      body: JSON.stringify({ [key]: null })
+    });
+  }
+
+  async function saveArtistField(key, inputId, btnId) {
+    const input = document.getElementById(inputId);
+    const btn = document.getElementById(btnId);
+    btn.disabled = true;
+    await fetch("/api/admin/settings", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-admin-secret": adminSecret },
+      body: JSON.stringify({ [key]: input.value.trim() || null })
+    });
+    btn.classList.add("saved");
+    btn.textContent = "Saved ✓";
+    setTimeout(() => { btn.disabled = false; btn.classList.remove("saved"); btn.textContent = "Save"; }, 2000);
   }
 
   async function setImHere(enabled) {
@@ -497,8 +673,8 @@ const HTML = `<!DOCTYPE html>
     const res = await fetch("/api/admin/participants", { headers: { "x-admin-secret": adminSecret } });
     const data = await res.json();
     document.getElementById("participants-loading").style.display = "none";
-    allParticipants = data.participants || [];
-    selected = new Set(allParticipants.map(p => p.phone_number));
+    allParticipants = (data.participants || []).filter(p => p.email);
+    selected = new Set(allParticipants.map(p => p.email));
     renderParticipants();
   }
 
@@ -509,44 +685,38 @@ const HTML = `<!DOCTYPE html>
       return;
     }
     list.innerHTML = allParticipants.map(p => \`
-      <div class="participant-row \${selected.has(p.phone_number) ? "" : "deselected"}"
-           onclick="toggleParticipant('\${esc(p.phone_number)}')"
-           data-phone="\${esc(p.phone_number)}">
-        <div class="cb \${selected.has(p.phone_number) ? "checked" : ""}"></div>
+      <div class="participant-row \${selected.has(p.email) ? "" : "deselected"}"
+           onclick="toggleParticipant('\${esc(p.email)}')"
+           data-email="\${esc(p.email)}">
+        <div class="cb \${selected.has(p.email) ? "checked" : ""}"></div>
         <span class="participant-name">\${esc(p.name)}</span>
-        <span class="participant-phone">\${esc(p.phone_number)}</span>
+        <span class="participant-email">\${esc(p.email)}</span>
       </div>
     \`).join("");
     updateSelectedBadge();
   }
 
-  function toggleParticipant(phone) {
-    if (selected.has(phone)) selected.delete(phone);
-    else selected.add(phone);
-    const row = document.querySelector(\`.participant-row[data-phone="\${CSS.escape(phone)}"]\`);
+  function toggleParticipant(email) {
+    if (selected.has(email)) selected.delete(email);
+    else selected.add(email);
+    const row = document.querySelector(\`.participant-row[data-email="\${CSS.escape(email)}"]\`);
     if (row) {
-      const isSelected = selected.has(phone);
+      const isSelected = selected.has(email);
       row.classList.toggle("deselected", !isSelected);
       row.querySelector(".cb").classList.toggle("checked", isSelected);
     }
     updateSelectedBadge();
   }
 
-  function selectAll() { selected = new Set(allParticipants.map(p => p.phone_number)); renderParticipants(); }
+  function selectAll() { selected = new Set(allParticipants.map(p => p.email)); renderParticipants(); }
   function selectNone() { selected = new Set(); renderParticipants(); }
   function updateSelectedBadge() { document.getElementById("selected-badge").textContent = selected.size + " selected"; }
 
-  function updateCharCount() {
-    const len = document.getElementById("message").value.length;
-    const el = document.getElementById("char-count");
-    const segments = Math.ceil(len / 160) || 1;
-    el.textContent = len + " chars" + (segments > 1 ? " (" + segments + " SMS segments)" : " / 160");
-    el.className = "char-count" + (len > 320 ? " over" : len > 160 ? " warn" : "");
-  }
-
   async function doBlast(dryRun = false) {
-    const message = document.getElementById("message").value.trim();
-    if (!message) { alert("Write a message first."); return; }
+    const subject = document.getElementById("blast-subject").value.trim();
+    const html = document.getElementById("blast-html").value.trim();
+    if (!subject) { alert("Add a subject line first."); return; }
+    if (!html) { alert("Write an HTML body first."); return; }
     if (selected.size === 0) { alert("No recipients selected."); return; }
 
     const btns = document.querySelectorAll(".actions .btn");
@@ -555,7 +725,7 @@ const HTML = `<!DOCTYPE html>
     const res = await fetch("/api/admin/blast", {
       method: "POST",
       headers: { "Content-Type": "application/json", "x-admin-secret": adminSecret },
-      body: JSON.stringify({ message, dryRun, phoneNumbers: [...selected] })
+      body: JSON.stringify({ subject, html, dryRun, emails: [...selected] })
     });
     const data = await res.json();
 
@@ -566,10 +736,12 @@ const HTML = `<!DOCTYPE html>
   }
 
   function confirmBlast() {
-    const message = document.getElementById("message").value.trim();
-    if (!message) { alert("Write a message first."); return; }
+    const subject = document.getElementById("blast-subject").value.trim();
+    const html = document.getElementById("blast-html").value.trim();
+    if (!subject) { alert("Add a subject line first."); return; }
+    if (!html) { alert("Write an HTML body first."); return; }
     if (selected.size === 0) { alert("No recipients selected."); return; }
-    if (confirm("Send to " + selected.size + " " + (selected.size === 1 ? "person" : "people") + "?\\n\\n\\"" + message + "\\"")) {
+    if (confirm("Send \\"" + subject + "\\" to " + selected.size + " " + (selected.size === 1 ? "person" : "people") + "?")) {
       doBlast(false);
     }
   }
@@ -588,7 +760,7 @@ const HTML = `<!DOCTYPE html>
         <div class="result-row">
           <span>\${esc(r.name)}</span>
           <span style="display:flex;align-items:center;gap:8px">
-            <span style="color:#666;font-family:monospace;font-size:0.82rem">\${esc(r.phone)}</span>
+            <span style="color:#666;font-family:monospace;font-size:0.82rem">\${esc(r.email)}</span>
             <span class="badge dry">dry run</span>
           </span>
         </div>
@@ -604,7 +776,7 @@ const HTML = `<!DOCTYPE html>
       <div class="result-row">
         <span>\${esc(r.name)}</span>
         <span style="display:flex;align-items:center;gap:8px">
-          <span style="color:#666;font-family:monospace;font-size:0.82rem">\${esc(r.phone)}</span>
+          <span style="color:#666;font-family:monospace;font-size:0.82rem">\${esc(r.email)}</span>
           <span class="badge \${r.status}">\${r.status}</span>
         </span>
       </div>
@@ -640,7 +812,7 @@ const HTML = `<!DOCTYPE html>
             <div class="result-row">
               <span>\${esc(r.name)}</span>
               <span style="display:flex;align-items:center;gap:8px">
-                <span style="color:#666;font-family:monospace;font-size:0.82rem">\${esc(r.phone)}</span>
+                <span style="color:#666;font-family:monospace;font-size:0.82rem">\${esc(r.email)}</span>
                 <span class="badge \${r.status}">\${r.status}</span>
               </span>
             </div>

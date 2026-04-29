@@ -3,9 +3,10 @@ const { z } = require("zod");
 const {
   createParticipant,
   findParticipant,
-  findParticipantByPhone,
+  findParticipantByEmail,
   findParticipantByName,
   findParticipantByReferralCode,
+  updateParticipantEmail,
 } = require("../store");
 
 const twilioClient =
@@ -13,63 +14,56 @@ const twilioClient =
     ? require("twilio")(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN)
     : null;
 
-async function notifyOwner(name, phone, referredBy) {
+async function notifyOwner(name, email, referredBy) {
   if (!twilioClient || !process.env.TWILIO_TO || !process.env.TWILIO_FROM) return;
   const ref = referredBy ? ` (referred by ${referredBy})` : "";
   await twilioClient.messages.create({
     to: process.env.TWILIO_TO,
     from: process.env.TWILIO_FROM,
-    body: `LSD: ${name} (${phone}) just joined the domain${ref}.`,
+    body: `LSD: ${name} (${email}) just joined the domain${ref}.`,
   });
 }
 
 const joinSchema = z.object({
   name: z.string().min(1),
-  contact: z.string().min(1),
+  contact: z.string().email(),
   referredBy: z.string().optional(),
+});
+
+const updateEmailSchema = z.object({
+  name: z.string().min(1),
+  email: z.string().email(),
 });
 
 function waitlistRouter() {
   const router = Router();
 
-  // Join waitlist with name + phone + optional referral
+  // Join waitlist with name + email + optional referral
   router.post("/", async (req, res) => {
     const parsed = joinSchema.safeParse(req.body);
     if (!parsed.success) {
-      return res.status(400).json({ error: "Please enter a valid name and phone number." });
+      return res.status(400).json({ error: "Please enter a valid name and email address." });
     }
 
-    const { name, contact, referredBy } = parsed.data;
-    const phoneRe = /^\+?[\d\s\-().]{7,20}$/;
-    if (!phoneRe.test(contact)) {
-      return res.status(400).json({ error: "Please enter a valid phone number." });
-    }
-
-    // Normalize to E.164 — strip everything except digits and leading +
-    let phone = contact.replace(/[\s\-().]/g, "");
-    // If it's a 10-digit US number with no country code, prepend +1
-    if (/^\d{10}$/.test(phone)) phone = "+1" + phone;
-    // If it starts with 1 and is 11 digits, add the +
-    else if (/^1\d{10}$/.test(phone)) phone = "+" + phone;
+    const { name, contact: email, referredBy } = parsed.data;
 
     try {
-      // If name + phone both match an existing row, they're already in — skip referral entirely
-      const exactMatch = await findParticipant({ name, phone });
+      // If name + email both match an existing row, they're already in
+      const exactMatch = await findParticipant({ name, email });
       if (exactMatch) {
-        return res.json({ status: "already_joined" });
+        return res.json({ status: "already_joined", referralCode: exactMatch.referral_code });
       }
 
-      // If phone exists under a different name, still already registered
-      const byPhone = await findParticipantByPhone(phone);
-      if (byPhone) {
-        return res.json({ status: "already_joined" });
+      // If email exists under a different name, already registered
+      const byEmail = await findParticipantByEmail(email);
+      if (byEmail) {
+        return res.json({ status: "already_joined", referralCode: byEmail.referral_code });
       }
 
-      // New participant — insert (DB trigger handles updating referrer's array)
-      const participant = await createParticipant({ name, phone, referredBy: referredBy || null });
+      // New participant
+      const participant = await createParticipant({ name, email, referredBy: referredBy || null });
 
-      // Fire-and-forget SMS to owner — don't block the response
-      notifyOwner(name, phone, referredBy).catch((err) =>
+      notifyOwner(name, email, referredBy).catch((err) =>
         console.error("[waitlist/sms]", err)
       );
 
@@ -80,7 +74,7 @@ function waitlistRouter() {
     }
   });
 
-  // Check if a referrer name exists — also returns their referral code
+  // Check if a referrer name exists — also returns their referral code and whether they have email
   router.post("/check-referrer", async (req, res) => {
     const { name } = req.body || {};
     if (!name || typeof name !== "string") {
@@ -92,9 +86,38 @@ function waitlistRouter() {
       return res.json({
         found: !!entry,
         referralCode: entry?.referral_code ?? null,
+        hasEmail: !!(entry?.email),
       });
     } catch (err) {
       console.error("[waitlist/check-referrer]", err);
+      return res.status(500).json({ error: "Something went wrong." });
+    }
+  });
+
+  // Update email for a returning participant who didn't have one
+  router.post("/update-email", async (req, res) => {
+    const parsed = updateEmailSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ error: "Please enter a valid email address." });
+    }
+
+    const { name, email } = parsed.data;
+
+    try {
+      // Check email isn't already taken by someone else
+      const byEmail = await findParticipantByEmail(email);
+      if (byEmail) {
+        const isSamePerson = byEmail.name.toLowerCase().trim() === name.toLowerCase().trim();
+        if (!isSamePerson) {
+          return res.status(409).json({ error: "That email is already registered." });
+        }
+        return res.json({ status: "ok" });
+      }
+
+      await updateParticipantEmail({ name, email });
+      return res.json({ status: "ok" });
+    } catch (err) {
+      console.error("[waitlist/update-email]", err);
       return res.status(500).json({ error: "Something went wrong." });
     }
   });
