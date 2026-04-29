@@ -155,7 +155,7 @@ body {
   /* Center within the safe area (accounts for status bar + home indicator in standalone PWA) */
   top: calc(var(--sat) + (100% - var(--sat) - var(--sab)) / 2);
   left: 50%;
-  --landing-content-offset-y: 0px;
+  --landing-content-offset-y: 35px;
   transform: translate(-50%, calc(-50% + var(--landing-content-offset-y)));
   z-index: 3;
   display: flex;
@@ -164,7 +164,7 @@ body {
 }
 
 .landing--has-here .welcome-wrap {
-  --landing-content-offset-y: 0px;
+  --landing-content-offset-y: 35px;
 }
 
 /* Accretion disk — flat rotating ellipse of hot glowing gas */
@@ -499,7 +499,7 @@ body {
 /* Fixed logo — stays at top through all scroll, fades when between sections */
 .home-logo {
   position: fixed;
-  top: 28px;
+  top: 8px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 200;
@@ -534,13 +534,14 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
+  text-align: center;
 }
 
 .home-regulation-title {
   font-family: "Akira Expanded", sans-serif;
   font-size: clamp(1.8rem, 3.4vw, 2.9rem);
   letter-spacing: 0.16em;
-  color: rgba(255, 255, 255, 0.94);
+  color: #fff;
   text-transform: none;
   line-height: 1.05;
   margin: 0 0 22px 0;
@@ -574,7 +575,7 @@ body {
   font-family: "Akira Expanded", sans-serif;
   font-size: clamp(0.48rem, 0.85vw, 0.65rem);
   letter-spacing: 0.22em;
-  color: rgba(255, 255, 255, 0.84);
+  color: #fff;
   text-transform: uppercase;
   margin: 0 0 12px 0;
   text-shadow:
@@ -622,13 +623,24 @@ body {
   color: #fff;
 }
 
+.home-next-time {
+  font-family: "Akira Expanded", sans-serif;
+  font-size: clamp(0.42rem, 0.72vw, 0.58rem);
+  letter-spacing: 0.18em;
+  color: #8fef4a;
+  margin: 4px 0 26px 0;
+  text-shadow:
+    0 0 8px rgba(143, 239, 74, 0.6),
+    0 0 22px rgba(143, 239, 74, 0.28);
+}
+
 .home-next-address {
   font-family: "Akira Expanded", sans-serif;
-  font-size: clamp(0.38rem, 0.68vw, 0.54rem);
+  font-size: clamp(0.6rem, 1vw, 0.82rem);
   font-weight: 900;
   letter-spacing: 0.14em;
   color: #8fef4a;
-  margin: 0 0 26px 0;
+  margin: 0 0 6px 0;
   text-shadow:
     0 0 8px rgba(143, 239, 74, 0.6),
     0 0 22px rgba(143, 239, 74, 0.28);
@@ -1027,47 +1039,84 @@ body {
 
 .j-attend-slot {
   font-family: "Akira Expanded", sans-serif;
-  font-size: clamp(0.72rem, 1.2vw, 1rem);
+  font-size: clamp(0.58rem, 1vw, 0.82rem);
   letter-spacing: 0.08em;
-  color: rgba(255, 255, 255, 0.82);
-  text-transform: none;
+  color: #fff;
   margin: 0;
-  text-shadow: 0 0 18px rgba(255, 255, 255, 0.12);
+  line-height: 1.6;
 }
 
 .j-attend-note,
 .j-section-copy {
   font-family: "Excrallik", cursive;
-  font-size: clamp(1.2rem, 2.2vw, 1.6rem);
-  color: rgba(255, 255, 255, 0.9);
+  font-size: clamp(0.78rem, 1.2vw, 0.98rem);
+  color: #fff;
   line-height: 1.6;
   letter-spacing: 0.03em;
   max-width: 600px;
   margin: 0 0 8px 0;
 }
 
+.j-section-copy {
+  max-width: 800px;
+}
+
 .j-attend-note {
   padding-left: clamp(14px, 2vw, 22px);
 }
 
-.j-artist-bios {
-  margin-top: 28px;
+.j-artist-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(20px, 4vw, 48px);
+  max-width: 680px;
+  margin: 0 0 40px 0;
+}
+
+.j-artist-card {
   display: flex;
   flex-direction: column;
-  gap: 10px;
 }
 
-.j-artist-bio {
+.j-artist-photo-wrap {
+  aspect-ratio: 1 / 1;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 4px;
+  margin-bottom: 14px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.j-artist-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.j-artist-photo-placeholder {
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.j-artist-card-name {
   font-family: "Excrallik", cursive;
-  font-size: clamp(0.88rem, 1.3vw, 1.05rem);
-  color: rgba(255, 255, 255, 0.65);
-  line-height: 1.5;
-  letter-spacing: 0.03em;
+  font-size: clamp(1rem, 1.6vw, 1.3rem);
+  color: #fff;
+  letter-spacing: 0.04em;
+  margin: 0 0 8px 0;
 }
 
-.j-artist-bio-name {
-  color: #fff;
-  font-weight: 700;
+.j-artist-card-bio {
+  font-family: "Excrallik", cursive;
+  font-size: clamp(0.8rem, 1.2vw, 1rem);
+  color: rgba(255, 255, 255, 0.75);
+  line-height: 1.6;
+  letter-spacing: 0.03em;
+  margin: 0;
+  white-space: pre-line;
 }
 
 .j-inline-link {
@@ -1160,18 +1209,27 @@ body {
 /* ── Domain section content ── */
 .j-domain-intro {
   font-family: "Excrallik", cursive;
-  font-size: clamp(1.2rem, 2.2vw, 1.6rem);
-  font-weight: 700;
-  color: rgba(255, 255, 255, 0.9);
+  font-size: clamp(0.8rem, 1.3vw, 1rem);
+  color: #fff;
   line-height: 1.6;
   max-width: 600px;
-  margin: 0 0 40px 0;
+  margin: 0 0 14px 0;
   letter-spacing: 0.03em;
+}
+
+.j-domain-disclaimer {
+  font-family: "Akira Expanded", sans-serif;
+  font-size: clamp(0.42rem, 0.7vw, 0.58rem);
+  color: rgba(255, 255, 255, 0.75);
+  line-height: 1.7;
+  letter-spacing: 0.08em;
+  max-width: 600px;
+  margin: 20px 0 0 0;
 }
 
 .j-space-lead {
   font-family: "Excrallik", cursive;
-  font-size: clamp(1rem, 2vw, 1.6rem);
+  font-size: clamp(0.85rem, 1.5vw, 1.1rem);
   font-weight: 900;
   letter-spacing: 0.06em;
   color: #fff;
@@ -1673,6 +1731,11 @@ body {
     padding: 24px 16px calc(24px + 58px + env(safe-area-inset-bottom));
     gap: 0;
   }
+
+  .j-artist-grid {
+    gap: 14px;
+    max-width: 100%;
+  }
 }
 
 /* ── Portal info above the landing circle ── */
@@ -1690,7 +1753,7 @@ body {
   font-family: "Akira Expanded", sans-serif;
   font-size: clamp(1.05rem, 5.6vw, 2rem);
   letter-spacing: 0.16em;
-  color: rgba(255, 255, 255, 0.94);
+  color: #fff;
   line-height: 1.05;
   margin: 0 0 14px 0;
   text-shadow:
@@ -1703,7 +1766,7 @@ body {
   font-family: "Akira Expanded", sans-serif;
   font-size: clamp(0.42rem, 2.2vw, 0.6rem);
   letter-spacing: 0.22em;
-  color: rgba(255, 255, 255, 0.84);
+  color: #fff;
   text-transform: uppercase;
   margin: 0 0 10px 0;
   text-shadow:
@@ -1724,11 +1787,11 @@ body {
 
 @media (max-width: 768px) {
   .welcome-wrap {
-    --landing-content-offset-y: 0px;
+    --landing-content-offset-y: 20px;
   }
 
   .landing--has-here .welcome-wrap {
-    --landing-content-offset-y: 0px;
+    --landing-content-offset-y: 20px;
   }
 
   .accretion-disk {

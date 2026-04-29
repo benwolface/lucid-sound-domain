@@ -5,11 +5,40 @@ import {
   apiCheckReferrer,
   apiLookupRefCode,
   apiGetSettings,
+  apiUpdateContactEmail,
 } from "./lib/api";
 import "./styles.css";
 
 // ── Dev flag — skip the intro so the circle shows immediately ──
 const DEV_SKIP_INTRO = false;
+
+// ── Session persistence ──
+const SESSION_KEY = "lsd_session";
+const SESSION_TTL_MS = 5 * 24 * 60 * 60 * 1000; // 5 days
+
+function loadSession() {
+  try {
+    const raw = localStorage.getItem(SESSION_KEY);
+    if (!raw) return null;
+    const { referralCode, ts } = JSON.parse(raw);
+    if (Date.now() - ts > SESSION_TTL_MS) {
+      localStorage.removeItem(SESSION_KEY);
+      return null;
+    }
+    return { referralCode: referralCode ?? null };
+  } catch {
+    return null;
+  }
+}
+
+function saveSession(referralCode) {
+  try {
+    localStorage.setItem(
+      SESSION_KEY,
+      JSON.stringify({ referralCode, ts: Date.now() }),
+    );
+  } catch {}
+}
 
 // Landing only uses the two atmospheric shots
 const LANDING_BACKGROUNDS = [
@@ -37,8 +66,12 @@ function fmtPortalDate(isoDate) {
 }
 
 export default function App() {
-  const [screen, setScreen] = useState("landing");
-  const [referralCode, setReferralCode] = useState(null);
+  const [screen, setScreen] = useState(() =>
+    loadSession() ? "home" : "landing",
+  );
+  const [referralCode, setReferralCode] = useState(
+    () => loadSession()?.referralCode ?? null,
+  );
   const [imHereEnabled, setImHereEnabled] = useState(false);
   const [nextPortalDate, setNextPortalDate] = useState(null);
   const [upcomingPortalDate, setUpcomingPortalDate] = useState(null);
@@ -46,18 +79,34 @@ export default function App() {
   const [artist1Bio, setArtist1Bio] = useState(null);
   const [artist2Name, setArtist2Name] = useState(null);
   const [artist2Bio, setArtist2Bio] = useState(null);
+  const [artist1PhotoUrl, setArtist1PhotoUrl] = useState(null);
+  const [artist2PhotoUrl, setArtist2PhotoUrl] = useState(null);
 
   useEffect(() => {
     apiGetSettings()
-      .then(({ imHereEnabled, nextPortalDate, upcomingPortalDate, artist1Name, artist1Bio, artist2Name, artist2Bio }) => {
-        setImHereEnabled(!!imHereEnabled);
-        setNextPortalDate(nextPortalDate ?? null);
-        setUpcomingPortalDate(upcomingPortalDate ?? null);
-        setArtist1Name(artist1Name ?? null);
-        setArtist1Bio(artist1Bio ?? null);
-        setArtist2Name(artist2Name ?? null);
-        setArtist2Bio(artist2Bio ?? null);
-      })
+      .then(
+        ({
+          imHereEnabled,
+          nextPortalDate,
+          upcomingPortalDate,
+          artist1Name,
+          artist1Bio,
+          artist2Name,
+          artist2Bio,
+          artist1PhotoUrl,
+          artist2PhotoUrl,
+        }) => {
+          setImHereEnabled(!!imHereEnabled);
+          setNextPortalDate(nextPortalDate ?? null);
+          setUpcomingPortalDate(upcomingPortalDate ?? null);
+          setArtist1Name(artist1Name ?? null);
+          setArtist1Bio(artist1Bio ?? null);
+          setArtist2Name(artist2Name ?? null);
+          setArtist2Bio(artist2Bio ?? null);
+          setArtist1PhotoUrl(artist1PhotoUrl ?? null);
+          setArtist2PhotoUrl(artist2PhotoUrl ?? null);
+        },
+      )
       .catch(() => {});
   }, []);
 
@@ -71,6 +120,8 @@ export default function App() {
         artist1Bio={artist1Bio}
         artist2Name={artist2Name}
         artist2Bio={artist2Bio}
+        artist1PhotoUrl={artist1PhotoUrl}
+        artist2PhotoUrl={artist2PhotoUrl}
       />
     );
   if (screen === "domain")
@@ -79,7 +130,9 @@ export default function App() {
     <div className="app">
       <Landing
         onHome={(code) => {
-          setReferralCode(code ?? null);
+          const resolved = code ?? null;
+          saveSession(resolved);
+          setReferralCode(resolved);
           setScreen("home");
         }}
         onDomainScreen={() => setScreen("domain")}
@@ -93,12 +146,22 @@ export default function App() {
 const JOURNEY_SECTIONS = [
   { id: "home", label: "Regulation" },
   { id: "domain", label: "Understand" },
-  { id: "flow", label: "Attend" },
-  { id: "invitation", label: "Invitation" },
-  { id: "contact", label: "Contribute" },
+  { id: "flow", label: "Program" },
+  { id: "contact", label: "Featuring" },
+  { id: "contribute", label: "Contribute" },
 ];
 
-function Home({ referralCode, nextPortalDate, upcomingPortalDate, artist1Name, artist1Bio, artist2Name, artist2Bio }) {
+function Home({
+  referralCode,
+  nextPortalDate,
+  upcomingPortalDate,
+  artist1Name,
+  artist1Bio,
+  artist2Name,
+  artist2Bio,
+  artist1PhotoUrl,
+  artist2PhotoUrl,
+}) {
   const [bg] = useState(
     () => HOME_BACKGROUNDS[Math.floor(Math.random() * HOME_BACKGROUNDS.length)],
   );
@@ -237,6 +300,7 @@ function Home({ referralCode, nextPortalDate, upcomingPortalDate, artist1Name, a
           <p className="home-next-address">
             1340 Turk St Apt 418 · San Francisco CA
           </p>
+          <p className="home-next-time">7:00 – 11:00p</p>
           <CalendarButtons nextPortalDate={nextPortalDate} />
           <p className="home-upcoming-title">Upcoming portals</p>
           <p className="home-upcoming-date">
@@ -293,12 +357,17 @@ function Home({ referralCode, nextPortalDate, upcomingPortalDate, artist1Name, a
                   floor that requires nothing from you except your presence.
                 </p>
                 <p className="j-animate j-domain-intro">
-                  A space to find respite from the chaos of life in the city and share a moment of intentional relaxation. 
+                  A space to find respite from the chaos of life in the city and
+                  share a moment of intentional relaxation.
                 </p>
                 <p className="j-animate j-domain-intro">
-                  You may have quiet conversation in side rooms or socialize to your heart’s content on the roof, but the intention here is to cultivate a space to explore the concept of mind expansion through deep listening.  
+                  The intention here is to cultivate a space to explore the
+                  concept of mind expansion through deep listening.
                 </p>
-                We request there be no talking or cell phone use in the listening room during Regulation (8-9p).
+                <p className="j-animate j-domain-disclaimer">
+                  We request there be no talking or cell phone use in the
+                  listening room during Regulation (8-9p).
+                </p>
               </div>
 
               {/* Right: big image */}
@@ -345,42 +414,78 @@ function Home({ referralCode, nextPortalDate, upcomingPortalDate, artist1Name, a
             <div className="j-animate j-attend-schedule">
               <p className="j-attend-slot">7:00p - Arrival</p>
               <p className="j-attend-note">
-                Doors - get cozy, peruse the wares, settle into the space
-              </p>
-              <p className="j-attend-slot">7:50p - Doors Close. Late Entry Cannot Be Guaranteed</p>
-              <p className="j-attend-slot">8:00p - Regulation w/ {artist1Name || "trytab"}</p>
-              <p className="j-attend-slot">
-                9:00 - 9:30p - Transition Time (Ambient)
+                get cozy, peruse the wares, settle into the space
               </p>
               <p className="j-attend-slot">
-                9:30 - 10:30p - Low-end Ritual w/ {artist2Name || "dotnine"} (Movement)
+                7:50p - Doors Close. Late Entry Cannot Be Guaranteed
               </p>
-              <p className="j-attend-note">guiding us from meditative deep listening into low end movement</p>
+              <p className="j-attend-slot">
+                8:00p - Regulation w/ {artist1Name || "trytab"}
+              </p>
+              <p className="j-attend-slot">
+                9:00 - 9:30p - Break & snacks
+              </p>
+              <p className="j-attend-slot">
+                9:30 - 10:30p - Low-end Ritual w/{" "}
+                {artist2Name || "dotnine"}{" "}
+              </p>
+              <p className="j-attend-note">
+                guiding us from meditative deep listening into low end movement
+              </p>
             </div>
-            {(artist1Bio || artist2Bio) && (
-              <div className="j-artist-bios">
-                {artist1Bio && <p className="j-artist-bio"><span className="j-artist-bio-name">{artist1Name || "trytab"}</span> — {artist1Bio}</p>}
-                {artist2Bio && <p className="j-artist-bio"><span className="j-artist-bio-name">{artist2Name || "dotnine"}</span> — {artist2Bio}</p>}
-              </div>
-            )}
           </section>
 
-          {/* ── Invitation ── */}
-          <section
-            id="j-invitation"
-            className="j-section"
-            data-section="invitation"
-          >
-            <h2 className="j-animate j-section-heading">Invitation</h2>
-            <p className="j-animate j-section-copy">
-              if you&apos;d like to bring a friend into the domain for the next
-              portal, click here for your unique invite link
-            </p>
-            <InviteLinkButton referralCode={referralCode} />
-          </section>
-
-          {/* ── Contact ── */}
+          {/* ── Featuring ── */}
           <section id="j-contact" className="j-section" data-section="contact">
+            <h2 className="j-animate j-section-heading">Featuring</h2>
+            <div className="j-animate j-artist-grid">
+              <div className="j-artist-card">
+                <div className="j-artist-photo-wrap">
+                  {artist1PhotoUrl ? (
+                    <img
+                      src={artist1PhotoUrl}
+                      alt={artist1Name || "Artist 1"}
+                      className="j-artist-photo"
+                    />
+                  ) : (
+                    <div className="j-artist-photo-placeholder" />
+                  )}
+                </div>
+                {artist1Name && (
+                  <p className="j-artist-card-name">{artist1Name}</p>
+                )}
+                {artist1Bio && (
+                  <p className="j-artist-card-bio">{artist1Bio}</p>
+                )}
+              </div>
+              <div className="j-artist-card">
+                <div className="j-artist-photo-wrap">
+                  {artist2PhotoUrl ? (
+                    <img
+                      src={artist2PhotoUrl}
+                      alt={artist2Name || "Artist 2"}
+                      className="j-artist-photo"
+                    />
+                  ) : (
+                    <div className="j-artist-photo-placeholder" />
+                  )}
+                </div>
+                {artist2Name && (
+                  <p className="j-artist-card-name">{artist2Name}</p>
+                )}
+                {artist2Bio && (
+                  <p className="j-artist-card-bio">{artist2Bio}</p>
+                )}
+              </div>
+            </div>
+          </section>
+
+          {/* ── Contribute ── */}
+          <section
+            id="j-contribute"
+            className="j-section"
+            data-section="contribute"
+          >
             <h2 className="j-animate j-section-heading">Contribute</h2>
             <p className="j-animate j-section-copy">
               if you&apos;d like to contribute to the co-creation of Regulation
@@ -391,10 +496,15 @@ function Home({ referralCode, nextPortalDate, upcomingPortalDate, artist1Name, a
               </a>
               .
             </p>
+            <p className="j-animate j-section-copy" style={{ marginTop: 20 }}>
+              if you&apos;d like to bring a trusted friend into the domain for
+              the next portal opening, click here for your unique invite link
+            </p>
+            <InviteLinkButton referralCode={referralCode} />
             <SectionScrollHint
               nextId="j-outro"
               containerRef={pageRef}
-              visible={active === "contact"}
+              visible={active === "contribute"}
               alwaysShow
             />
           </section>
@@ -954,9 +1064,8 @@ function DomainScreen({ onBack }) {
   );
 }
 
-function isContactReady(value) {
-  const digits = value.replace(/\D/g, "");
-  return digits.length >= 10 || value.includes(".com");
+function isEmailValid(value) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
 }
 
 function Landing({ onHome, onDomainScreen, imHereEnabled, nextPortalDate }) {
@@ -967,12 +1076,13 @@ function Landing({ onHome, onDomainScreen, imHereEnabled, nextPortalDate }) {
       ],
   );
 
-  // step: 'arrival' → ('name' → 'contact' → 'referral') | ('returning')
+  // step: 'arrival' → ('name' → 'contact' → 'referral') | ('returning' → 'returning-email'?)
   const [step, setStep] = useState("arrival");
   const [name, setName] = useState("");
   const [contact, setContact] = useState("");
   const [referrer, setReferrer] = useState("");
   const [returningName, setReturningName] = useState("");
+  const [returningReferralCode, setReturningReferralCode] = useState(null);
   // ref code from ?ref= URL param — skips the referral step if present
   const [inboundRefCode, setInboundRefCode] = useState(null);
   const [inboundRefName, setInboundRefName] = useState(null);
@@ -995,12 +1105,14 @@ function Landing({ onHome, onDomainScreen, imHereEnabled, nextPortalDate }) {
     step === "name"
       ? name.trim().length > 0
       : step === "contact"
-        ? isContactReady(contact)
+        ? isEmailValid(contact)
         : step === "referral"
           ? referrer.trim().length > 0
           : step === "returning"
             ? returningName.trim().length > 0
-            : false;
+            : step === "returning-email"
+              ? isEmailValid(contact)
+              : false;
 
   // ── Refs ──
   const skipIntroRef = useRef(null);
@@ -1051,7 +1163,7 @@ function Landing({ onHome, onDomainScreen, imHereEnabled, nextPortalDate }) {
 
   // ── Submit: contact step → skip referral if we have an inbound ref code ──
   function handleContactSubmit() {
-    if (!isContactReady(contact)) return;
+    if (!isEmailValid(contact)) return;
     if (inboundRefCode) {
       // Already know the referrer — submit directly
       triggerPower();
@@ -1062,6 +1174,9 @@ function Landing({ onHome, onDomainScreen, imHereEnabled, nextPortalDate }) {
 
   // ── Arrival choice: first arrival → name step ──
   function handleFirstArrival() {
+    // Run skip now (pauses intro animations, nulls itself) so the parent
+    // onClick bubble doesn't re-run it and undo our fade-out below.
+    skipIntroRef.current?.();
     const wtEl = welcomeTextRef.current;
     if (wtEl) {
       wtEl.style.transition = "opacity 0.4s ease, transform 0.4s ease";
@@ -1100,6 +1215,7 @@ function Landing({ onHome, onDomainScreen, imHereEnabled, nextPortalDate }) {
 
   // ── Arrival choice: returning → check name in DB ──
   function handleArrivalReturning() {
+    skipIntroRef.current?.();
     const wtEl = welcomeTextRef.current;
     if (wtEl) {
       wtEl.style.transition = "opacity 0.4s ease, transform 0.4s ease";
@@ -1169,6 +1285,9 @@ function Landing({ onHome, onDomainScreen, imHereEnabled, nextPortalDate }) {
       fadeToStep("name");
     } else if (step === "referral") {
       fadeToStep("contact");
+    } else if (step === "returning-email") {
+      setContact("");
+      fadeToStep("returning");
     }
   }
 
@@ -1237,7 +1356,7 @@ function Landing({ onHome, onDomainScreen, imHereEnabled, nextPortalDate }) {
     if (isPressing) return;
     setIsPressing(true);
     try {
-      const { found, referralCode } = await apiCheckReferrer({
+      const { found, referralCode, hasEmail } = await apiCheckReferrer({
         name: returningName.trim(),
       });
       if (!found) {
@@ -1245,8 +1364,30 @@ function Landing({ onHome, onDomainScreen, imHereEnabled, nextPortalDate }) {
         handleRejection("returning");
         return;
       }
+      if (!hasEmail) {
+        setIsPressing(false);
+        setReturningReferralCode(referralCode);
+        fadeToStep("returning-email");
+        return;
+      }
       setIsPressing(false);
       handlePowerPress(referralCode);
+    } catch {
+      setIsPressing(false);
+      handleRejection("returning");
+    }
+  }
+
+  async function triggerReturningWithEmail() {
+    if (isPressing) return;
+    setIsPressing(true);
+    try {
+      await apiUpdateContactEmail({
+        name: returningName.trim(),
+        email: contact.trim(),
+      });
+      setIsPressing(false);
+      handlePowerPress(returningReferralCode);
     } catch {
       setIsPressing(false);
       handleRejection("returning");
@@ -1260,6 +1401,8 @@ function Landing({ onHome, onDomainScreen, imHereEnabled, nextPortalDate }) {
     else if (step === "referral" && referrer.trim().length > 0) triggerPower();
     else if (step === "returning" && returningName.trim().length > 0)
       triggerReturning();
+    else if (step === "returning-email" && isEmailValid(contact))
+      triggerReturningWithEmail();
   }
 
   // ── Power button: full shutdown sequence ──
@@ -1517,7 +1660,7 @@ function Landing({ onHome, onDomainScreen, imHereEnabled, nextPortalDate }) {
         parseFloat(
           getComputedStyle(document.documentElement).getPropertyValue("--sat"),
         ) || 0;
-      const LOGO_TOP_PX = 12 + sat;
+      const LOGO_TOP_PX = 4 + sat;
       const rect = splashEl.getBoundingClientRect();
       const targetTY =
         LOGO_TOP_PX +
@@ -1606,10 +1749,17 @@ function Landing({ onHome, onDomainScreen, imHereEnabled, nextPortalDate }) {
 
     skipIntroRef.current = () => {
       skipIntroRef.current = null;
-      animations.forEach((a) => { try { a.pause(); } catch (_) {} });
+      animations.forEach((a) => {
+        try {
+          a.pause();
+        } catch (_) {}
+      });
       clearTimeout(flickerStart);
       clearTimeout(logoTimeout);
-      if (flickerTick) { clearInterval(flickerTick); flickerTick = null; }
+      if (flickerTick) {
+        clearInterval(flickerTick);
+        flickerTick = null;
+      }
       words.forEach((w) => {
         w.style.transition = "opacity 0.25s ease, filter 0.25s ease";
         w.style.opacity = "0";
@@ -1621,11 +1771,28 @@ function Landing({ onHome, onDomainScreen, imHereEnabled, nextPortalDate }) {
         splashRef.current.style.opacity = "0";
         splashRef.current.style.transform = "";
       }
-      if (slide) { slide.style.transition = "opacity 0.3s ease"; slide.style.opacity = "1"; }
-      if (welcomeRef.current) { welcomeRef.current.style.transition = "opacity 0.35s ease 0.1s"; welcomeRef.current.style.opacity = "1"; }
-      if (welcomeTextRef.current) { welcomeTextRef.current.style.transition = "opacity 0.35s ease 0.15s, transform 0.35s ease 0.15s"; welcomeTextRef.current.style.opacity = "1"; welcomeTextRef.current.style.transform = "translateY(0)"; }
-      if (inputWrapRef.current) { inputWrapRef.current.style.transition = "opacity 0.35s ease 0.2s"; inputWrapRef.current.style.opacity = "1"; }
-      if (lineRef.current) { lineRef.current.style.transition = "transform 0.35s ease 0.2s"; lineRef.current.style.transform = "scaleX(1)"; }
+      if (slide) {
+        slide.style.transition = "opacity 0.3s ease";
+        slide.style.opacity = "1";
+      }
+      if (welcomeRef.current) {
+        welcomeRef.current.style.transition = "opacity 0.35s ease 0.1s";
+        welcomeRef.current.style.opacity = "1";
+      }
+      if (welcomeTextRef.current) {
+        welcomeTextRef.current.style.transition =
+          "opacity 0.35s ease 0.15s, transform 0.35s ease 0.15s";
+        welcomeTextRef.current.style.opacity = "1";
+        welcomeTextRef.current.style.transform = "translateY(0)";
+      }
+      if (inputWrapRef.current) {
+        inputWrapRef.current.style.transition = "opacity 0.35s ease 0.2s";
+        inputWrapRef.current.style.opacity = "1";
+      }
+      if (lineRef.current) {
+        lineRef.current.style.transition = "transform 0.35s ease 0.2s";
+        lineRef.current.style.transform = "scaleX(1)";
+      }
     };
 
     return () => {
@@ -1657,7 +1824,10 @@ function Landing({ onHome, onDomainScreen, imHereEnabled, nextPortalDate }) {
   }, []);
 
   return (
-    <div className={`landing${imHereEnabled ? " landing--has-here" : ""}`}>
+    <div
+      className={`landing${imHereEnabled ? " landing--has-here" : ""}`}
+      onClick={() => skipIntroRef.current?.()}
+    >
       <div
         ref={bgSlideRef}
         className="bg-slide"
@@ -1669,7 +1839,11 @@ function Landing({ onHome, onDomainScreen, imHereEnabled, nextPortalDate }) {
       />
       <div className="bg-veil" />
 
-      <div ref={splashRef} className="splash" onClick={() => skipIntroRef.current?.()}>
+      <div
+        ref={splashRef}
+        className="splash"
+        onClick={() => skipIntroRef.current?.()}
+      >
         <span className="splash-word" data-word="LUCID">
           LUCID
         </span>
@@ -1689,7 +1863,7 @@ function Landing({ onHome, onDomainScreen, imHereEnabled, nextPortalDate }) {
             {nextPortalDate ? fmtPortalDate(nextPortalDate) : "date TBD"}
           </p>
           <p className="home-timing">
-            Doors close at 7:50p. Late Entry Not Guaranteed. 
+            Doors close at 7:50p. Late Entry Not Guaranteed.
           </p>
         </div>
         <div ref={diskRef} className="accretion-disk" />
@@ -1706,7 +1880,7 @@ function Landing({ onHome, onDomainScreen, imHereEnabled, nextPortalDate }) {
               "this is the right place. that's not the right person"
             ) : step === "name" || step === "returning" ? (
               "who are you?"
-            ) : step === "contact" ? (
+            ) : step === "contact" || step === "returning-email" ? (
               "how do we reach you?"
             ) : step === "referral" ? (
               <>
@@ -1731,6 +1905,7 @@ function Landing({ onHome, onDomainScreen, imHereEnabled, nextPortalDate }) {
           ref={inputWrapRef}
           className="waitlist-input-wrap"
           onSubmit={handleSubmit}
+          autoComplete="off"
         >
           {step === "arrival" ? (
             <div
@@ -1754,7 +1929,10 @@ function Landing({ onHome, onDomainScreen, imHereEnabled, nextPortalDate }) {
                 <button
                   type="button"
                   className="arrival-btn arrival-btn--here"
-                  onClick={() => handlePowerPress(null, onDomainScreen)}
+                  onClick={() => {
+                    skipIntroRef.current?.();
+                    handlePowerPress(null, onDomainScreen);
+                  }}
                 >
                   i'm here
                 </button>
@@ -1764,18 +1942,27 @@ function Landing({ onHome, onDomainScreen, imHereEnabled, nextPortalDate }) {
             <>
               <input
                 className="waitlist-input"
-                type={step === "contact" ? "tel" : "text"}
+                type={
+                  step === "contact" || step === "returning-email"
+                    ? "email"
+                    : "text"
+                }
+                autoComplete={
+                  step === "contact" || step === "returning-email"
+                    ? "email"
+                    : "off"
+                }
                 placeholder={
                   step === "name" || step === "returning"
                     ? "your name"
-                    : step === "contact"
-                      ? "phone number"
+                    : step === "contact" || step === "returning-email"
+                      ? "email address"
                       : "name..."
                 }
                 value={
                   step === "name"
                     ? name
-                    : step === "contact"
+                    : step === "contact" || step === "returning-email"
                       ? contact
                       : step === "returning"
                         ? returningName
@@ -1784,7 +1971,7 @@ function Landing({ onHome, onDomainScreen, imHereEnabled, nextPortalDate }) {
                 onChange={(e) =>
                   step === "name"
                     ? setName(e.target.value)
-                    : step === "contact"
+                    : step === "contact" || step === "returning-email"
                       ? setContact(e.target.value)
                       : step === "returning"
                         ? setReturningName(e.target.value)
@@ -1808,11 +1995,18 @@ function Landing({ onHome, onDomainScreen, imHereEnabled, nextPortalDate }) {
                           e.preventDefault();
                           triggerReturning();
                         }
-                      : undefined
+                      : step === "returning-email"
+                        ? (e) => {
+                            e.preventDefault();
+                            triggerReturningWithEmail();
+                          }
+                        : undefined
                 }
-                className={`submit-btn${showSubmit ? " visible" : ""}${step === "referral" || step === "returning" ? " submit-btn--power" : ""}${isPressing ? " is-pressing" : ""}`}
+                className={`submit-btn${showSubmit ? " visible" : ""}${step === "referral" || step === "returning" || step === "returning-email" ? " submit-btn--power" : ""}${isPressing ? " is-pressing" : ""}`}
               >
-                {step === "referral" || step === "returning" ? (
+                {step === "referral" ||
+                step === "returning" ||
+                step === "returning-email" ? (
                   <PowerIcon />
                 ) : (
                   "enter"

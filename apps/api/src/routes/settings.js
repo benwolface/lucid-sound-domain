@@ -15,10 +15,12 @@ function settingsRouter() {
         artist1Bio: settings.artist1_bio ?? null,
         artist2Name: settings.artist2_name ?? null,
         artist2Bio: settings.artist2_bio ?? null,
+        artist1PhotoUrl: settings.artist1_photo_url ?? null,
+        artist2PhotoUrl: settings.artist2_photo_url ?? null,
       });
     } catch (err) {
       console.error("[settings]", err);
-      return res.json({ imHereEnabled: false, nextPortalDate: null, upcomingPortalDate: null, artist1Name: null, artist1Bio: null, artist2Name: null, artist2Bio: null });
+      return res.json({ imHereEnabled: false, nextPortalDate: null, upcomingPortalDate: null, artist1Name: null, artist1Bio: null, artist2Name: null, artist2Bio: null, artist1PhotoUrl: null, artist2PhotoUrl: null });
     }
   });
 

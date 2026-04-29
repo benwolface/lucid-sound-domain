@@ -159,11 +159,11 @@ async function findWaitlistEntryByName(name) {
 
 // ---------- Participants (Supabase) ----------
 
-async function findParticipant({ name, phone }) {
+async function findParticipant({ name, email }) {
   const { data } = await supabase
     .from("participants")
-    .select("id, name, phone_number, referrals, referred_by")
-    .eq("phone_number", phone)
+    .select("id, name, email, referrals, referred_by")
+    .eq("email", email)
     .ilike("name", name)
     .maybeSingle();
   return data ?? null;
@@ -178,10 +178,19 @@ async function findParticipantByPhone(phone) {
   return data ?? null;
 }
 
+async function findParticipantByEmail(email) {
+  const { data } = await supabase
+    .from("participants")
+    .select("id, name, email, referrals, referred_by")
+    .eq("email", email)
+    .maybeSingle();
+  return data ?? null;
+}
+
 async function findParticipantByName(name) {
   const { data } = await supabase
     .from("participants")
-    .select("id, name, referral_code")
+    .select("id, name, email, referral_code")
     .ilike("name", name)
     .maybeSingle();
   return data ?? null;
@@ -196,21 +205,29 @@ async function findParticipantByReferralCode(code) {
   return data ?? null;
 }
 
-async function createParticipant({ name, phone, referredBy = null }) {
+async function createParticipant({ name, email, phone = null, referredBy = null }) {
   const referral_code = generateReferralCode();
   const { data, error } = await supabase
     .from("participants")
-    .insert({ name, phone_number: phone, referred_by: referredBy, referral_code })
+    .insert({ name, email: email || null, phone_number: phone || null, referred_by: referredBy, referral_code })
     .select()
     .single();
   if (error) throw error;
   return data;
 }
 
+async function updateParticipantEmail({ name, email }) {
+  const { error } = await supabase
+    .from("participants")
+    .update({ email })
+    .ilike("name", name);
+  if (error) throw error;
+}
+
 async function getAllParticipants() {
   const { data, error } = await supabase
     .from("participants")
-    .select("id, name, phone_number, referral_code, referred_by, created_at")
+    .select("id, name, email, phone_number, referral_code, referred_by, created_at")
     .order("created_at", { ascending: true });
   if (error) throw error;
   return data ?? [];
@@ -219,7 +236,7 @@ async function getAllParticipants() {
 async function getSettings() {
   const { data, error } = await supabase
     .from("app_settings")
-    .select("im_here_enabled, next_portal_date, upcoming_portal_date, artist1_name, artist1_bio, artist2_name, artist2_bio")
+    .select("im_here_enabled, next_portal_date, upcoming_portal_date, artist1_name, artist1_bio, artist2_name, artist2_bio, artist1_photo_url, artist2_photo_url")
     .single();
   if (error) throw error;
   return data;
@@ -254,6 +271,15 @@ async function updateArtists({ artist1Name, artist1Bio, artist2Name, artist2Bio 
   if (error) throw error;
 }
 
+async function updateArtistPhotoUrl({ artist, url }) {
+  const field = artist === "1" ? "artist1_photo_url" : "artist2_photo_url";
+  const { error } = await supabase
+    .from("app_settings")
+    .update({ [field]: url || null })
+    .eq("id", true);
+  if (error) throw error;
+}
+
 async function logBlast({ message, sent, failed, total, dryRun, results }) {
   const { error } = await supabase
     .from("blast_logs")
@@ -280,6 +306,7 @@ module.exports = {
   deleteSessionByTokenHash,
   ensureVisitor,
   findParticipant,
+  findParticipantByEmail,
   findParticipantByName,
   findParticipantByPhone,
   findParticipantByReferralCode,
@@ -291,8 +318,10 @@ module.exports = {
   getBlastLogs,
   getSettings,
   logBlast,
+  updateArtistPhotoUrl,
   updateArtists,
   updateImHereEnabled,
+  updateParticipantEmail,
   updatePortalDates,
   upsertUser
 };
