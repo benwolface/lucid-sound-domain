@@ -1827,6 +1827,7 @@ function Landing({ onHome, onDomainScreen, imHereEnabled, nextPortalDate }) {
     <div
       className={`landing${imHereEnabled ? " landing--has-here" : ""}`}
       onClick={() => skipIntroRef.current?.()}
+      onTouchStart={() => skipIntroRef.current?.()}
     >
       <div
         ref={bgSlideRef}

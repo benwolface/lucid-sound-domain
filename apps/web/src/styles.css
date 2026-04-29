@@ -1787,11 +1787,11 @@ body {
 
 @media (max-width: 768px) {
   .welcome-wrap {
-    --landing-content-offset-y: 20px;
+    --landing-content-offset-y: 0px;
   }
 
   .landing--has-here .welcome-wrap {
-    --landing-content-offset-y: 20px;
+    --landing-content-offset-y: 0px;
   }
 
   .accretion-disk {
