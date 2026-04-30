@@ -109,7 +109,7 @@
     .participant-row:hover { background: #161616; margin: 0 -20px; padding-left: 20px; padding-right: 20px; }
     .participant-row.deselected { opacity: 0.35; }
     .participant-name { color: #e5e5e5; flex: 1; }
-    .participant-phone { color: #666; font-family: monospace; font-size: 0.82rem; }
+    .participant-email { color: #666; font-family: monospace; font-size: 0.82rem; }
     .cb {
       width: 16px; height: 16px; border: 1.5px solid #444;
       border-radius: 4px; flex-shrink: 0;
@@ -368,9 +368,9 @@
 
     <!-- COMPOSE -->
     <div class="section">
-      <div class="section-title">Message</div>
-      <textarea id="message" class="input" placeholder="Type your message here…" oninput="updateCharCount()"></textarea>
-      <div id="char-count" class="char-count">0 / 160</div>
+      <div class="section-title" style="margin-bottom:12px">Message</div>
+      <input type="text" id="blast-subject" class="input" placeholder="Subject line…" style="margin-bottom:10px" />
+      <textarea id="blast-html" class="input" placeholder="HTML body… (e.g. &lt;p&gt;Hey everyone!&lt;/p&gt;)" style="min-height:120px"></textarea>
       <div class="actions">
         <button class="btn btn-ghost" onclick="doBlast(true)">Dry Run</button>
         <button class="btn btn-danger" onclick="confirmBlast()">Send Blast</button>
@@ -550,8 +550,8 @@
     const res = await fetch("/api/admin/participants", { headers: { "x-admin-secret": adminSecret } });
     const data = await res.json();
     document.getElementById("participants-loading").style.display = "none";
-    allParticipants = data.participants || [];
-    selected = new Set(allParticipants.map(p => p.phone_number));
+    allParticipants = (data.participants || []).filter(p => p.email);
+    selected = new Set(allParticipants.map(p => p.email));
     renderParticipants();
   }
 
@@ -562,30 +562,30 @@
       return;
     }
     list.innerHTML = allParticipants.map(p => `
-      <div class="participant-row ${selected.has(p.phone_number) ? "" : "deselected"}"
-           onclick="toggleParticipant('${esc(p.phone_number)}')"
-           data-phone="${esc(p.phone_number)}">
-        <div class="cb ${selected.has(p.phone_number) ? "checked" : ""}"></div>
+      <div class="participant-row ${selected.has(p.email) ? "" : "deselected"}"
+           onclick="toggleParticipant('${esc(p.email)}')"
+           data-email="${esc(p.email)}">
+        <div class="cb ${selected.has(p.email) ? "checked" : ""}"></div>
         <span class="participant-name">${esc(p.name)}</span>
-        <span class="participant-phone">${esc(p.phone_number)}</span>
+        <span class="participant-email">${esc(p.email)}</span>
       </div>
     `).join("");
     updateSelectedBadge();
   }
 
-  function toggleParticipant(phone) {
-    if (selected.has(phone)) selected.delete(phone);
-    else selected.add(phone);
-    const row = document.querySelector(`.participant-row[data-phone="${CSS.escape(phone)}"]`);
+  function toggleParticipant(email) {
+    if (selected.has(email)) selected.delete(email);
+    else selected.add(email);
+    const row = document.querySelector(`.participant-row[data-email="${CSS.escape(email)}"]`);
     if (row) {
-      const isSelected = selected.has(phone);
+      const isSelected = selected.has(email);
       row.classList.toggle("deselected", !isSelected);
       row.querySelector(".cb").classList.toggle("checked", isSelected);
     }
     updateSelectedBadge();
   }
 
-  function selectAll() { selected = new Set(allParticipants.map(p => p.phone_number)); renderParticipants(); }
+  function selectAll() { selected = new Set(allParticipants.map(p => p.email)); renderParticipants(); }
   function selectNone() { selected = new Set(); renderParticipants(); }
   function updateSelectedBadge() { document.getElementById("selected-badge").textContent = selected.size + " selected"; }
 
@@ -598,8 +598,10 @@
   }
 
   async function doBlast(dryRun = false) {
-    const message = document.getElementById("message").value.trim();
-    if (!message) { alert("Write a message first."); return; }
+    const subject = document.getElementById("blast-subject").value.trim();
+    const html = document.getElementById("blast-html").value.trim();
+    if (!subject) { alert("Add a subject line first."); return; }
+    if (!html) { alert("Write an HTML body first."); return; }
     if (selected.size === 0) { alert("No recipients selected."); return; }
 
     const btns = document.querySelectorAll(".actions .btn");
@@ -608,7 +610,7 @@
     const res = await fetch("/api/admin/blast", {
       method: "POST",
       headers: { "Content-Type": "application/json", "x-admin-secret": adminSecret },
-      body: JSON.stringify({ message, dryRun, phoneNumbers: [...selected] })
+      body: JSON.stringify({ subject, html, dryRun, emails: [...selected] })
     });
     const data = await res.json();
 
@@ -619,10 +621,12 @@
   }
 
   function confirmBlast() {
-    const message = document.getElementById("message").value.trim();
-    if (!message) { alert("Write a message first."); return; }
+    const subject = document.getElementById("blast-subject").value.trim();
+    const html = document.getElementById("blast-html").value.trim();
+    if (!subject) { alert("Add a subject line first."); return; }
+    if (!html) { alert("Write an HTML body first."); return; }
     if (selected.size === 0) { alert("No recipients selected."); return; }
-    if (confirm("Send to " + selected.size + " " + (selected.size === 1 ? "person" : "people") + "?\n\n\"" + message + "\"")) {
+    if (confirm("Send to " + selected.size + " " + (selected.size === 1 ? "person" : "people") + "?\n\nSubject: \"" + subject + "\"")) {
       doBlast(false);
     }
   }
@@ -641,7 +645,7 @@
         <div class="result-row">
           <span>${esc(r.name)}</span>
           <span style="display:flex;align-items:center;gap:8px">
-            <span style="color:#666;font-family:monospace;font-size:0.82rem">${esc(r.phone)}</span>
+            <span style="color:#666;font-family:monospace;font-size:0.82rem">${esc(r.email)}</span>
             <span class="badge dry">dry run</span>
           </span>
         </div>
@@ -657,7 +661,7 @@
       <div class="result-row">
         <span>${esc(r.name)}</span>
         <span style="display:flex;align-items:center;gap:8px">
-          <span style="color:#666;font-family:monospace;font-size:0.82rem">${esc(r.phone)}</span>
+          <span style="color:#666;font-family:monospace;font-size:0.82rem">${esc(r.email)}</span>
           <span class="badge ${r.status}">${r.status}</span>
         </span>
       </div>
@@ -693,7 +697,7 @@
             <div class="result-row">
               <span>${esc(r.name)}</span>
               <span style="display:flex;align-items:center;gap:8px">
-                <span style="color:#666;font-family:monospace;font-size:0.82rem">${esc(r.phone)}</span>
+                <span style="color:#666;font-family:monospace;font-size:0.82rem">${esc(r.email)}</span>
                 <span class="badge ${r.status}">${r.status}</span>
               </span>
             </div>
