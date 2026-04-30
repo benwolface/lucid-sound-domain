@@ -647,6 +647,13 @@
 
   function fmt(cmd) { document.execCommand(cmd, false, null); document.getElementById("blast-html").focus(); }
 
+  // Strip all external formatting on paste — plain text only, then user applies their own formatting
+  document.getElementById("blast-html").addEventListener("paste", function(e) {
+    e.preventDefault();
+    const text = (e.clipboardData || window.clipboardData).getData("text/plain");
+    document.execCommand("insertText", false, text);
+  });
+
   function getBody() { return document.getElementById("blast-html").innerHTML.replace(/^(<br\s*\/?>)+|(<br\s*\/?>)+$/gi, "").trim(); }
 
   async function doBlast(dryRun = false) {
