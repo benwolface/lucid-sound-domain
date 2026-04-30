@@ -7,11 +7,7 @@ const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANO
 
 const BATCH_SIZE = 10;
 const FROM_EMAIL = process.env.FROM_EMAIL || "hi@lucidsounddomain.com";
-
-function withUnsubscribeFooter(html, email) {
-  const footer = `<div style="margin-top:32px;padding-top:16px;border-top:1px solid #333;font-family:Arial,sans-serif;font-size:11px;color:#777;text-align:center;line-height:1.6">You're receiving this because you joined Lucid Sound Domain.<br>To unsubscribe, reply to this email with "STOP".</div>`;
-  return html.includes("</body>") ? html.replace("</body>", footer + "</body>") : html + footer;
-}
+const FROM_NAME = process.env.FROM_NAME || "mani";
 
 function requireAdminSecret(req, res, next) {
   const secret = process.env.ADMIN_SECRET;
@@ -158,11 +154,11 @@ function adminRouter() {
     for (let i = 0; i < participants.length; i += BATCH_SIZE) {
       const chunk = participants.slice(i, i + BATCH_SIZE);
       const batch = chunk.map((p) => ({
-        from: `Lucid Sound Domain <${FROM_EMAIL}>`,
+        from: `${FROM_NAME} <${FROM_EMAIL}>`,
         to: p.email,
         reply_to: FROM_EMAIL,
         subject,
-        html: withUnsubscribeFooter(html, p.email),
+        text: html + "\n\n---\nTo opt out of future messages, reply with \"stop\".",
       }));
 
       try {

@@ -370,7 +370,8 @@
     <div class="section">
       <div class="section-title" style="margin-bottom:12px">Message</div>
       <input type="text" id="blast-subject" class="input" placeholder="Subject line…" style="margin-bottom:10px" />
-      <textarea id="blast-html" class="input" placeholder="HTML body… (e.g. &lt;p&gt;Hey everyone!&lt;/p&gt;)" style="min-height:120px"></textarea>
+      <textarea id="blast-html" class="input" placeholder="Plain text message… keep it personal, like a text from a friend" style="min-height:140px;white-space:pre-wrap;font-family:monospace"></textarea>
+      <div style="color:#555;font-size:0.78rem;margin-top:6px">✦ Tip: plain text lands in Primary inbox, HTML goes to Promotions</div>
       <div class="actions">
         <button class="btn btn-ghost" onclick="doBlast(true)">Dry Run</button>
         <button class="btn btn-danger" onclick="confirmBlast()">Send Blast</button>
