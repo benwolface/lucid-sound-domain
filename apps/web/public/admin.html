@@ -135,11 +135,19 @@
       font-size: 0.8rem; color: #aaa; margin-left: 6px;
     }
 
-    /* MESSAGE */
-    textarea.input { resize: vertical; min-height: 100px; line-height: 1.5; }
-    .char-count { text-align: right; font-size: 0.78rem; color: #666; margin-top: 6px; }
-    .char-count.warn { color: #f59e0b; }
-    .char-count.over { color: #f87171; }
+    /* COMPOSE */
+    .compose-toolbar { display: flex; gap: 4px; margin-bottom: 8px; }
+    .toolbar-btn { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 5px; color: #aaa; width: 32px; height: 28px; cursor: pointer; font-size: 0.85rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .toolbar-btn:hover { background: #2a2a2a; color: #e5e5e5; }
+    .toolbar-sep { width: 1px; background: #2a2a2a; margin: 2px 4px; }
+    .compose-editor {
+      background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 8px;
+      color: #e5e5e5; padding: 12px 14px; min-height: 180px;
+      font-size: 0.95rem; outline: none; line-height: 1.7;
+      cursor: text; white-space: pre-wrap;
+    }
+    .compose-editor:focus { border-color: #555; }
+    .compose-editor:empty::before { content: attr(data-placeholder); color: #444; pointer-events: none; }
     .actions { display: flex; gap: 10px; margin-top: 14px; }
     .actions .btn { flex: 1; }
 
@@ -377,8 +385,14 @@
     <div class="section">
       <div class="section-title" style="margin-bottom:12px">Message</div>
       <input type="text" id="blast-subject" class="input" placeholder="Subject line…" style="margin-bottom:10px" />
-      <textarea id="blast-html" class="input" placeholder="Plain text message… keep it personal, like a text from a friend" style="min-height:140px;white-space:pre-wrap;font-family:monospace"></textarea>
-      <div style="color:#555;font-size:0.78rem;margin-top:6px">✦ Tip: plain text lands in Primary inbox, HTML goes to Promotions</div>
+      <div class="compose-toolbar">
+        <button class="toolbar-btn" onmousedown="event.preventDefault();fmt('bold')" title="Bold"><b>B</b></button>
+        <button class="toolbar-btn" onmousedown="event.preventDefault();fmt('italic')" title="Italic"><i>I</i></button>
+        <button class="toolbar-btn" onmousedown="event.preventDefault();fmt('underline')" title="Underline"><u>U</u></button>
+        <div class="toolbar-sep"></div>
+        <button class="toolbar-btn" onmousedown="event.preventDefault();fmt('insertUnorderedList')" title="Bullet list" style="font-size:1rem">≡</button>
+      </div>
+      <div id="blast-html" class="compose-editor" contenteditable="true" data-placeholder="Write your message… keep it personal"></div>
       <div class="actions">
         <button class="btn btn-ghost" onclick="doBlast(true)">Dry Run</button>
         <button class="btn btn-danger" onclick="confirmBlast()">Send Blast</button>
@@ -558,7 +572,9 @@
     const res = await fetch("/api/admin/participants", { headers: { "x-admin-secret": adminSecret } });
     const data = await res.json();
     document.getElementById("participants-loading").style.display = "none";
-    allParticipants = data.participants || [];
+    const all = data.participants || [];
+    // email-having participants first, phone-only at the bottom
+    allParticipants = [...all.filter(p => p.email), ...all.filter(p => !p.email)];
     selected = new Set(allParticipants.filter(p => p.email).map(p => p.email));
     renderParticipants();
   }
@@ -629,19 +645,15 @@
   function selectNone() { selected = new Set(); renderParticipants(); }
   function updateSelectedBadge() { document.getElementById("selected-badge").textContent = selected.size + " selected"; }
 
-  function updateCharCount() {
-    const len = document.getElementById("message").value.length;
-    const el = document.getElementById("char-count");
-    const segments = Math.ceil(len / 160) || 1;
-    el.textContent = len + " chars" + (segments > 1 ? " (" + segments + " SMS segments)" : " / 160");
-    el.className = "char-count" + (len > 320 ? " over" : len > 160 ? " warn" : "");
-  }
+  function fmt(cmd) { document.execCommand(cmd, false, null); document.getElementById("blast-html").focus(); }
+
+  function getBody() { return document.getElementById("blast-html").innerHTML.replace(/^(<br\s*\/?>)+|(<br\s*\/?>)+$/gi, "").trim(); }
 
   async function doBlast(dryRun = false) {
     const subject = document.getElementById("blast-subject").value.trim();
-    const html = document.getElementById("blast-html").value.trim();
+    const html = getBody();
     if (!subject) { alert("Add a subject line first."); return; }
-    if (!html) { alert("Write an HTML body first."); return; }
+    if (!html) { alert("Write a message first."); return; }
     if (selected.size === 0) { alert("No recipients selected."); return; }
 
     const btns = document.querySelectorAll(".actions .btn");
@@ -662,9 +674,9 @@
 
   function confirmBlast() {
     const subject = document.getElementById("blast-subject").value.trim();
-    const html = document.getElementById("blast-html").value.trim();
+    const html = getBody();
     if (!subject) { alert("Add a subject line first."); return; }
-    if (!html) { alert("Write an HTML body first."); return; }
+    if (!html) { alert("Write a message first."); return; }
     if (selected.size === 0) { alert("No recipients selected."); return; }
     if (confirm("Send to " + selected.size + " " + (selected.size === 1 ? "person" : "people") + "?\n\nSubject: \"" + subject + "\"")) {
       doBlast(false);

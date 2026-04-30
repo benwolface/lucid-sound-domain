@@ -19,7 +19,11 @@ const supabase = createClient(
 
 const BATCH_SIZE = 10;
 const FROM_EMAIL = process.env.FROM_EMAIL || "portal@lucidsounddomain.com";
-const FROM_NAME = process.env.FROM_NAME || "mani";
+const FROM_NAME = process.env.FROM_NAME || "trytab";
+
+function wrapEmail(content) {
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{margin:0;padding:0;background:#f4f4f0}a{color:inherit}</style></head><body><div style="max-width:560px;margin:0 auto;padding:48px 32px;color:#1a1a1a;font-family:Georgia,'Times New Roman',serif;font-size:16px;line-height:1.75">${content}<p style="margin-top:40px;font-size:12px;color:#999;border-top:1px solid #ddd;padding-top:16px">To opt out of future messages, reply with "stop".</p></div></body></html>`;
+}
 
 function requireAdminSecret(req, res, next) {
   const secret = process.env.ADMIN_SECRET;
@@ -190,8 +194,7 @@ function adminRouter() {
         to: p.email,
         reply_to: FROM_EMAIL,
         subject,
-        text:
-          html + '\n\n---\nTo opt out of future messages, reply with "stop".',
+        html: wrapEmail(html),
       }));
 
       try {
