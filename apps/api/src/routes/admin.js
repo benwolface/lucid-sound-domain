@@ -21,8 +21,33 @@ const BATCH_SIZE = 10;
 const FROM_EMAIL = process.env.FROM_EMAIL || "portal@lucidsounddomain.com";
 const FROM_NAME = process.env.FROM_NAME || "trytab";
 
-function wrapEmail(content) {
-  return `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{margin:0;padding:0;background:#f4f4f0}a{color:inherit}</style></head><body><div style="max-width:560px;margin:0 auto;padding:48px 32px;color:#1a1a1a;font-family:Georgia,'Times New Roman',serif;font-size:16px;line-height:1.75">${content}<p style="margin-top:40px;font-size:12px;color:#999;border-top:1px solid #ddd;padding-top:16px">To opt out of future messages, reply with "stop".</p></div></body></html>`;
+function wrapEmail(raw) {
+  // Normalize contenteditable div-per-line output into clean line breaks
+  const normalized = raw
+    .replace(/<div><br\s*\/?><\/div>/gi, "<br>")
+    .replace(/<\/div><div>/gi, "<br>")
+    .replace(/<div>/gi, "")
+    .replace(/<\/div>/gi, "<br>");
+
+  // Plain text version — Gmail uses this for Promotions scoring
+  const text =
+    normalized
+      .replace(/<br\s*\/?>/gi, "\n")
+      .replace(/<li>/gi, "- ")
+      .replace(/<\/li>/gi, "\n")
+      .replace(/<ul>|<\/ul>|<ol>|<\/ol>/gi, "")
+      .replace(/<[^>]+>/g, "")
+      .replace(/&nbsp;/g, " ")
+      .replace(/&amp;/g, "&")
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .replace(/\n{3,}/g, "\n\n")
+      .trim() + '\n\n---\nTo opt out, reply with "stop".';
+
+  // Minimal HTML — no background color, no newsletter-style container
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body style="font-family:Georgia,serif;font-size:16px;line-height:1.6;color:#1a1a1a;padding:24px 16px"><div style="max-width:560px">${normalized}<p style="margin-top:32px;font-size:12px;color:#aaa;border-top:1px solid #eee;padding-top:12px">To opt out, reply with "stop".</p></div></body></html>`;
+
+  return { html, text };
 }
 
 function requireAdminSecret(req, res, next) {
@@ -189,12 +214,14 @@ function adminRouter() {
 
     for (let i = 0; i < participants.length; i += BATCH_SIZE) {
       const chunk = participants.slice(i, i + BATCH_SIZE);
+      const { html: htmlBody, text: textBody } = wrapEmail(html);
       const batch = chunk.map((p) => ({
         from: `${FROM_NAME} <${FROM_EMAIL}>`,
         to: p.email,
         reply_to: FROM_EMAIL,
         subject,
-        html: wrapEmail(html),
+        html: htmlBody,
+        text: textBody,
       }));
 
       try {
