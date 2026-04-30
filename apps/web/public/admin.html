@@ -108,8 +108,15 @@
     .participant-row:last-child { border-bottom: none; }
     .participant-row:hover { background: #161616; margin: 0 -20px; padding-left: 20px; padding-right: 20px; }
     .participant-row.deselected { opacity: 0.35; }
+    .participant-row.no-email { opacity: 1; cursor: default; }
+    .participant-row.no-email:hover { background: transparent; margin: 0; padding: 9px 0; }
     .participant-name { color: #e5e5e5; flex: 1; }
     .participant-email { color: #666; font-family: monospace; font-size: 0.82rem; }
+    .add-email-wrap { display: flex; gap: 6px; align-items: center; flex: 1; }
+    .add-email-input { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 5px; color: #e5e5e5; padding: 4px 8px; font-size: 0.8rem; outline: none; width: 180px; }
+    .add-email-input:focus { border-color: #555; }
+    .add-email-btn { background: #2a2a2a; border: none; border-radius: 5px; color: #aaa; font-size: 0.75rem; padding: 4px 10px; cursor: pointer; white-space: nowrap; }
+    .add-email-btn:hover { background: #333; color: #e5e5e5; }
     .cb {
       width: 16px; height: 16px; border: 1.5px solid #444;
       border-radius: 4px; flex-shrink: 0;
@@ -551,8 +558,8 @@
     const res = await fetch("/api/admin/participants", { headers: { "x-admin-secret": adminSecret } });
     const data = await res.json();
     document.getElementById("participants-loading").style.display = "none";
-    allParticipants = (data.participants || []).filter(p => p.email);
-    selected = new Set(allParticipants.map(p => p.email));
+    allParticipants = data.participants || [];
+    selected = new Set(allParticipants.filter(p => p.email).map(p => p.email));
     renderParticipants();
   }
 
@@ -562,16 +569,48 @@
       list.innerHTML = '<p style="color:#666;font-size:0.9rem">No participants yet.</p>';
       return;
     }
-    list.innerHTML = allParticipants.map(p => `
-      <div class="participant-row ${selected.has(p.email) ? "" : "deselected"}"
-           onclick="toggleParticipant('${esc(p.email)}')"
-           data-email="${esc(p.email)}">
-        <div class="cb ${selected.has(p.email) ? "checked" : ""}"></div>
-        <span class="participant-name">${esc(p.name)}</span>
-        <span class="participant-email">${esc(p.email)}</span>
-      </div>
-    `).join("");
+    list.innerHTML = allParticipants.map((p, i) => {
+      if (p.email) {
+        return `
+          <div class="participant-row ${selected.has(p.email) ? "" : "deselected"}"
+               onclick="toggleParticipant('${esc(p.email)}')"
+               data-email="${esc(p.email)}">
+            <div class="cb ${selected.has(p.email) ? "checked" : ""}"></div>
+            <span class="participant-name">${esc(p.name)}</span>
+            <span class="participant-email">${esc(p.email)}</span>
+          </div>`;
+      } else {
+        return `
+          <div class="participant-row no-email" data-name="${esc(p.name)}">
+            <div class="cb" style="border-color:#2a2a2a;opacity:0.3"></div>
+            <span class="participant-name" style="color:#666">${esc(p.name)}</span>
+            <div class="add-email-wrap" onclick="event.stopPropagation()">
+              <input class="add-email-input" id="email-input-${i}" type="email" placeholder="add email…" />
+              <button class="add-email-btn" onclick="saveEmail('${esc(p.name)}', 'email-input-${i}', this)">Save</button>
+            </div>
+          </div>`;
+      }
+    }).join("");
     updateSelectedBadge();
+  }
+
+  async function saveEmail(name, inputId, btn) {
+    const email = document.getElementById(inputId).value.trim();
+    if (!email || !email.includes("@")) { alert("Enter a valid email."); return; }
+    btn.disabled = true; btn.textContent = "Saving…";
+    try {
+      const res = await fetch("/api/waitlist/update-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email })
+      });
+      const data = await res.json();
+      if (!res.ok) { alert(data.error || "Failed to save."); btn.disabled = false; btn.textContent = "Save"; return; }
+      // Update in-memory and re-render
+      const p = allParticipants.find(p => p.name === name);
+      if (p) { p.email = email; selected.add(email); }
+      renderParticipants();
+    } catch (e) { alert("Network error."); btn.disabled = false; btn.textContent = "Save"; }
   }
 
   function toggleParticipant(email) {
@@ -586,7 +625,7 @@
     updateSelectedBadge();
   }
 
-  function selectAll() { selected = new Set(allParticipants.map(p => p.email)); renderParticipants(); }
+  function selectAll() { selected = new Set(allParticipants.filter(p => p.email).map(p => p.email)); renderParticipants(); }
   function selectNone() { selected = new Set(); renderParticipants(); }
   function updateSelectedBadge() { document.getElementById("selected-badge").textContent = selected.size + " selected"; }
 

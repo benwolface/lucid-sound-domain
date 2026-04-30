@@ -1,12 +1,24 @@
 const { Router } = require("express");
 const { z } = require("zod");
 const { Resend } = require("resend");
-const { getAllParticipants, getBlastLogs, logBlast, getSettings, updateImHereEnabled, updatePortalDates, updateArtists, updateArtistPhotoUrl } = require("../store");
+const {
+  getAllParticipants,
+  getBlastLogs,
+  logBlast,
+  getSettings,
+  updateImHereEnabled,
+  updatePortalDates,
+  updateArtists,
+  updateArtistPhotoUrl,
+} = require("../store");
 const { createClient } = require("@supabase/supabase-js");
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_ANON_KEY,
+);
 
 const BATCH_SIZE = 10;
-const FROM_EMAIL = process.env.FROM_EMAIL || "hi@lucidsounddomain.com";
+const FROM_EMAIL = process.env.FROM_EMAIL || "portal@lucidsounddomain.com";
 const FROM_NAME = process.env.FROM_NAME || "mani";
 
 function requireAdminSecret(req, res, next) {
@@ -67,7 +79,15 @@ function adminRouter() {
 
   // POST /api/admin/settings — update settings
   router.post("/settings", async (req, res) => {
-    const { imHereEnabled, nextPortalDate, upcomingPortalDate, artist1Name, artist1Bio, artist2Name, artist2Bio } = req.body;
+    const {
+      imHereEnabled,
+      nextPortalDate,
+      upcomingPortalDate,
+      artist1Name,
+      artist1Bio,
+      artist2Name,
+      artist2Bio,
+    } = req.body;
     try {
       if (typeof imHereEnabled === "boolean") {
         await updateImHereEnabled(imHereEnabled);
@@ -75,8 +95,18 @@ function adminRouter() {
       if (nextPortalDate !== undefined || upcomingPortalDate !== undefined) {
         await updatePortalDates({ nextPortalDate, upcomingPortalDate });
       }
-      if (artist1Name !== undefined || artist1Bio !== undefined || artist2Name !== undefined || artist2Bio !== undefined) {
-        await updateArtists({ artist1Name, artist1Bio, artist2Name, artist2Bio });
+      if (
+        artist1Name !== undefined ||
+        artist1Bio !== undefined ||
+        artist2Name !== undefined ||
+        artist2Bio !== undefined
+      ) {
+        await updateArtists({
+          artist1Name,
+          artist1Bio,
+          artist2Name,
+          artist2Bio,
+        });
       }
       const settings = await getSettings();
       return res.json({
@@ -119,7 +149,9 @@ function adminRouter() {
     const dryRun = req.body.dryRun === true;
 
     if (!process.env.RESEND_API_KEY) {
-      return res.status(503).json({ error: "RESEND_API_KEY is not configured." });
+      return res
+        .status(503)
+        .json({ error: "RESEND_API_KEY is not configured." });
     }
 
     let participants;
@@ -158,23 +190,39 @@ function adminRouter() {
         to: p.email,
         reply_to: FROM_EMAIL,
         subject,
-        text: html + "\n\n---\nTo opt out of future messages, reply with \"stop\".",
+        text:
+          html + '\n\n---\nTo opt out of future messages, reply with "stop".',
       }));
 
       try {
         const { data, error } = await resend.batch.send(batch);
         if (error) {
           chunk.forEach((p) =>
-            report.push({ name: p.name, email: p.email, status: "failed", error: error.message })
+            report.push({
+              name: p.name,
+              email: p.email,
+              status: "failed",
+              error: error.message,
+            }),
           );
         } else {
           chunk.forEach((p, j) =>
-            report.push({ name: p.name, email: p.email, id: data?.[j]?.id, status: "sent" })
+            report.push({
+              name: p.name,
+              email: p.email,
+              id: data?.[j]?.id,
+              status: "sent",
+            }),
           );
         }
       } catch (err) {
         chunk.forEach((p) =>
-          report.push({ name: p.name, email: p.email, status: "failed", error: err.message })
+          report.push({
+            name: p.name,
+            email: p.email,
+            status: "failed",
+            error: err.message,
+          }),
         );
       }
     }
@@ -182,12 +230,25 @@ function adminRouter() {
     const sent = report.filter((r) => r.status === "sent").length;
     const failed = report.filter((r) => r.status === "failed").length;
 
-    console.log(`[admin/blast] sent=${sent} failed=${failed} total=${participants.length}`);
+    console.log(
+      `[admin/blast] sent=${sent} failed=${failed} total=${participants.length}`,
+    );
 
-    logBlast({ message: subject, sent, failed, total: participants.length, dryRun: false, results: report })
-      .catch((err) => console.error("[admin/blast] logBlast:", err));
+    logBlast({
+      message: subject,
+      sent,
+      failed,
+      total: participants.length,
+      dryRun: false,
+      results: report,
+    }).catch((err) => console.error("[admin/blast] logBlast:", err));
 
-    return res.json({ sent, failed, total: participants.length, results: report });
+    return res.json({
+      sent,
+      failed,
+      total: participants.length,
+      results: report,
+    });
   });
 
   // POST /api/admin/upload-artist-photo — upload base64 image to Supabase Storage
@@ -218,9 +279,9 @@ function adminRouter() {
       return res.status(500).json({ error: "Upload failed." });
     }
 
-    const { data: { publicUrl } } = supabase.storage
-      .from("artist-photos")
-      .getPublicUrl(filename);
+    const {
+      data: { publicUrl },
+    } = supabase.storage.from("artist-photos").getPublicUrl(filename);
 
     try {
       await updateArtistPhotoUrl({ artist: String(artist), url: publicUrl });
