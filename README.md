@@ -30,3 +30,7 @@ Because the API currently uses SQLite (`DATABASE_URL=file:...`), production host
 
 For the frontend to talk to the API, ensure `VITE_API_BASE_URL` is set appropriately (for local we proxy `/api` to `apps/api`).
 
+## TODO
+
+- [ ] Add `RESEND_API_KEY` to `apps/api/.env` (and verify the sending domain in Resend) so the waitlist welcome email actually sends — currently a no-op without it.
+

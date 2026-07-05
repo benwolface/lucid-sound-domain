@@ -1,5 +1,6 @@
 const { Router } = require("express");
 const { z } = require("zod");
+const { Resend } = require("resend");
 const {
   createParticipant,
   findParticipant,
@@ -8,6 +9,39 @@ const {
   findParticipantByReferralCode,
   updateParticipantEmail,
 } = require("../store");
+
+const resend = process.env.RESEND_API_KEY
+  ? new Resend(process.env.RESEND_API_KEY)
+  : null;
+const FROM_EMAIL = process.env.FROM_EMAIL || "portal@lucidsounddomain.com";
+const FROM_NAME = process.env.FROM_NAME || "lucid sound domain";
+
+async function sendWelcomeEmail(email) {
+  if (!resend) return;
+  const text = [
+    "welcome to the lucid sound domain.",
+    "",
+    "this is how we'll reach you about our upcoming portals and entry instructions.",
+    "",
+    'if this landed in promotions, moving it to your inbox (or replying "message recieved" once) helps keep it there so that you don\'t miss the next one.',
+    "",
+    "see you inside.",
+    "",
+    '---',
+    'To opt out, reply with "stop".',
+  ].join("\n");
+
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body style="font-family:Georgia,serif;font-size:16px;line-height:1.6;color:#1a1a1a;padding:24px 16px"><div style="max-width:560px"><p>welcome to the lucid sound domain.</p><p>this is how we'll reach you about our upcoming portals and entry instructions.</p><p>if this landed in promotions, moving it to your inbox (or replying "message recieved" once) helps keep it there so that you don't miss the next one.</p><p>see you inside.</p><p style="margin-top:32px;font-size:12px;color:#aaa;border-top:1px solid #eee;padding-top:12px">To opt out, reply with "stop".</p></div></body></html>`;
+
+  await resend.emails.send({
+    from: `${FROM_NAME} <${FROM_EMAIL}>`,
+    to: email,
+    reply_to: FROM_EMAIL,
+    subject: "welcome to the lucid sound domain",
+    text,
+    html,
+  });
+}
 
 const twilioClient =
   process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN
@@ -65,6 +99,10 @@ function waitlistRouter() {
 
       notifyOwner(name, email, referredBy).catch((err) =>
         console.error("[waitlist/sms]", err)
+      );
+
+      sendWelcomeEmail(email).catch((err) =>
+        console.error("[waitlist/welcome-email]", err)
       );
 
       return res.json({ status: "joined", referralCode: participant.referral_code });

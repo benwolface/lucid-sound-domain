@@ -15,6 +15,7 @@ const DEV_SKIP_INTRO = false;
 // ── Session persistence ──
 const SESSION_KEY = "lsd_session";
 const SESSION_TTL_MS = 5 * 24 * 60 * 60 * 1000; // 5 days
+const WELCOME_KEY = "lsd_welcome_shown";
 
 function loadSession() {
   try {
@@ -72,6 +73,7 @@ export default function App() {
   const [referralCode, setReferralCode] = useState(
     () => loadSession()?.referralCode ?? null,
   );
+  const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   const [imHereEnabled, setImHereEnabled] = useState(false);
   const [nextPortalDate, setNextPortalDate] = useState(null);
   const [upcomingPortalDate, setUpcomingPortalDate] = useState(null);
@@ -110,35 +112,61 @@ export default function App() {
       .catch(() => {});
   }, []);
 
+  function handleHome(code, isNew = false) {
+    const resolved = code ?? null;
+    saveSession(resolved);
+    setReferralCode(resolved);
+    setScreen("home");
+    if (isNew && !localStorage.getItem(WELCOME_KEY)) {
+      localStorage.setItem(WELCOME_KEY, "1");
+      setShowWelcomeModal(true);
+    }
+  }
+
   if (screen === "home")
     return (
-      <Home
-        referralCode={referralCode}
-        nextPortalDate={nextPortalDate}
-        upcomingPortalDate={upcomingPortalDate}
-        artist1Name={artist1Name}
-        artist1Bio={artist1Bio}
-        artist2Name={artist2Name}
-        artist2Bio={artist2Bio}
-        artist1PhotoUrl={artist1PhotoUrl}
-        artist2PhotoUrl={artist2PhotoUrl}
-      />
+      <>
+        <Home
+          referralCode={referralCode}
+          nextPortalDate={nextPortalDate}
+          upcomingPortalDate={upcomingPortalDate}
+          artist1Name={artist1Name}
+          artist1Bio={artist1Bio}
+          artist2Name={artist2Name}
+          artist2Bio={artist2Bio}
+          artist1PhotoUrl={artist1PhotoUrl}
+          artist2PhotoUrl={artist2PhotoUrl}
+        />
+        {showWelcomeModal && (
+          <WelcomeModal onClose={() => setShowWelcomeModal(false)} />
+        )}
+      </>
     );
   if (screen === "domain")
     return <DomainScreen onBack={() => setScreen("landing")} />;
   return (
     <div className="app">
       <Landing
-        onHome={(code) => {
-          const resolved = code ?? null;
-          saveSession(resolved);
-          setReferralCode(resolved);
-          setScreen("home");
-        }}
+        onHome={handleHome}
         onDomainScreen={() => setScreen("domain")}
         imHereEnabled={imHereEnabled}
         nextPortalDate={nextPortalDate}
       />
+    </div>
+  );
+}
+
+function WelcomeModal({ onClose }) {
+  return (
+    <div className="welcome-overlay" onClick={onClose}>
+      <div className="welcome-box" onClick={(e) => e.stopPropagation()}>
+        <button className="welcome-close" onClick={onClose} aria-label="close">
+          ✕
+        </button>
+        <p>check your inbox.</p>
+        <p>we sent you a note.</p>
+        <p>(if you don't see it, it might be in promos)</p>
+      </div>
     </div>
   );
 }
@@ -1339,13 +1367,13 @@ function Landing({ onHome, onDomainScreen, imHereEnabled, nextPortalDate }) {
         }
       }
 
-      const { referralCode } = await apiJoinWaitlist({
+      const { referralCode, status } = await apiJoinWaitlist({
         name,
         contact,
         referredBy: resolvedReferrer || undefined,
       });
       setIsPressing(false);
-      handlePowerPress(referralCode);
+      handlePowerPress(referralCode, null, status === "joined");
     } catch {
       setIsPressing(false);
       handleRejection("referral");
@@ -1406,7 +1434,7 @@ function Landing({ onHome, onDomainScreen, imHereEnabled, nextPortalDate }) {
   }
 
   // ── Power button: full shutdown sequence ──
-  function handlePowerPress(referralCode, onComplete = null) {
+  function handlePowerPress(referralCode, onComplete = null, isNew = false) {
     // 1 — fade out everything except the circle
     const fadeEls = [
       bgSlideRef.current,
@@ -1495,7 +1523,7 @@ function Landing({ onHome, onDomainScreen, imHereEnabled, nextPortalDate }) {
     }
 
     // 6 — navigate after holding white for 0.5s
-    setTimeout(() => (onComplete ? onComplete() : onHome(referralCode)), 5200);
+    setTimeout(() => (onComplete ? onComplete() : onHome(referralCode, isNew)), 5200);
   }
 
   // ── Intro animation ──
