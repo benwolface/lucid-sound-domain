@@ -510,6 +510,14 @@ const HTML = `<!DOCTYPE html>
         <input type="file" id="archive-file" class="input-file" accept="image/*,video/*" multiple onchange="uploadArchiveFiles(this)" />
         <div class="photo-status" id="archive-upload-status"></div>
       </div>
+      <div class="date-row">
+        <div class="date-label">OR ADD A YOUTUBE LINK — shows as a reel</div>
+        <div class="date-input-row">
+          <input type="text" id="archive-youtube" class="input" placeholder="https://youtu.be/…" />
+          <button class="date-save-btn" onclick="addYoutubeReel()">Add</button>
+        </div>
+        <div class="photo-status" id="archive-youtube-status"></div>
+      </div>
       <div id="archive-grid" class="archive-grid"></div>
     </div>
 
@@ -685,11 +693,13 @@ const HTML = `<!DOCTYPE html>
       <div class="archive-card">
         \${item.type === "photo"
           ? \`<img class="archive-thumb" src="\${esc(item.url)}" alt="" />\`
-          : \`<video class="archive-thumb" src="\${esc(item.url)}" muted preload="metadata"></video>\`}
+          : item.type === "youtube"
+            ? \`<img class="archive-thumb" src="\${esc(item.thumb)}" alt="" />\`
+            : \`<video class="archive-thumb" src="\${esc(item.url)}" muted preload="metadata"></video>\`}
         <div class="archive-card-body">
           \${item.type === "photo"
             ? \`<input class="archive-caption-input" placeholder="caption…" value="\${esc(item.caption || "")}" oninput="autosaveArchiveCaption('\${item.id}', this)" onblur="saveArchiveCaptionNow('\${item.id}', this)" />\`
-            : \`<span class="archive-type-tag">video</span>\`}
+            : \`<span class="archive-type-tag">\${item.type === "youtube" ? "youtube reel" : "video"}</span>\`}
           <div class="archive-card-foot">
             <span class="archive-caption-status" id="archive-status-\${item.id}"></span>
             <button class="link-btn archive-del" onclick="removeArchiveItem('\${item.id}')">delete</button>
@@ -697,6 +707,32 @@ const HTML = `<!DOCTYPE html>
         </div>
       </div>
     \`).join("");
+  }
+
+  async function addYoutubeReel() {
+    const input = document.getElementById("archive-youtube");
+    const status = document.getElementById("archive-youtube-status");
+    const url = input.value.trim();
+    if (!url) return;
+    status.classList.remove("error");
+    status.textContent = "Adding…";
+    try {
+      const res = await fetch("/api/admin/archive", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-admin-secret": adminSecret },
+        body: JSON.stringify({ type: "youtube", youtubeUrl: url })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Add failed");
+      input.value = "";
+      status.textContent = "Added ✓";
+      setTimeout(() => { status.textContent = ""; }, 2000);
+      loadAdminArchive();
+    } catch (err) {
+      console.error("[archive-youtube]", err);
+      status.textContent = err.message || "Add failed — check the link.";
+      status.classList.add("error");
+    }
   }
 
   async function uploadArchiveFiles(input) {

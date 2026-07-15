@@ -852,6 +852,7 @@ function MobileTimeline({ active, pageRef, navReady }) {
 function RsvpBlock({ referralCode }) {
   const [state, setState] = useState(null);
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     apiRsvpStatus(referralCode)
@@ -864,6 +865,7 @@ function RsvpBlock({ referralCode }) {
   async function respond(response) {
     if (busy) return;
     setBusy(true);
+    setError(null);
     try {
       const res = await apiRsvpRespond({ referralCode, response });
       if (res.status === "full") {
@@ -877,8 +879,14 @@ function RsvpBlock({ referralCode }) {
           myStatus: res.myStatus,
         }));
       }
-    } catch {
-      // leave state as-is; they can retry
+    } catch (err) {
+      // A 404 means the session's referral code no longer matches a
+      // participant — they need to re-enter through the portal
+      setError(
+        /404/.test(err?.message || "")
+          ? "we can't find your entry — return through the portal and try again."
+          : "something went wrong — try again.",
+      );
     }
     setBusy(false);
   }
@@ -926,6 +934,7 @@ function RsvpBlock({ referralCode }) {
                 join waitlist
               </button>
             ))}
+          {error && <p className="rsvp-error">{error}</p>}
         </>
       )}
     </div>
@@ -1183,16 +1192,27 @@ function ProjectorOverlay({ videos, idx, setIdx, onClose }) {
       <div className="projector-stage" onClick={(e) => e.stopPropagation()}>
         <div className="filmstrip">
           <div className="filmstrip-holes" />
-          <video
-            key={v.id}
-            className="filmstrip-video"
-            src={v.url}
-            autoPlay
-            loop
-            playsInline
-            controls
-            preload="metadata"
-          />
+          {v.type === "youtube" ? (
+            <iframe
+              key={v.id}
+              className="filmstrip-video filmstrip-iframe"
+              src={`${v.url}?autoplay=1&rel=0`}
+              title={`archive reel ${idx + 1}`}
+              allow="autoplay; encrypted-media; fullscreen"
+              allowFullScreen
+            />
+          ) : (
+            <video
+              key={v.id}
+              className="filmstrip-video"
+              src={v.url}
+              autoPlay
+              loop
+              playsInline
+              controls
+              preload="metadata"
+            />
+          )}
           <div className="filmstrip-holes" />
         </div>
         <div className="projector-controls">

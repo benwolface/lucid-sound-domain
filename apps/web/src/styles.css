@@ -2558,3 +2558,16 @@ body {
     justify-content: center;
   }
 }
+
+.rsvp-error {
+  font-family: "Cormorant Garamond", serif;
+  font-style: italic;
+  font-size: clamp(0.85rem, 1.4vw, 1rem);
+  color: rgba(248, 113, 113, 0.85);
+  margin: 0;
+}
+
+.filmstrip-iframe {
+  aspect-ratio: 16 / 9;
+  border: 0;
+}

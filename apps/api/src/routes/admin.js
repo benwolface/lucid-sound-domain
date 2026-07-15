@@ -398,20 +398,33 @@ function adminRouter() {
     }
   });
 
-  // POST /api/admin/archive — register an item already uploaded to the archive bucket
-  // (the browser uploads directly to Supabase storage — videos are too large for this API)
+  // POST /api/admin/archive — register an item already uploaded to the archive
+  // bucket (the browser uploads directly to Supabase storage — videos are too
+  // large for this API), or a YouTube link via { type: "youtube", youtubeUrl }.
   router.post("/archive", async (req, res) => {
-    const { type, storagePath, caption } = req.body || {};
-    if (type !== "photo" && type !== "video") {
-      return res.status(400).json({ error: "type must be photo or video." });
+    const { type, storagePath, youtubeUrl, caption } = req.body || {};
+    if (!["photo", "video", "youtube"].includes(type)) {
+      return res.status(400).json({ error: "type must be photo, video, or youtube." });
     }
-    if (!storagePath || typeof storagePath !== "string") {
+
+    let path = storagePath;
+    if (type === "youtube") {
+      const match = String(youtubeUrl || "").match(
+        /(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([\w-]{6,20})/
+      );
+      if (!match) {
+        return res.status(400).json({ error: "Couldn't read that YouTube link." });
+      }
+      path = match[1]; // storage_path holds the video id for youtube items
+    }
+
+    if (!path || typeof path !== "string") {
       return res.status(400).json({ error: "storagePath required." });
     }
     try {
       const item = await createArchiveItem({
         type,
-        storagePath,
+        storagePath: path,
         caption: typeof caption === "string" && caption.trim() ? caption.trim() : null,
       });
       return res.json({ item });
