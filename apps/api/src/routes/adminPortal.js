@@ -62,17 +62,15 @@ const HTML = `<!DOCTYPE html>
     #login .btn { width: 100%; }
     .error-msg { color: #f87171; font-size: 0.85rem; margin-top: 8px; }
 
-    /* MAIN — two-column grid of section cards (JS shows it with display:grid) */
-    #main {
-      display: none;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
-      align-items: start;
+    /* MAIN — masonry columns so cards pack tight with no gaps */
+    #main { display: none; }
+    #main-cols {
+      column-count: 2;
+      column-gap: 16px;
     }
     .header {
-      grid-column: 1 / -1;
       display: flex; align-items: center; justify-content: space-between;
-      margin-bottom: 8px;
+      margin-bottom: 16px;
     }
     .header h1 { font-size: 1.25rem; font-weight: 600; }
 
@@ -81,10 +79,11 @@ const HTML = `<!DOCTYPE html>
       border: 1px solid #1e1e1e;
       border-radius: 12px;
       padding: 20px;
-      margin-bottom: 0;
+      margin-bottom: 16px;
+      break-inside: avoid;
     }
     @media (max-width: 900px) {
-      #main { grid-template-columns: 1fr; }
+      #main-cols { column-count: 1; }
     }
     .section-header {
       display: flex;
@@ -345,6 +344,7 @@ const HTML = `<!DOCTYPE html>
       <button class="btn btn-ghost" style="font-size:0.8rem;padding:7px 12px" onclick="doLogout()">Log out</button>
     </div>
 
+    <div id="main-cols">
     <!-- CONTROLS -->
     <div class="section">
       <div class="section-title" style="margin-bottom:14px">Controls</div>
@@ -533,6 +533,7 @@ const HTML = `<!DOCTYPE html>
       </div>
       <div id="archive-content"><div class="archive-empty">Loading...</div></div>
     </div>
+    </div>
   </div>
 
 </div>
@@ -582,7 +583,7 @@ const HTML = `<!DOCTYPE html>
 
   function showMain() {
     document.getElementById("login").style.display = "none";
-    document.getElementById("main").style.display = "grid";
+    document.getElementById("main").style.display = "block";
     loadParticipants();
     loadArchive();
     loadSettings();
