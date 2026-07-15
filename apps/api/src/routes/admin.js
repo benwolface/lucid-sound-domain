@@ -2,6 +2,7 @@ const { Router } = require("express");
 const { z } = require("zod");
 const { Resend } = require("resend");
 const {
+  clearRsvps,
   createArchiveItem,
   deleteArchiveItem,
   getAllParticipants,
@@ -367,6 +368,22 @@ function adminRouter() {
     } catch (err) {
       console.error("[admin/attendance]", err);
       return res.status(500).json({ error: "Failed to fetch attendance." });
+    }
+  });
+
+  // POST /api/admin/attendance-reset — wipe all RSVPs for the current portal
+  router.post("/attendance-reset", async (req, res) => {
+    try {
+      const settings = await getSettings();
+      const portalDate = settings.next_portal_date ?? null;
+      if (!portalDate) {
+        return res.status(400).json({ error: "No portal date set." });
+      }
+      await clearRsvps(portalDate);
+      return res.json({ status: "ok" });
+    } catch (err) {
+      console.error("[admin/attendance-reset]", err);
+      return res.status(500).json({ error: "Failed to reset RSVPs." });
     }
   });
 

@@ -403,6 +403,14 @@ async function upsertRsvp({ participantId, portalDate, status }) {
   if (error) throw error;
 }
 
+async function clearRsvps(portalDate) {
+  const { error } = await supabase
+    .from("rsvps")
+    .delete()
+    .eq("portal_date", portalDate);
+  if (error) throw error;
+}
+
 async function getRsvpRoster(portalDate) {
   const { data, error } = await supabase
     .from("rsvps")
@@ -422,6 +430,7 @@ async function getRsvpRoster(portalDate) {
 
 module.exports = {
   attachVisitorUser,
+  clearRsvps,
   countAttending,
   confirmParticipantEmail,
   createArchiveItem,

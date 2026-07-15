@@ -414,7 +414,10 @@ const HTML = `<!DOCTYPE html>
     <div class="section">
       <div class="section-header">
         <div class="section-title">Attendance</div>
-        <button class="link-btn" onclick="loadAttendance()">Refresh</button>
+        <div class="selection-controls">
+          <button class="link-btn" onclick="loadAttendance()">Refresh</button>
+          <button class="link-btn archive-del" onclick="resetAttendance()">Reset all</button>
+        </div>
       </div>
       <div class="result-summary">
         <div class="stat success"><div class="stat-num" id="att-confirmed">—</div><div class="stat-label">Confirmed</div></div>
@@ -643,6 +646,21 @@ const HTML = `<!DOCTYPE html>
         (data.notAttending.map(r => row(r)).join("") || '<div class="att-empty">none</div>');
     } catch (err) {
       console.error("[attendance]", err);
+    }
+  }
+
+  async function resetAttendance() {
+    if (!confirm("Reset ALL RSVPs for the current portal? Everyone will have to respond again.")) return;
+    try {
+      const res = await fetch("/api/admin/attendance-reset", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-admin-secret": adminSecret },
+      });
+      if (!res.ok) throw new Error("reset failed");
+      loadAttendance();
+    } catch (err) {
+      console.error("[attendance-reset]", err);
+      alert("Reset failed — try again.");
     }
   }
 

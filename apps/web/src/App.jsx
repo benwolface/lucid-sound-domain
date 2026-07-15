@@ -852,7 +852,6 @@ function MobileTimeline({ active, pageRef, navReady }) {
 function RsvpBlock({ referralCode }) {
   const [state, setState] = useState(null);
   const [busy, setBusy] = useState(false);
-  const [changing, setChanging] = useState(false);
 
   useEffect(() => {
     apiRsvpStatus(referralCode)
@@ -878,7 +877,6 @@ function RsvpBlock({ referralCode }) {
           myStatus: res.myStatus,
         }));
       }
-      setChanging(false);
     } catch {
       // leave state as-is; they can retry
     }
@@ -886,81 +884,50 @@ function RsvpBlock({ referralCode }) {
   }
 
   const { full, copy, myStatus } = state;
-
-  let body = null;
-  if (referralCode) {
-    if (myStatus === "attending" && !changing) {
-      body = (
-        <p className="rsvp-state">
-          you will attend.{" "}
-          <button
-            type="button"
-            className="rsvp-change"
-            onClick={() => setChanging(true)}
-          >
-            change
-          </button>
-        </p>
-      );
-    } else if (myStatus === "not_attending" && !changing) {
-      body = (
-        <p className="rsvp-state">
-          you will not attend.{" "}
-          <button
-            type="button"
-            className="rsvp-change"
-            onClick={() => setChanging(true)}
-          >
-            change
-          </button>
-        </p>
-      );
-    } else if (myStatus === "waitlist" && !changing) {
-      body = (
-        <p className="rsvp-state">
-          you're on the list — we'll reach out if a space opens.
-        </p>
-      );
-    } else if (full && myStatus !== "attending") {
-      body = (
-        <button
-          type="button"
-          className="rsvp-btn"
-          disabled={busy}
-          onClick={() => respond("waitlist")}
-        >
-          join waitlist
-        </button>
-      );
-    } else {
-      body = (
-        <div className="rsvp-btns">
-          <button
-            type="button"
-            className="rsvp-btn rsvp-btn--yes"
-            disabled={busy}
-            onClick={() => respond("attending")}
-          >
-            Will attend
-          </button>
-          <button
-            type="button"
-            className="rsvp-btn"
-            disabled={busy}
-            onClick={() => respond("not_attending")}
-          >
-            Will not attend
-          </button>
-        </div>
-      );
-    }
-  }
+  // "Will attend" is closed off once full — unless it's already theirs
+  const attendClosed = full && myStatus !== "attending";
 
   return (
     <div className="rsvp-block">
-      <p className="rsvp-capacity">Capacity: Limited</p>
-      {copy && <p className="rsvp-copy">{copy}</p>}
-      {body}
+      <p className="rsvp-capacity">Capacity is limited.</p>
+      <p className="rsvp-copy">{copy || "Will you be attending?"}</p>
+      {referralCode && (
+        <>
+          <div className="rsvp-btns">
+            <button
+              type="button"
+              className={`rsvp-btn${myStatus === "attending" ? " is-pressed" : ""}`}
+              disabled={busy || attendClosed}
+              onClick={() => respond("attending")}
+            >
+              Will attend
+            </button>
+            <button
+              type="button"
+              className={`rsvp-btn${myStatus === "not_attending" ? " is-pressed" : ""}`}
+              disabled={busy}
+              onClick={() => respond("not_attending")}
+            >
+              Will not attend
+            </button>
+          </div>
+          {attendClosed &&
+            (myStatus === "waitlist" ? (
+              <p className="rsvp-state">
+                you're on the list — we'll reach out if a space opens.
+              </p>
+            ) : (
+              <button
+                type="button"
+                className="rsvp-btn rsvp-btn--waitlist"
+                disabled={busy}
+                onClick={() => respond("waitlist")}
+              >
+                join waitlist
+              </button>
+            ))}
+        </>
+      )}
     </div>
   );
 }
