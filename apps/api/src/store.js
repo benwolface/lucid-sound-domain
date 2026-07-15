@@ -365,8 +365,64 @@ async function deleteArchiveItem(id) {
   }
 }
 
+// ---------- RSVPs (Supabase) ----------
+
+async function countAttending(portalDate) {
+  const { count, error } = await supabase
+    .from("rsvps")
+    .select("id", { count: "exact", head: true })
+    .eq("portal_date", portalDate)
+    .eq("status", "attending");
+  if (error) throw error;
+  return count ?? 0;
+}
+
+async function getRsvp({ participantId, portalDate }) {
+  const { data, error } = await supabase
+    .from("rsvps")
+    .select("id, status")
+    .eq("participant_id", participantId)
+    .eq("portal_date", portalDate)
+    .maybeSingle();
+  if (error) throw error;
+  return data ?? null;
+}
+
+async function upsertRsvp({ participantId, portalDate, status }) {
+  const { error } = await supabase
+    .from("rsvps")
+    .upsert(
+      {
+        participant_id: participantId,
+        portal_date: portalDate,
+        status,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "participant_id,portal_date" }
+    );
+  if (error) throw error;
+}
+
+async function getRsvpRoster(portalDate) {
+  const { data, error } = await supabase
+    .from("rsvps")
+    .select("id, status, created_at, updated_at, participants(name, email, phone_number)")
+    .eq("portal_date", portalDate)
+    .order("created_at", { ascending: true });
+  if (error) throw error;
+  return (data ?? []).map((r) => ({
+    id: r.id,
+    status: r.status,
+    respondedAt: r.created_at,
+    name: r.participants?.name ?? null,
+    email: r.participants?.email ?? null,
+    phone: r.participants?.phone_number ?? null,
+  }));
+}
+
 module.exports = {
   attachVisitorUser,
+  countAttending,
   confirmParticipantEmail,
   createArchiveItem,
   createEvent,
@@ -388,8 +444,11 @@ module.exports = {
   getAllParticipants,
   getArchiveItems,
   getBlastLogs,
+  getRsvp,
+  getRsvpRoster,
   getSettings,
   logBlast,
+  upsertRsvp,
   updateArchiveCaption,
   updateArtistPhotoUrl,
   updateArtists,

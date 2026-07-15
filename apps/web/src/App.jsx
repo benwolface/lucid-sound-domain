@@ -6,6 +6,8 @@ import {
   apiLookupRefCode,
   apiGetArchive,
   apiGetSettings,
+  apiRsvpRespond,
+  apiRsvpStatus,
   apiUpdateContactEmail,
 } from "./lib/api";
 import "./styles.css";
@@ -379,6 +381,7 @@ function Home({
             </svg>
           </a>
         </div>
+        <RsvpBlock referralCode={referralCode} />
         <ScrollHint onClick={scrollToJourney} visible={heroHintVisible} />
       </div>
 
@@ -842,6 +845,123 @@ function MobileTimeline({ active, pageRef, navReady }) {
         </a>
       ))}
     </nav>
+  );
+}
+
+// ── RSVP — guests only ever see "Capacity: limited", never numbers ──
+function RsvpBlock({ referralCode }) {
+  const [state, setState] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const [changing, setChanging] = useState(false);
+
+  useEffect(() => {
+    apiRsvpStatus(referralCode)
+      .then(setState)
+      .catch(() => {});
+  }, [referralCode]);
+
+  if (!state || !state.open) return null;
+
+  async function respond(response) {
+    if (busy) return;
+    setBusy(true);
+    try {
+      const res = await apiRsvpRespond({ referralCode, response });
+      if (res.status === "full") {
+        // Capacity was taken while they were deciding
+        setState((s) => ({ ...s, full: true, copy: res.copy }));
+      } else {
+        setState((s) => ({
+          ...s,
+          full: res.full,
+          copy: res.copy,
+          myStatus: res.myStatus,
+        }));
+      }
+      setChanging(false);
+    } catch {
+      // leave state as-is; they can retry
+    }
+    setBusy(false);
+  }
+
+  const { full, copy, myStatus } = state;
+
+  let body = null;
+  if (referralCode) {
+    if (myStatus === "attending" && !changing) {
+      body = (
+        <p className="rsvp-state">
+          you will attend.{" "}
+          <button
+            type="button"
+            className="rsvp-change"
+            onClick={() => setChanging(true)}
+          >
+            change
+          </button>
+        </p>
+      );
+    } else if (myStatus === "not_attending" && !changing) {
+      body = (
+        <p className="rsvp-state">
+          you will not attend.{" "}
+          <button
+            type="button"
+            className="rsvp-change"
+            onClick={() => setChanging(true)}
+          >
+            change
+          </button>
+        </p>
+      );
+    } else if (myStatus === "waitlist" && !changing) {
+      body = (
+        <p className="rsvp-state">
+          you're on the list — we'll reach out if a space opens.
+        </p>
+      );
+    } else if (full && myStatus !== "attending") {
+      body = (
+        <button
+          type="button"
+          className="rsvp-btn"
+          disabled={busy}
+          onClick={() => respond("waitlist")}
+        >
+          join waitlist
+        </button>
+      );
+    } else {
+      body = (
+        <div className="rsvp-btns">
+          <button
+            type="button"
+            className="rsvp-btn rsvp-btn--yes"
+            disabled={busy}
+            onClick={() => respond("attending")}
+          >
+            Will attend
+          </button>
+          <button
+            type="button"
+            className="rsvp-btn"
+            disabled={busy}
+            onClick={() => respond("not_attending")}
+          >
+            Will not attend
+          </button>
+        </div>
+      );
+    }
+  }
+
+  return (
+    <div className="rsvp-block">
+      <p className="rsvp-capacity">Capacity: Limited</p>
+      {copy && <p className="rsvp-copy">{copy}</p>}
+      {body}
+    </div>
   );
 }
 

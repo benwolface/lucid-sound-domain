@@ -7,6 +7,7 @@ const {
   getAllParticipants,
   getArchiveItems,
   getBlastLogs,
+  getRsvpRoster,
   logBlast,
   getSettings,
   updateArchiveCaption,
@@ -16,6 +17,7 @@ const {
   updatePortalDates,
 } = require("../store");
 const { createClient } = require("@supabase/supabase-js");
+const { PUBLIC_CAP, HARD_CAP } = require("./rsvp");
 const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_ANON_KEY,
@@ -335,6 +337,37 @@ function adminRouter() {
     }
 
     return res.json({ url: publicUrl });
+  });
+
+  // GET /api/admin/attendance — real RSVP numbers for the current portal
+  router.get("/attendance", async (req, res) => {
+    try {
+      const settings = await getSettings();
+      const portalDate = settings.next_portal_date ?? null;
+      if (!portalDate) {
+        return res.json({
+          portalDate: null,
+          publicCap: PUBLIC_CAP,
+          hardCap: HARD_CAP,
+          attending: [],
+          notAttending: [],
+          waitlist: [],
+        });
+      }
+      const roster = await getRsvpRoster(portalDate);
+      return res.json({
+        portalDate,
+        publicCap: PUBLIC_CAP,
+        hardCap: HARD_CAP,
+        attending: roster.filter((r) => r.status === "attending"),
+        notAttending: roster.filter((r) => r.status === "not_attending"),
+        // roster is ordered by created_at, so waitlist order = contact order
+        waitlist: roster.filter((r) => r.status === "waitlist"),
+      });
+    } catch (err) {
+      console.error("[admin/attendance]", err);
+      return res.status(500).json({ error: "Failed to fetch attendance." });
+    }
   });
 
   // GET /api/admin/archive — all archive items (for the admin manager)
