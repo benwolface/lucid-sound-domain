@@ -57,25 +57,6 @@ function confirmPage(message) {
   return `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body style="${CONFIRM_PAGE_STYLE}"><div style="${CONFIRM_BOX_STYLE}"><p style="margin:0;font-size:15px;line-height:1.75">${message}</p></div></body></html>`;
 }
 
-let twilioClient = null;
-if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN) {
-  try {
-    twilioClient = require("twilio")(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
-  } catch (err) {
-    console.error("[waitlist] twilio package not installed, SMS notify disabled:", err.message);
-  }
-}
-
-async function notifyOwner(name, email, referredBy) {
-  if (!twilioClient || !process.env.TWILIO_TO || !process.env.TWILIO_FROM) return;
-  const ref = referredBy ? ` (referred by ${referredBy})` : "";
-  await twilioClient.messages.create({
-    to: process.env.TWILIO_TO,
-    from: process.env.TWILIO_FROM,
-    body: `LSD: ${name} (${email}) just joined the domain${ref}.`,
-  });
-}
-
 const joinSchema = z.object({
   name: z.string().min(1),
   contact: z.string().email(),
@@ -116,11 +97,9 @@ function waitlistRouter() {
       // New participant
       const participant = await createParticipant({ name, email, referredBy: referredBy || null });
 
-      notifyOwner(name, email, referredBy).catch((err) =>
-        console.error("[waitlist/sms]", err)
-      );
-
-      sendWelcomeEmail(email, participant.referral_code).catch((err) =>
+      // Awaited (not fire-and-forget) — on serverless, the function can be frozen
+      // the instant res.json() returns, cutting off any still-pending network calls.
+      await sendWelcomeEmail(email, participant.referral_code).catch((err) =>
         console.error("[waitlist/welcome-email]", err)
       );
 
@@ -173,7 +152,7 @@ function waitlistRouter() {
 
       await updateParticipantEmail({ referralCode, email });
 
-      sendWelcomeEmail(email, referralCode).catch((err) =>
+      await sendWelcomeEmail(email, referralCode).catch((err) =>
         console.error("[waitlist/update-email/welcome-email]", err)
       );
 
