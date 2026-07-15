@@ -328,7 +328,6 @@ const HTML = `<!DOCTYPE html>
         <div class="date-label">NEXT PORTAL DATE</div>
         <div class="date-input-row">
           <input type="date" id="next-portal-date" class="input" oninput="updateDatePreview('next')" onchange="savePortalDate('next')" />
-          <button class="date-save-btn" id="next-portal-save" onclick="savePortalDate('next')">Save</button>
           <button class="date-save-btn" id="next-portal-clear" onclick="clearPortalDate('next')">Clear</button>
         </div>
         <div class="date-preview" id="next-portal-preview"></div>
@@ -337,16 +336,15 @@ const HTML = `<!DOCTYPE html>
       <div class="date-row">
         <div class="date-label">NEXT PORTAL GUEST (optional — shows as "w/ ___" under the date)</div>
         <div class="date-input-row">
-          <input type="text" id="next-portal-guest" class="input" placeholder="e.g. dotnine" oninput="autosaveField('nextPortalGuest', 'next-portal-guest', 'next-portal-guest-save')" />
-          <button class="date-save-btn" id="next-portal-guest-save" onclick="saveArtistField('nextPortalGuest', 'next-portal-guest', 'next-portal-guest-save')">Save</button>
+          <input type="text" id="next-portal-guest" class="input" placeholder="e.g. dotnine" oninput="autosaveField('nextPortalGuest', 'next-portal-guest', 'next-portal-guest-status')" onblur="saveFieldNow('nextPortalGuest', 'next-portal-guest', 'next-portal-guest-status')" />
         </div>
+        <div class="date-preview" id="next-portal-guest-status"></div>
       </div>
 
       <div class="date-row">
         <div class="date-label">UPCOMING PORTAL DATE</div>
         <div class="date-input-row">
           <input type="date" id="upcoming-portal-date" class="input" oninput="updateDatePreview('upcoming')" onchange="savePortalDate('upcoming')" />
-          <button class="date-save-btn" id="upcoming-portal-save" onclick="savePortalDate('upcoming')">Save</button>
           <button class="date-save-btn" id="upcoming-portal-clear" onclick="clearPortalDate('upcoming')">Clear</button>
         </div>
         <div class="date-preview" id="upcoming-portal-preview"></div>
@@ -355,9 +353,9 @@ const HTML = `<!DOCTYPE html>
       <div class="date-row">
         <div class="date-label">UPCOMING PORTAL GUEST (optional — shows as "w/ ___" under the date)</div>
         <div class="date-input-row">
-          <input type="text" id="upcoming-portal-guest" class="input" placeholder="e.g. dotnine" oninput="autosaveField('upcomingPortalGuest', 'upcoming-portal-guest', 'upcoming-portal-guest-save')" />
-          <button class="date-save-btn" id="upcoming-portal-guest-save" onclick="saveArtistField('upcomingPortalGuest', 'upcoming-portal-guest', 'upcoming-portal-guest-save')">Save</button>
+          <input type="text" id="upcoming-portal-guest" class="input" placeholder="e.g. dotnine" oninput="autosaveField('upcomingPortalGuest', 'upcoming-portal-guest', 'upcoming-portal-guest-status')" onblur="saveFieldNow('upcomingPortalGuest', 'upcoming-portal-guest', 'upcoming-portal-guest-status')" />
         </div>
+        <div class="date-preview" id="upcoming-portal-guest-status"></div>
       </div>
     </div>
 
@@ -381,20 +379,20 @@ const HTML = `<!DOCTYPE html>
       <div class="date-row">
         <div class="date-label">ARTIST 1 NAME</div>
         <div class="date-input-row">
-          <input type="text" id="artist1-name" class="input" placeholder="e.g. trytab" oninput="autosaveField('artist1Name', 'artist1-name', 'artist1-name-save')" />
-          <button class="date-save-btn" id="artist1-name-save" onclick="saveArtistField('artist1Name', 'artist1-name', 'artist1-name-save')">Save</button>
+          <input type="text" id="artist1-name" class="input" placeholder="e.g. trytab" oninput="autosaveField('artist1Name', 'artist1-name', 'artist1-name-status')" onblur="saveFieldNow('artist1Name', 'artist1-name', 'artist1-name-status')" />
         </div>
+        <div class="date-preview" id="artist1-name-status"></div>
       </div>
 
       <div class="date-row">
         <div class="date-label">ARTIST 1 BIO</div>
         <div class="bio-input-row">
-          <textarea id="artist1-bio" class="input bio-input" placeholder="bio..." oninput="autosaveField('artist1Bio', 'artist1-bio', 'artist1-bio-save')"></textarea>
+          <textarea id="artist1-bio" class="input bio-input" placeholder="bio..." oninput="autosaveField('artist1Bio', 'artist1-bio', 'artist1-bio-status')" onblur="saveFieldNow('artist1Bio', 'artist1-bio', 'artist1-bio-status')"></textarea>
           <div class="bio-btn-col">
-            <button class="date-save-btn" id="artist1-bio-save" onclick="saveArtistField('artist1Bio', 'artist1-bio', 'artist1-bio-save')">Save</button>
             <button class="date-save-btn btn-clear" onclick="clearArtistField('artist1Bio', 'artist1-bio')">Clear</button>
           </div>
         </div>
+        <div class="date-preview" id="artist1-bio-status"></div>
       </div>
 
       <hr class="divider" />
@@ -415,20 +413,20 @@ const HTML = `<!DOCTYPE html>
       <div class="date-row">
         <div class="date-label">ARTIST 2 NAME</div>
         <div class="date-input-row">
-          <input type="text" id="artist2-name" class="input" placeholder="e.g. dotnine" oninput="autosaveField('artist2Name', 'artist2-name', 'artist2-name-save')" />
-          <button class="date-save-btn" id="artist2-name-save" onclick="saveArtistField('artist2Name', 'artist2-name', 'artist2-name-save')">Save</button>
+          <input type="text" id="artist2-name" class="input" placeholder="e.g. dotnine" oninput="autosaveField('artist2Name', 'artist2-name', 'artist2-name-status')" onblur="saveFieldNow('artist2Name', 'artist2-name', 'artist2-name-status')" />
         </div>
+        <div class="date-preview" id="artist2-name-status"></div>
       </div>
 
       <div class="date-row">
         <div class="date-label">ARTIST 2 BIO</div>
         <div class="bio-input-row">
-          <textarea id="artist2-bio" class="input bio-input" placeholder="bio..." oninput="autosaveField('artist2Bio', 'artist2-bio', 'artist2-bio-save')"></textarea>
+          <textarea id="artist2-bio" class="input bio-input" placeholder="bio..." oninput="autosaveField('artist2Bio', 'artist2-bio', 'artist2-bio-status')" onblur="saveFieldNow('artist2Bio', 'artist2-bio', 'artist2-bio-status')"></textarea>
           <div class="bio-btn-col">
-            <button class="date-save-btn" id="artist2-bio-save" onclick="saveArtistField('artist2Bio', 'artist2-bio', 'artist2-bio-save')">Save</button>
             <button class="date-save-btn btn-clear" onclick="clearArtistField('artist2Bio', 'artist2-bio')">Clear</button>
           </div>
         </div>
+        <div class="date-preview" id="artist2-bio-status"></div>
       </div>
     </div>
 
@@ -653,25 +651,30 @@ const HTML = `<!DOCTYPE html>
   }
 
   const autosaveTimers = {};
-  function autosaveField(key, inputId, btnId, delay = 1200) {
+  function autosaveField(key, inputId, statusId, delay = 1200) {
     clearTimeout(autosaveTimers[inputId]);
     autosaveTimers[inputId] = setTimeout(() => {
-      saveArtistField(key, inputId, btnId);
+      saveArtistField(key, inputId, statusId);
     }, delay);
   }
 
-  async function saveArtistField(key, inputId, btnId) {
+  function saveFieldNow(key, inputId, statusId) {
+    clearTimeout(autosaveTimers[inputId]);
+    saveArtistField(key, inputId, statusId);
+  }
+
+  async function saveArtistField(key, inputId, statusId) {
     const input = document.getElementById(inputId);
-    const btn = document.getElementById(btnId);
-    btn.disabled = true;
+    const status = document.getElementById(statusId);
+    if (status) status.textContent = "Saving…";
     await fetch("/api/admin/settings", {
       method: "POST",
       headers: { "Content-Type": "application/json", "x-admin-secret": adminSecret },
       body: JSON.stringify({ [key]: input.value.trim() || null })
     });
-    btn.classList.add("saved");
-    btn.textContent = "Saved ✓";
-    setTimeout(() => { btn.disabled = false; btn.classList.remove("saved"); btn.textContent = "Save"; }, 2000);
+    if (!status) return;
+    status.textContent = "Saved ✓";
+    setTimeout(() => { status.textContent = ""; }, 2000);
   }
 
   async function setImHere(enabled) {
@@ -698,23 +701,18 @@ const HTML = `<!DOCTYPE html>
 
   async function savePortalDate(which) {
     const input = document.getElementById(which === "next" ? "next-portal-date" : "upcoming-portal-date");
-    const btn = document.getElementById(which === "next" ? "next-portal-save" : "upcoming-portal-save");
+    const preview = document.getElementById(which === "next" ? "next-portal-preview" : "upcoming-portal-preview");
     const key = which === "next" ? "nextPortalDate" : "upcomingPortalDate";
 
-    btn.disabled = true;
     await fetch("/api/admin/settings", {
       method: "POST",
       headers: { "Content-Type": "application/json", "x-admin-secret": adminSecret },
       body: JSON.stringify({ [key]: input.value || null })
     });
 
-    btn.classList.add("saved");
-    btn.textContent = "Saved ✓";
-    setTimeout(() => {
-      btn.disabled = false;
-      btn.classList.remove("saved");
-      btn.textContent = "Save";
-    }, 2000);
+    const formatted = input.value ? fmtPortalDate(input.value) : "";
+    preview.textContent = formatted ? \`\${formatted} · saved ✓\` : "saved ✓";
+    setTimeout(() => { preview.textContent = formatted; }, 2000);
   }
 
   async function clearPortalDate(which) {
