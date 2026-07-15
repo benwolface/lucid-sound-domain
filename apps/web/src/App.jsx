@@ -1007,7 +1007,7 @@ function ArchiveSection() {
               >
                 <ReelIcon />
                 <span className="reel-label">
-                  reel {String(i + 1).padStart(2, "0")}
+                  Regulation {String(i + 1).padStart(2, "0")}
                 </span>
               </button>
             ))}
@@ -1225,7 +1225,7 @@ function ProjectorOverlay({ videos, idx, setIdx, onClose }) {
             ‹
           </button>
           <span className="projector-counter">
-            reel {String(idx + 1).padStart(2, "0")} /{" "}
+            Regulation {String(idx + 1).padStart(2, "0")} /{" "}
             {String(videos.length).padStart(2, "0")}
           </span>
           <button
