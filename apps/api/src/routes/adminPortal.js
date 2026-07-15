@@ -154,6 +154,32 @@ const HTML = `<!DOCTYPE html>
     .photo-upload-col { display: flex; flex-direction: column; gap: 6px; flex: 1; }
     .photo-status { font-size: 0.78rem; color: #555; min-height: 1em; }
     .photo-status.error { color: #f87171; }
+
+    /* ARCHIVE */
+    .archive-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 12px; margin-top: 14px;
+    }
+    .archive-card {
+      background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 8px;
+      overflow: hidden; display: flex; flex-direction: column;
+    }
+    .archive-thumb { width: 100%; height: 110px; object-fit: cover; display: block; background: #000; }
+    .archive-card-body { padding: 8px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
+    .archive-caption-input {
+      background: #111; border: 1px solid #2a2a2a; border-radius: 5px;
+      color: #e5e5e5; padding: 5px 8px; font-size: 0.78rem; outline: none; width: 100%;
+    }
+    .archive-caption-input:focus { border-color: #555; }
+    .archive-type-tag {
+      font-size: 0.68rem; color: #666; text-transform: uppercase; letter-spacing: 0.08em;
+    }
+    .archive-card-foot {
+      display: flex; align-items: center; justify-content: space-between; margin-top: auto;
+    }
+    .archive-caption-status { font-size: 0.7rem; color: #555; }
+    .archive-del { color: #a05252; font-size: 0.72rem; }
+    .archive-del:hover { color: #f87171; }
     input[type="file"].input-file {
       display: block; color: #888; font-size: 0.82rem;
       background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 8px;
@@ -430,6 +456,20 @@ const HTML = `<!DOCTYPE html>
       </div>
     </div>
 
+    <!-- ARCHIVE MEDIA -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">Archive</div>
+        <button class="link-btn" onclick="loadAdminArchive()">Refresh</button>
+      </div>
+      <div class="date-row" style="margin-top:0">
+        <div class="date-label">UPLOAD PHOTOS & VIDEOS — photos can carry an optional polaroid caption</div>
+        <input type="file" id="archive-file" class="input-file" accept="image/*,video/*" multiple onchange="uploadArchiveFiles(this)" />
+        <div class="photo-status" id="archive-upload-status"></div>
+      </div>
+      <div id="archive-grid" class="archive-grid"></div>
+    </div>
+
     <!-- PARTICIPANTS -->
     <div class="section">
       <div class="section-header">
@@ -486,9 +526,12 @@ const HTML = `<!DOCTYPE html>
 
 </div>
 <script>
+  const SUPABASE_URL = "__SUPABASE_URL__";
+  const SUPABASE_ANON_KEY = "__SUPABASE_ANON_KEY__";
   let adminSecret = sessionStorage.getItem("lsd_admin_secret") || "";
   let allParticipants = [];
   let selected = new Set();
+  let archiveItems = [];
 
   if (adminSecret) tryAutoLogin();
 
@@ -532,6 +575,118 @@ const HTML = `<!DOCTYPE html>
     loadParticipants();
     loadArchive();
     loadSettings();
+    loadAdminArchive();
+  }
+
+  // ── Archive media manager ──
+
+  async function loadAdminArchive() {
+    try {
+      const res = await fetch("/api/admin/archive", { headers: { "x-admin-secret": adminSecret } });
+      const data = await res.json();
+      archiveItems = data.items || [];
+    } catch { archiveItems = []; }
+    renderArchiveGrid();
+  }
+
+  function renderArchiveGrid() {
+    const grid = document.getElementById("archive-grid");
+    if (!archiveItems.length) {
+      grid.innerHTML = '<p style="color:#666;font-size:0.85rem">Nothing in the archive yet — upload photos or videos above.</p>';
+      return;
+    }
+    grid.innerHTML = archiveItems.map(item => \`
+      <div class="archive-card">
+        \${item.type === "photo"
+          ? \`<img class="archive-thumb" src="\${esc(item.url)}" alt="" />\`
+          : \`<video class="archive-thumb" src="\${esc(item.url)}" muted preload="metadata"></video>\`}
+        <div class="archive-card-body">
+          \${item.type === "photo"
+            ? \`<input class="archive-caption-input" placeholder="caption…" value="\${esc(item.caption || "")}" oninput="autosaveArchiveCaption('\${item.id}', this)" onblur="saveArchiveCaptionNow('\${item.id}', this)" />\`
+            : \`<span class="archive-type-tag">video</span>\`}
+          <div class="archive-card-foot">
+            <span class="archive-caption-status" id="archive-status-\${item.id}"></span>
+            <button class="link-btn archive-del" onclick="removeArchiveItem('\${item.id}')">delete</button>
+          </div>
+        </div>
+      </div>
+    \`).join("");
+  }
+
+  async function uploadArchiveFiles(input) {
+    const files = Array.from(input.files || []);
+    if (!files.length) return;
+    const status = document.getElementById("archive-upload-status");
+    status.classList.remove("error");
+    let done = 0, failed = 0;
+    for (const file of files) {
+      status.textContent = \`Uploading \${done + failed + 1} of \${files.length}…\`;
+      try {
+        const type = file.type.startsWith("video/") ? "video" : "photo";
+        const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+        const storagePath = \`\${type}s/\${Date.now()}-\${safeName}\`;
+        // Straight to Supabase storage — videos are too big for the API's body limit
+        const up = await fetch(\`\${SUPABASE_URL}/storage/v1/object/archive/\${storagePath}\`, {
+          method: "POST",
+          headers: {
+            "Authorization": \`Bearer \${SUPABASE_ANON_KEY}\`,
+            "apikey": SUPABASE_ANON_KEY,
+            "Content-Type": file.type || "application/octet-stream"
+          },
+          body: file
+        });
+        if (!up.ok) throw new Error(\`storage upload failed (\${up.status})\`);
+        const reg = await fetch("/api/admin/archive", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "x-admin-secret": adminSecret },
+          body: JSON.stringify({ type, storagePath })
+        });
+        if (!reg.ok) throw new Error("register failed");
+        done++;
+      } catch (err) {
+        console.error("[archive-upload]", err);
+        failed++;
+      }
+    }
+    input.value = "";
+    status.textContent = failed ? \`\${done} uploaded, \${failed} failed — try again.\` : \`Uploaded \${done} ✓\`;
+    if (failed) status.classList.add("error");
+    setTimeout(() => { if (!failed) status.textContent = ""; }, 3000);
+    loadAdminArchive();
+  }
+
+  const archiveCaptionTimers = {};
+  function autosaveArchiveCaption(id, input) {
+    clearTimeout(archiveCaptionTimers[id]);
+    archiveCaptionTimers[id] = setTimeout(() => saveArchiveCaption(id, input), 1200);
+  }
+  function saveArchiveCaptionNow(id, input) {
+    clearTimeout(archiveCaptionTimers[id]);
+    saveArchiveCaption(id, input);
+  }
+  async function saveArchiveCaption(id, input) {
+    const status = document.getElementById(\`archive-status-\${id}\`);
+    if (status) status.textContent = "Saving…";
+    await fetch("/api/admin/archive-caption", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-admin-secret": adminSecret },
+      body: JSON.stringify({ id, caption: input.value.trim() })
+    });
+    if (status) {
+      status.textContent = "Saved ✓";
+      setTimeout(() => { status.textContent = ""; }, 2000);
+    }
+  }
+
+  async function removeArchiveItem(id) {
+    if (!confirm("Delete this from the archive?")) return;
+    await fetch("/api/admin/archive-delete", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-admin-secret": adminSecret },
+      body: JSON.stringify({ id })
+    });
+    archiveItems = archiveItems.filter(i => i.id !== id);
+    renderArchiveGrid();
   }
 
   async function loadSettings() {
@@ -913,7 +1068,14 @@ function adminPortalRouter() {
   const router = Router();
   router.get("/", (req, res) => {
     res.setHeader("Content-Type", "text/html");
-    res.send(HTML);
+    // Injected at request time — env vars aren't loaded yet when this module's
+    // template literal is evaluated (dotenv.config runs after requires).
+    res.send(
+      HTML.replace("__SUPABASE_URL__", process.env.SUPABASE_URL || "").replace(
+        "__SUPABASE_ANON_KEY__",
+        process.env.SUPABASE_ANON_KEY || ""
+      )
+    );
   });
   return router;
 }

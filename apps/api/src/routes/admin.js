@@ -2,14 +2,18 @@ const { Router } = require("express");
 const { z } = require("zod");
 const { Resend } = require("resend");
 const {
+  createArchiveItem,
+  deleteArchiveItem,
   getAllParticipants,
+  getArchiveItems,
   getBlastLogs,
   logBlast,
   getSettings,
+  updateArchiveCaption,
+  updateArtistPhotoUrl,
+  updateArtists,
   updateImHereEnabled,
   updatePortalDates,
-  updateArtists,
-  updateArtistPhotoUrl,
 } = require("../store");
 const { createClient } = require("@supabase/supabase-js");
 const supabase = createClient(
@@ -331,6 +335,66 @@ function adminRouter() {
     }
 
     return res.json({ url: publicUrl });
+  });
+
+  // GET /api/admin/archive — all archive items (for the admin manager)
+  router.get("/archive", async (req, res) => {
+    try {
+      const items = await getArchiveItems();
+      return res.json({ items });
+    } catch (err) {
+      console.error("[admin/archive]", err);
+      return res.status(500).json({ error: "Failed to fetch archive." });
+    }
+  });
+
+  // POST /api/admin/archive — register an item already uploaded to the archive bucket
+  // (the browser uploads directly to Supabase storage — videos are too large for this API)
+  router.post("/archive", async (req, res) => {
+    const { type, storagePath, caption } = req.body || {};
+    if (type !== "photo" && type !== "video") {
+      return res.status(400).json({ error: "type must be photo or video." });
+    }
+    if (!storagePath || typeof storagePath !== "string") {
+      return res.status(400).json({ error: "storagePath required." });
+    }
+    try {
+      const item = await createArchiveItem({
+        type,
+        storagePath,
+        caption: typeof caption === "string" && caption.trim() ? caption.trim() : null,
+      });
+      return res.json({ item });
+    } catch (err) {
+      console.error("[admin/archive]", err);
+      return res.status(500).json({ error: "Failed to save archive item." });
+    }
+  });
+
+  // POST /api/admin/archive-caption — update a photo's polaroid caption
+  router.post("/archive-caption", async (req, res) => {
+    const { id, caption } = req.body || {};
+    if (!id) return res.status(400).json({ error: "id required." });
+    try {
+      await updateArchiveCaption({ id, caption });
+      return res.json({ status: "ok" });
+    } catch (err) {
+      console.error("[admin/archive-caption]", err);
+      return res.status(500).json({ error: "Failed to update caption." });
+    }
+  });
+
+  // POST /api/admin/archive-delete — remove an item (row + storage object)
+  router.post("/archive-delete", async (req, res) => {
+    const { id } = req.body || {};
+    if (!id) return res.status(400).json({ error: "id required." });
+    try {
+      await deleteArchiveItem(id);
+      return res.json({ status: "ok" });
+    } catch (err) {
+      console.error("[admin/archive-delete]", err);
+      return res.status(500).json({ error: "Failed to delete archive item." });
+    }
   });
 
   return router;
