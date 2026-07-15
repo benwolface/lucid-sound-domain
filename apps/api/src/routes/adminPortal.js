@@ -327,7 +327,7 @@ const HTML = `<!DOCTYPE html>
       <div class="date-row">
         <div class="date-label">NEXT PORTAL DATE</div>
         <div class="date-input-row">
-          <input type="date" id="next-portal-date" class="input" oninput="updateDatePreview('next')" />
+          <input type="date" id="next-portal-date" class="input" oninput="updateDatePreview('next')" onchange="savePortalDate('next')" />
           <button class="date-save-btn" id="next-portal-save" onclick="savePortalDate('next')">Save</button>
           <button class="date-save-btn" id="next-portal-clear" onclick="clearPortalDate('next')">Clear</button>
         </div>
@@ -337,7 +337,7 @@ const HTML = `<!DOCTYPE html>
       <div class="date-row">
         <div class="date-label">NEXT PORTAL GUEST (optional — shows as "w/ ___" under the date)</div>
         <div class="date-input-row">
-          <input type="text" id="next-portal-guest" class="input" placeholder="e.g. dotnine" />
+          <input type="text" id="next-portal-guest" class="input" placeholder="e.g. dotnine" oninput="autosaveField('nextPortalGuest', 'next-portal-guest', 'next-portal-guest-save')" />
           <button class="date-save-btn" id="next-portal-guest-save" onclick="saveArtistField('nextPortalGuest', 'next-portal-guest', 'next-portal-guest-save')">Save</button>
         </div>
       </div>
@@ -345,7 +345,7 @@ const HTML = `<!DOCTYPE html>
       <div class="date-row">
         <div class="date-label">UPCOMING PORTAL DATE</div>
         <div class="date-input-row">
-          <input type="date" id="upcoming-portal-date" class="input" oninput="updateDatePreview('upcoming')" />
+          <input type="date" id="upcoming-portal-date" class="input" oninput="updateDatePreview('upcoming')" onchange="savePortalDate('upcoming')" />
           <button class="date-save-btn" id="upcoming-portal-save" onclick="savePortalDate('upcoming')">Save</button>
           <button class="date-save-btn" id="upcoming-portal-clear" onclick="clearPortalDate('upcoming')">Clear</button>
         </div>
@@ -355,7 +355,7 @@ const HTML = `<!DOCTYPE html>
       <div class="date-row">
         <div class="date-label">UPCOMING PORTAL GUEST (optional — shows as "w/ ___" under the date)</div>
         <div class="date-input-row">
-          <input type="text" id="upcoming-portal-guest" class="input" placeholder="e.g. dotnine" />
+          <input type="text" id="upcoming-portal-guest" class="input" placeholder="e.g. dotnine" oninput="autosaveField('upcomingPortalGuest', 'upcoming-portal-guest', 'upcoming-portal-guest-save')" />
           <button class="date-save-btn" id="upcoming-portal-guest-save" onclick="saveArtistField('upcomingPortalGuest', 'upcoming-portal-guest', 'upcoming-portal-guest-save')">Save</button>
         </div>
       </div>
@@ -381,7 +381,7 @@ const HTML = `<!DOCTYPE html>
       <div class="date-row">
         <div class="date-label">ARTIST 1 NAME</div>
         <div class="date-input-row">
-          <input type="text" id="artist1-name" class="input" placeholder="e.g. trytab" />
+          <input type="text" id="artist1-name" class="input" placeholder="e.g. trytab" oninput="autosaveField('artist1Name', 'artist1-name', 'artist1-name-save')" />
           <button class="date-save-btn" id="artist1-name-save" onclick="saveArtistField('artist1Name', 'artist1-name', 'artist1-name-save')">Save</button>
         </div>
       </div>
@@ -389,7 +389,7 @@ const HTML = `<!DOCTYPE html>
       <div class="date-row">
         <div class="date-label">ARTIST 1 BIO</div>
         <div class="bio-input-row">
-          <textarea id="artist1-bio" class="input bio-input" placeholder="bio..."></textarea>
+          <textarea id="artist1-bio" class="input bio-input" placeholder="bio..." oninput="autosaveField('artist1Bio', 'artist1-bio', 'artist1-bio-save')"></textarea>
           <div class="bio-btn-col">
             <button class="date-save-btn" id="artist1-bio-save" onclick="saveArtistField('artist1Bio', 'artist1-bio', 'artist1-bio-save')">Save</button>
             <button class="date-save-btn btn-clear" onclick="clearArtistField('artist1Bio', 'artist1-bio')">Clear</button>
@@ -415,7 +415,7 @@ const HTML = `<!DOCTYPE html>
       <div class="date-row">
         <div class="date-label">ARTIST 2 NAME</div>
         <div class="date-input-row">
-          <input type="text" id="artist2-name" class="input" placeholder="e.g. dotnine" />
+          <input type="text" id="artist2-name" class="input" placeholder="e.g. dotnine" oninput="autosaveField('artist2Name', 'artist2-name', 'artist2-name-save')" />
           <button class="date-save-btn" id="artist2-name-save" onclick="saveArtistField('artist2Name', 'artist2-name', 'artist2-name-save')">Save</button>
         </div>
       </div>
@@ -423,7 +423,7 @@ const HTML = `<!DOCTYPE html>
       <div class="date-row">
         <div class="date-label">ARTIST 2 BIO</div>
         <div class="bio-input-row">
-          <textarea id="artist2-bio" class="input bio-input" placeholder="bio..."></textarea>
+          <textarea id="artist2-bio" class="input bio-input" placeholder="bio..." oninput="autosaveField('artist2Bio', 'artist2-bio', 'artist2-bio-save')"></textarea>
           <div class="bio-btn-col">
             <button class="date-save-btn" id="artist2-bio-save" onclick="saveArtistField('artist2Bio', 'artist2-bio', 'artist2-bio-save')">Save</button>
             <button class="date-save-btn btn-clear" onclick="clearArtistField('artist2Bio', 'artist2-bio')">Clear</button>
@@ -650,6 +650,14 @@ const HTML = `<!DOCTYPE html>
       headers: { "Content-Type": "application/json", "x-admin-secret": adminSecret },
       body: JSON.stringify({ [key]: null })
     });
+  }
+
+  const autosaveTimers = {};
+  function autosaveField(key, inputId, btnId, delay = 1200) {
+    clearTimeout(autosaveTimers[inputId]);
+    autosaveTimers[inputId] = setTimeout(() => {
+      saveArtistField(key, inputId, btnId);
+    }, delay);
   }
 
   async function saveArtistField(key, inputId, btnId) {
