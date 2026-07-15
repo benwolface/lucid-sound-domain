@@ -565,7 +565,7 @@ body {
   font-size: clamp(0.92rem, 1.65vw, 1.25rem);
   color: #8fef4a;
   letter-spacing: 0.06em;
-  margin: 0 0 10px 0;
+  margin: 0 0 4px 0;
   text-shadow:
     0 0 10px rgba(143, 239, 74, 0.52),
     0 0 24px rgba(143, 239, 74, 0.2);
@@ -573,10 +573,11 @@ body {
 
 .home-upcoming-guest {
   font-family: "Excrallik", cursive;
+  font-weight: 700;
   font-size: clamp(0.68rem, 1.2vw, 0.92rem);
   color: rgba(143, 239, 74, 0.78);
   letter-spacing: 0.05em;
-  margin: 6px 0 10px 0;
+  margin: 2px 0 10px 0;
 }
 
 .home-next-label {
@@ -596,7 +597,7 @@ body {
   font-size: clamp(1.2rem, 2.4vw, 1.85rem);
   color: #8fef4a;
   letter-spacing: 0.06em;
-  margin: 0 0 10px 0;
+  margin: 0 0 4px 0;
   text-shadow:
     0 0 12px rgba(143, 239, 74, 0.65),
     0 0 32px rgba(143, 239, 74, 0.28);
@@ -604,6 +605,7 @@ body {
 
 .home-next-guest {
   font-family: "Excrallik", cursive;
+  font-weight: 700;
   font-size: clamp(0.72rem, 1.3vw, 1rem);
   color: rgba(143, 239, 74, 0.78);
   letter-spacing: 0.05em;
@@ -641,10 +643,10 @@ body {
 
 .home-next-time {
   font-family: "Akira Expanded", sans-serif;
-  font-size: clamp(0.42rem, 0.72vw, 0.58rem);
+  font-size: clamp(0.62rem, 1.05vw, 0.85rem);
   letter-spacing: 0.18em;
   color: #8fef4a;
-  margin: 4px 0 6px 0;
+  margin: 0 0 6px 0;
   text-shadow:
     0 0 8px rgba(143, 239, 74, 0.6),
     0 0 22px rgba(143, 239, 74, 0.28);
