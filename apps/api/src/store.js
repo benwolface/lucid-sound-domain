@@ -308,13 +308,72 @@ async function getBlastLogs() {
   return data ?? [];
 }
 
+// ---------- Archive (Supabase) ----------
+
+function archivePublicUrl(storagePath) {
+  const {
+    data: { publicUrl },
+  } = supabase.storage.from("archive").getPublicUrl(storagePath);
+  return publicUrl;
+}
+
+async function getArchiveItems() {
+  const { data, error } = await supabase
+    .from("archive_items")
+    .select("id, type, storage_path, caption, created_at")
+    .order("created_at", { ascending: true });
+  if (error) throw error;
+  return (data ?? []).map((item) => ({
+    id: item.id,
+    type: item.type,
+    caption: item.caption,
+    url: archivePublicUrl(item.storage_path),
+  }));
+}
+
+async function createArchiveItem({ type, storagePath, caption = null }) {
+  const { data, error } = await supabase
+    .from("archive_items")
+    .insert({ type, storage_path: storagePath, caption })
+    .select()
+    .single();
+  if (error) throw error;
+  return { id: data.id, type: data.type, caption: data.caption, url: archivePublicUrl(data.storage_path) };
+}
+
+async function updateArchiveCaption({ id, caption }) {
+  const { error } = await supabase
+    .from("archive_items")
+    .update({ caption: caption || null })
+    .eq("id", id);
+  if (error) throw error;
+}
+
+async function deleteArchiveItem(id) {
+  const { data, error } = await supabase
+    .from("archive_items")
+    .delete()
+    .eq("id", id)
+    .select()
+    .maybeSingle();
+  if (error) throw error;
+  if (data?.storage_path) {
+    const { error: storageError } = await supabase.storage
+      .from("archive")
+      .remove([data.storage_path]);
+    if (storageError) console.error("[deleteArchiveItem] storage:", storageError);
+  }
+}
+
 module.exports = {
   attachVisitorUser,
   confirmParticipantEmail,
+  createArchiveItem,
   createEvent,
   createParticipant,
   createSession,
   createWaitlistEntry,
+  deleteArchiveItem,
   deleteSessionByTokenHash,
   ensureVisitor,
   findParticipant,
@@ -327,9 +386,11 @@ module.exports = {
   findWaitlistEntry,
   findWaitlistEntryByName,
   getAllParticipants,
+  getArchiveItems,
   getBlastLogs,
   getSettings,
   logBlast,
+  updateArchiveCaption,
   updateArtistPhotoUrl,
   updateArtists,
   updateImHereEnabled,

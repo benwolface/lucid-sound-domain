@@ -565,7 +565,7 @@ body {
   font-size: clamp(0.92rem, 1.65vw, 1.25rem);
   color: #8fef4a;
   letter-spacing: 0.06em;
-  margin: 0 0 10px 0;
+  margin: 0 0 4px 0;
   text-shadow:
     0 0 10px rgba(143, 239, 74, 0.52),
     0 0 24px rgba(143, 239, 74, 0.2);
@@ -573,10 +573,11 @@ body {
 
 .home-upcoming-guest {
   font-family: "Excrallik", cursive;
+  font-weight: 700;
   font-size: clamp(0.68rem, 1.2vw, 0.92rem);
   color: rgba(143, 239, 74, 0.78);
   letter-spacing: 0.05em;
-  margin: -4px 0 10px 0;
+  margin: 2px 0 10px 0;
 }
 
 .home-next-label {
@@ -596,7 +597,7 @@ body {
   font-size: clamp(1.2rem, 2.4vw, 1.85rem);
   color: #8fef4a;
   letter-spacing: 0.06em;
-  margin: 0 0 10px 0;
+  margin: 0 0 4px 0;
   text-shadow:
     0 0 12px rgba(143, 239, 74, 0.65),
     0 0 32px rgba(143, 239, 74, 0.28);
@@ -604,10 +605,11 @@ body {
 
 .home-next-guest {
   font-family: "Excrallik", cursive;
+  font-weight: 700;
   font-size: clamp(0.72rem, 1.3vw, 1rem);
   color: rgba(143, 239, 74, 0.78);
   letter-spacing: 0.05em;
-  margin: -4px 0 10px 0;
+  margin: 6px 0 10px 0;
 }
 
 .home-ig-link {
@@ -641,10 +643,10 @@ body {
 
 .home-next-time {
   font-family: "Akira Expanded", sans-serif;
-  font-size: clamp(0.42rem, 0.72vw, 0.58rem);
+  font-size: clamp(0.62rem, 1.05vw, 0.85rem);
   letter-spacing: 0.18em;
   color: #8fef4a;
-  margin: 4px 0 26px 0;
+  margin: 0 0 6px 0;
   text-shadow:
     0 0 8px rgba(143, 239, 74, 0.6),
     0 0 22px rgba(143, 239, 74, 0.28);
@@ -656,7 +658,7 @@ body {
   font-weight: 900;
   letter-spacing: 0.14em;
   color: #8fef4a;
-  margin: 0 0 6px 0;
+  margin: 0 0 26px 0;
   text-shadow:
     0 0 8px rgba(143, 239, 74, 0.6),
     0 0 22px rgba(143, 239, 74, 0.28);
@@ -773,7 +775,9 @@ body {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: 80px clamp(24px, 5vw, 64px) 80px clamp(40px, 8vw, 120px);
+  /* Top-heavy padding shifts the centered block ~45px down — titles
+     shouldn't start right at the top of the viewport */
+  padding: 170px clamp(24px, 5vw, 64px) 80px clamp(40px, 8vw, 120px);
   position: relative;
   scroll-snap-align: start;
   scroll-snap-stop: always;
@@ -1355,23 +1359,32 @@ body {
   padding: 0 0 0 40px;
 }
 
-/* Vertical track line */
+/* Vertical track line — a faint beam of light */
 .j-track {
   position: absolute;
   left: 43px; /* center of the dot */
   top: 14px;
   bottom: 14px;
   width: 1px;
-  background: rgba(255, 255, 255, 0.1);
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 140, 10, 0.22),
+    rgba(255, 255, 255, 0.08)
+  );
 }
 
-/* Green fill that grows as sections are passed */
+/* Fill that grows as sections are passed — accretion orange cooling to green */
 .j-track-fill {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
-  background: rgba(143, 239, 74, 0.55);
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 150, 20, 0.55),
+    rgba(143, 239, 74, 0.6)
+  );
+  box-shadow: 0 0 6px rgba(255, 140, 10, 0.25);
   transition: height 0.6s ease;
 }
 
@@ -1385,65 +1398,62 @@ body {
   cursor: pointer;
 }
 
+/* Each node is a tiny portal — a black disc that ignites when active */
 .j-node-dot {
   position: relative;
-  width: 8px;
-  height: 8px;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.18);
+  background: radial-gradient(circle at 38% 35%, #17130e 0%, #000 65%);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.14);
   flex-shrink: 0;
   z-index: 1;
   transition:
-    background 0.4s ease,
-    box-shadow 0.4s ease,
-    transform 0.4s ease;
+    box-shadow 0.5s ease,
+    transform 0.5s ease;
 }
 
-/* Outer pulsing ring on active node */
+/* Dashed orbit ring — always faintly turning, like the welcome ring.
+   Integer offsets (no translate(-50%,-50%)) keep it pixel-concentric
+   with the dot while it spins. */
 .j-node-ring {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 20px;
-  height: 20px;
+  top: calc(50% - 11px);
+  left: calc(50% - 11px);
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
-  border: 1px solid rgba(143, 239, 74, 0);
-  transition:
-    border-color 0.4s ease,
-    width 0.4s ease,
-    height 0.4s ease;
+  border: 1px dashed rgba(255, 255, 255, 0.14);
+  animation: nav-orbit 16s linear infinite;
+  transition: border-color 0.5s ease;
 }
 
+@keyframes nav-orbit {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Active: the eclipse ignites — warm corona + green orbit spinning faster */
 .j-node.is-active .j-node-dot {
-  background: #8fef4a;
-  transform: scale(1.35);
+  transform: scale(1.3);
   box-shadow:
-    0 0 8px rgba(143, 239, 74, 0.9),
-    0 0 20px rgba(143, 239, 74, 0.45);
+    0 0 0 1px rgba(255, 150, 20, 0.6),
+    0 0 9px 2px rgba(255, 130, 15, 0.55),
+    0 0 22px 6px rgba(255, 80, 8, 0.25);
 }
 
 .j-node.is-active .j-node-ring {
-  border-color: rgba(143, 239, 74, 0.38);
-  animation: ring-pulse 2.2s ease-in-out infinite;
+  border-color: rgba(143, 239, 74, 0.55);
+  animation: nav-orbit 5s linear infinite;
 }
 
+/* Past: a cooled ember */
 .j-node.is-past .j-node-dot {
-  background: rgba(143, 239, 74, 0.6);
-}
-
-@keyframes ring-pulse {
-  0%,
-  100% {
-    width: 20px;
-    height: 20px;
-    opacity: 1;
-  }
-  50% {
-    width: 28px;
-    height: 28px;
-    opacity: 0.4;
-  }
+  background: radial-gradient(circle at 38% 35%, #101a0a 0%, #000 65%);
+  box-shadow:
+    0 0 0 1px rgba(143, 239, 74, 0.35),
+    0 0 8px rgba(143, 239, 74, 0.22);
 }
 
 .j-node-label {
@@ -1581,7 +1591,7 @@ body {
   transform: translateY(0);
 }
 
-/* ── Understand: list + image side by side ── */
+/* ── Arrival: list + image side by side ── */
 .j-space-image-row {
   display: flex;
   align-items: flex-start;
@@ -1627,7 +1637,12 @@ body {
   top: 0;
   left: 0;
   height: 100%;
-  background: rgba(143, 239, 74, 0.55);
+  background: linear-gradient(
+    to right,
+    rgba(255, 150, 20, 0.55),
+    rgba(143, 239, 74, 0.6)
+  );
+  box-shadow: 0 0 6px rgba(255, 140, 10, 0.25);
   transition: width 0.6s ease;
 }
 
@@ -1662,48 +1677,48 @@ body {
 
 .j-mnode-dot {
   position: relative;
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.18);
+  background: radial-gradient(circle at 38% 35%, #17130e 0%, #000 65%);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.14);
   flex-shrink: 0;
   z-index: 1;
   transition:
-    background 0.4s ease,
-    box-shadow 0.4s ease,
-    transform 0.4s ease;
+    box-shadow 0.5s ease,
+    transform 0.5s ease;
 }
 
 .j-mnode-ring {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 20px;
-  height: 20px;
+  top: calc(50% - 9px);
+  left: calc(50% - 9px);
+  width: 18px;
+  height: 18px;
   border-radius: 50%;
-  border: 1px solid rgba(143, 239, 74, 0);
-  transition:
-    border-color 0.4s ease,
-    width 0.4s ease,
-    height 0.4s ease;
+  border: 1px dashed rgba(255, 255, 255, 0.14);
+  animation: nav-orbit 16s linear infinite;
+  transition: border-color 0.5s ease;
 }
 
 .j-mnode.is-active .j-mnode-dot {
-  background: #8fef4a;
-  transform: scale(1.35);
+  transform: scale(1.25);
   box-shadow:
-    0 0 8px rgba(143, 239, 74, 0.9),
-    0 0 20px rgba(143, 239, 74, 0.45);
+    0 0 0 1px rgba(255, 150, 20, 0.6),
+    0 0 8px 2px rgba(255, 130, 15, 0.55),
+    0 0 18px 5px rgba(255, 80, 8, 0.25);
 }
 
 .j-mnode.is-active .j-mnode-ring {
-  border-color: rgba(143, 239, 74, 0.38);
-  animation: ring-pulse 2.2s ease-in-out infinite;
+  border-color: rgba(143, 239, 74, 0.55);
+  animation: nav-orbit 5s linear infinite;
 }
 
 .j-mnode.is-past .j-mnode-dot {
-  background: rgba(143, 239, 74, 0.6);
+  background: radial-gradient(circle at 38% 35%, #101a0a 0%, #000 65%);
+  box-shadow:
+    0 0 0 1px rgba(143, 239, 74, 0.35),
+    0 0 8px rgba(143, 239, 74, 0.22);
 }
 
 /* ── Mobile layout overrides ── */
@@ -1748,9 +1763,9 @@ body {
     flex-direction: column;
     justify-content: center;
     align-items: flex-start;
-    /* top: clears fixed logo. bottom: clears nav bar. together they shift the
-       flex center point into the true visible midpoint of the screen. */
-    padding: 64px 24px calc(64px + 58px + env(safe-area-inset-bottom)) 24px;
+    /* top: clears fixed logo (+ breathing room so titles don't start at
+       the top). bottom: clears nav bar. */
+    padding: 100px 24px calc(64px + 58px + env(safe-area-inset-bottom)) 24px;
     min-height: 100svh;
   }
 
@@ -2082,5 +2097,351 @@ body {
     filter: none !important;
     color: rgba(255, 255, 255, 0.5);
     text-shadow: none;
+  }
+}
+
+/* ── Archive: time capsule ── */
+
+.j-archive-empty {
+  font-family: "Cormorant Garamond", serif;
+  font-style: italic;
+  font-size: clamp(1rem, 1.8vw, 1.3rem);
+  color: rgba(255, 255, 255, 0.45);
+  text-align: center;
+  margin-top: 12px;
+}
+
+.j-archive-hint {
+  font-family: "Cormorant Garamond", serif;
+  font-style: italic;
+  font-size: clamp(0.9rem, 1.5vw, 1.1rem);
+  color: rgba(255, 255, 255, 0.42);
+  margin: 0 0 14px 0;
+}
+
+.j-archive-hint--reels {
+  margin-top: 48px;
+}
+
+/* The table the polaroids are scattered on */
+.polaroid-table {
+  position: relative;
+  width: 100%;
+  height: clamp(340px, 58vh, 560px);
+  border-radius: 14px;
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(255, 140, 10, 0.05), transparent 60%),
+    rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+}
+
+.polaroid {
+  position: absolute;
+  width: clamp(150px, 20vw, 215px);
+  background: #f4f0e6;
+  padding: 10px 10px 44px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55);
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.polaroid:active {
+  cursor: grabbing;
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.75);
+}
+
+.polaroid img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  background: #111;
+  filter: saturate(0.82) contrast(1.03) sepia(0.14);
+  pointer-events: none;
+}
+
+.polaroid-caption {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 11px;
+  text-align: center;
+  font-family: "Cormorant Garamond", serif;
+  font-style: italic;
+  font-size: 1rem;
+  color: #3a352c;
+  padding: 0 10px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Reel shelf */
+.reel-shelf {
+  display: flex;
+  gap: clamp(22px, 4.5vw, 48px);
+  justify-content: center;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.reel {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 6px;
+}
+
+.reel svg {
+  width: clamp(64px, 9vw, 96px);
+  height: auto;
+  transition:
+    transform 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+    filter 0.3s ease;
+  filter: drop-shadow(0 0 0 rgba(255, 140, 10, 0));
+}
+
+.reel:hover svg,
+.reel:focus-visible svg {
+  transform: rotate(45deg);
+  filter: drop-shadow(0 0 14px rgba(255, 140, 10, 0.35));
+}
+
+.reel-label {
+  font-family: "Akira Expanded", sans-serif;
+  font-size: 0.5rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+/* Projector overlay — the light goes through the reel */
+.projector-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  background: rgba(0, 0, 0, 0.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: projector-dim 0.55s ease both;
+}
+
+@keyframes projector-dim {
+  from { background: rgba(0, 0, 0, 0); }
+  to { background: rgba(0, 0, 0, 0.95); }
+}
+
+.projector-beam {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(94vw, 940px);
+  height: 56vh;
+  clip-path: polygon(47.5% 0, 52.5% 0, 100% 100%, 0 100%);
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 250, 228, 0.17),
+    rgba(255, 250, 228, 0)
+  );
+  pointer-events: none;
+  animation: beam-flicker 3.4s ease-in-out infinite;
+}
+
+@keyframes beam-flicker {
+  0%, 100% { opacity: 0.85; }
+  42% { opacity: 1; }
+  55% { opacity: 0.68; }
+  71% { opacity: 0.94; }
+}
+
+.projector-stage {
+  position: relative;
+  z-index: 1;
+  width: min(92vw, 760px);
+}
+
+.filmstrip {
+  background: #050505;
+  border-radius: 6px;
+  box-shadow: 0 0 70px rgba(255, 250, 228, 0.09);
+  overflow: hidden;
+}
+
+.filmstrip-holes {
+  height: 26px;
+  background-image: radial-gradient(
+    rgba(245, 240, 226, 0.85) 26%,
+    transparent 34%
+  );
+  background-size: 34px 13px;
+  background-repeat: repeat-x;
+  background-position: center;
+}
+
+.filmstrip-video {
+  display: block;
+  width: 100%;
+  max-height: 60vh;
+  background: #000;
+}
+
+.projector-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 26px;
+  margin-top: 20px;
+}
+
+.projector-arrow {
+  background: none;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: rgba(255, 255, 255, 0.8);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: border-color 0.2s ease, color 0.2s ease;
+}
+
+.projector-arrow:hover {
+  border-color: #8fef4a;
+  color: #8fef4a;
+}
+
+.projector-counter {
+  font-family: "Akira Expanded", sans-serif;
+  font-size: 0.55rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.projector-close {
+  position: absolute;
+  top: max(18px, var(--sat));
+  right: 22px;
+  z-index: 2;
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 1.3rem;
+  cursor: pointer;
+}
+
+.projector-close:hover {
+  color: #fff;
+}
+
+/* Polaroid lightbox — tap a photo to hold it up */
+.polaroid-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  background: rgba(0, 0, 0, 0.92);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  animation: projector-dim 0.4s ease both;
+}
+
+.polaroid--zoom {
+  position: relative;
+  width: min(86vw, 480px);
+  padding: 14px 14px 60px;
+  cursor: default;
+  touch-action: auto;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.8);
+  animation: polaroid-lift 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes polaroid-lift {
+  from {
+    transform: scale(0.55) rotate(-7deg);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1) rotate(-1.5deg);
+    opacity: 1;
+  }
+}
+
+.polaroid--zoom img {
+  aspect-ratio: auto;
+  width: 100%;
+  max-height: 68vh;
+  object-fit: contain;
+}
+
+.polaroid--zoom .polaroid-caption {
+  bottom: 18px;
+  font-size: 1.3rem;
+  white-space: normal;
+}
+
+/* ── Archive on phones ── */
+@media (max-width: 768px) {
+  .polaroid {
+    width: 128px;
+    padding: 8px 8px 34px;
+  }
+
+  .polaroid-caption {
+    font-size: 0.85rem;
+    bottom: 8px;
+  }
+
+  .polaroid-table {
+    height: min(46svh, 420px);
+  }
+
+  .polaroid--zoom {
+    width: min(88vw, 480px);
+    padding: 12px 12px 54px;
+  }
+
+  .polaroid--zoom .polaroid-caption {
+    font-size: 1.1rem;
+    bottom: 14px;
+  }
+
+  .reel svg {
+    width: 58px;
+  }
+
+  .filmstrip-holes {
+    height: 20px;
+    background-size: 26px 10px;
+  }
+
+  .projector-controls {
+    gap: 18px;
+  }
+}
+
+/* Six nav stops need tighter labels on small phones */
+@media (max-width: 480px) {
+  .j-mnode-label {
+    font-size: 0.32rem;
+    letter-spacing: 0.08em;
+  }
+
+  .j-timeline-mobile {
+    padding-left: 8px;
+    padding-right: 8px;
   }
 }

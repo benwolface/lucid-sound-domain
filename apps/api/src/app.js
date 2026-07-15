@@ -12,6 +12,7 @@ const { healthRouter } = require("./routes/health");
 const { waitlistRouter } = require("./routes/waitlist");
 const { adminRouter } = require("./routes/admin");
 const { adminPortalRouter } = require("./routes/adminPortal");
+const { archiveRouter } = require("./routes/archive");
 const { settingsRouter } = require("./routes/settings");
 
 dotenv.config();
@@ -47,6 +48,7 @@ function createApp() {
   app.use("/api/me", meRouter());
   app.use("/api/waitlist", waitlistRouter());
   app.use("/api/admin", adminRouter());
+  app.use("/api/archive", archiveRouter());
   app.use("/api/settings", settingsRouter());
   app.use("/api/admin-portal", adminPortalRouter());
   app.use("/admin", adminPortalRouter());

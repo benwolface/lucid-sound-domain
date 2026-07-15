@@ -18,7 +18,8 @@ const HTML = `<!DOCTYPE html>
       justify-content: center;
       padding: 24px;
     }
-    #app { width: 100%; max-width: 640px; }
+    #app { width: 100%; max-width: 1100px; }
+    #login { max-width: 640px; margin: 0 auto; }
 
     /* LOGIN */
     #login { text-align: center; }
@@ -61,11 +62,15 @@ const HTML = `<!DOCTYPE html>
     #login .btn { width: 100%; }
     .error-msg { color: #f87171; font-size: 0.85rem; margin-top: 8px; }
 
-    /* MAIN */
+    /* MAIN — masonry columns so cards pack tight with no gaps */
     #main { display: none; }
+    #main-cols {
+      column-count: 2;
+      column-gap: 16px;
+    }
     .header {
       display: flex; align-items: center; justify-content: space-between;
-      margin-bottom: 28px;
+      margin-bottom: 16px;
     }
     .header h1 { font-size: 1.25rem; font-weight: 600; }
 
@@ -75,6 +80,10 @@ const HTML = `<!DOCTYPE html>
       border-radius: 12px;
       padding: 20px;
       margin-bottom: 16px;
+      break-inside: avoid;
+    }
+    @media (max-width: 900px) {
+      #main-cols { column-count: 1; }
     }
     .section-header {
       display: flex;
@@ -134,7 +143,7 @@ const HTML = `<!DOCTYPE html>
     textarea.input { resize: vertical; min-height: 100px; line-height: 1.5; }
     #blast-html { min-height: 180px; font-family: monospace; font-size: 0.82rem; }
     .bio-input-row { display: flex; gap: 8px; align-items: flex-start; }
-    textarea.bio-input { min-height: 72px; resize: vertical; }
+    textarea.bio-input { min-height: 140px; resize: vertical; }
     .bio-btn-col { display: flex; flex-direction: column; gap: 6px; flex-shrink: 0; }
     .btn-clear { color: #888; }
     .btn-clear:hover { border-color: #555; color: #f87171; }
@@ -154,6 +163,33 @@ const HTML = `<!DOCTYPE html>
     .photo-upload-col { display: flex; flex-direction: column; gap: 6px; flex: 1; }
     .photo-status { font-size: 0.78rem; color: #555; min-height: 1em; }
     .photo-status.error { color: #f87171; }
+
+    /* ARCHIVE */
+    .archive-grid {
+      display: grid; grid-template-columns: repeat(2, 1fr);
+      gap: 12px; margin-top: 14px;
+    }
+    .archive-card {
+      background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 8px;
+      overflow: hidden; display: flex; flex-direction: column;
+    }
+    .archive-thumb { width: 100%; height: 170px; object-fit: cover; display: block; background: #000; }
+    .archive-card-body { padding: 8px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
+    .archive-caption-input {
+      background: #111; border: 1px solid #2a2a2a; border-radius: 5px;
+      color: #e5e5e5; padding: 5px 8px; font-size: 0.78rem; outline: none; width: 100%;
+    }
+    .archive-caption-input:focus { border-color: #555; }
+    .archive-type-tag {
+      font-size: 0.68rem; color: #666; text-transform: uppercase; letter-spacing: 0.08em;
+    }
+    .archive-card-foot {
+      display: flex; align-items: center; justify-content: space-between; margin-top: auto;
+    }
+    .archive-caption-status { font-size: 0.7rem; color: #555; }
+    .archive-del { color: #a05252; font-size: 0.72rem; }
+    .archive-del:hover { color: #f87171; }
+    .blast-load-rest { display: block; width: 100%; margin-top: 12px; text-align: center; }
     input[type="file"].input-file {
       display: block; color: #888; font-size: 0.82rem;
       background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 8px;
@@ -308,6 +344,7 @@ const HTML = `<!DOCTYPE html>
       <button class="btn btn-ghost" style="font-size:0.8rem;padding:7px 12px" onclick="doLogout()">Log out</button>
     </div>
 
+    <div id="main-cols">
     <!-- CONTROLS -->
     <div class="section">
       <div class="section-title" style="margin-bottom:14px">Controls</div>
@@ -327,8 +364,7 @@ const HTML = `<!DOCTYPE html>
       <div class="date-row">
         <div class="date-label">NEXT PORTAL DATE</div>
         <div class="date-input-row">
-          <input type="date" id="next-portal-date" class="input" oninput="updateDatePreview('next')" />
-          <button class="date-save-btn" id="next-portal-save" onclick="savePortalDate('next')">Save</button>
+          <input type="date" id="next-portal-date" class="input" oninput="updateDatePreview('next')" onchange="savePortalDate('next')" />
           <button class="date-save-btn" id="next-portal-clear" onclick="clearPortalDate('next')">Clear</button>
         </div>
         <div class="date-preview" id="next-portal-preview"></div>
@@ -337,16 +373,15 @@ const HTML = `<!DOCTYPE html>
       <div class="date-row">
         <div class="date-label">NEXT PORTAL GUEST (optional — shows as "w/ ___" under the date)</div>
         <div class="date-input-row">
-          <input type="text" id="next-portal-guest" class="input" placeholder="e.g. dotnine" />
-          <button class="date-save-btn" id="next-portal-guest-save" onclick="saveArtistField('nextPortalGuest', 'next-portal-guest', 'next-portal-guest-save')">Save</button>
+          <input type="text" id="next-portal-guest" class="input" placeholder="e.g. dotnine" oninput="autosaveField('nextPortalGuest', 'next-portal-guest', 'next-portal-guest-status')" onblur="saveFieldNow('nextPortalGuest', 'next-portal-guest', 'next-portal-guest-status')" />
         </div>
+        <div class="date-preview" id="next-portal-guest-status"></div>
       </div>
 
       <div class="date-row">
         <div class="date-label">UPCOMING PORTAL DATE</div>
         <div class="date-input-row">
-          <input type="date" id="upcoming-portal-date" class="input" oninput="updateDatePreview('upcoming')" />
-          <button class="date-save-btn" id="upcoming-portal-save" onclick="savePortalDate('upcoming')">Save</button>
+          <input type="date" id="upcoming-portal-date" class="input" oninput="updateDatePreview('upcoming')" onchange="savePortalDate('upcoming')" />
           <button class="date-save-btn" id="upcoming-portal-clear" onclick="clearPortalDate('upcoming')">Clear</button>
         </div>
         <div class="date-preview" id="upcoming-portal-preview"></div>
@@ -355,9 +390,9 @@ const HTML = `<!DOCTYPE html>
       <div class="date-row">
         <div class="date-label">UPCOMING PORTAL GUEST (optional — shows as "w/ ___" under the date)</div>
         <div class="date-input-row">
-          <input type="text" id="upcoming-portal-guest" class="input" placeholder="e.g. dotnine" />
-          <button class="date-save-btn" id="upcoming-portal-guest-save" onclick="saveArtistField('upcomingPortalGuest', 'upcoming-portal-guest', 'upcoming-portal-guest-save')">Save</button>
+          <input type="text" id="upcoming-portal-guest" class="input" placeholder="e.g. dotnine" oninput="autosaveField('upcomingPortalGuest', 'upcoming-portal-guest', 'upcoming-portal-guest-status')" onblur="saveFieldNow('upcomingPortalGuest', 'upcoming-portal-guest', 'upcoming-portal-guest-status')" />
         </div>
+        <div class="date-preview" id="upcoming-portal-guest-status"></div>
       </div>
     </div>
 
@@ -381,20 +416,20 @@ const HTML = `<!DOCTYPE html>
       <div class="date-row">
         <div class="date-label">ARTIST 1 NAME</div>
         <div class="date-input-row">
-          <input type="text" id="artist1-name" class="input" placeholder="e.g. trytab" />
-          <button class="date-save-btn" id="artist1-name-save" onclick="saveArtistField('artist1Name', 'artist1-name', 'artist1-name-save')">Save</button>
+          <input type="text" id="artist1-name" class="input" placeholder="e.g. trytab" oninput="autosaveField('artist1Name', 'artist1-name', 'artist1-name-status')" onblur="saveFieldNow('artist1Name', 'artist1-name', 'artist1-name-status')" />
         </div>
+        <div class="date-preview" id="artist1-name-status"></div>
       </div>
 
       <div class="date-row">
         <div class="date-label">ARTIST 1 BIO</div>
         <div class="bio-input-row">
-          <textarea id="artist1-bio" class="input bio-input" placeholder="bio..."></textarea>
+          <textarea id="artist1-bio" class="input bio-input" placeholder="bio..." oninput="autosaveField('artist1Bio', 'artist1-bio', 'artist1-bio-status')" onblur="saveFieldNow('artist1Bio', 'artist1-bio', 'artist1-bio-status')"></textarea>
           <div class="bio-btn-col">
-            <button class="date-save-btn" id="artist1-bio-save" onclick="saveArtistField('artist1Bio', 'artist1-bio', 'artist1-bio-save')">Save</button>
             <button class="date-save-btn btn-clear" onclick="clearArtistField('artist1Bio', 'artist1-bio')">Clear</button>
           </div>
         </div>
+        <div class="date-preview" id="artist1-bio-status"></div>
       </div>
 
       <hr class="divider" />
@@ -415,21 +450,35 @@ const HTML = `<!DOCTYPE html>
       <div class="date-row">
         <div class="date-label">ARTIST 2 NAME</div>
         <div class="date-input-row">
-          <input type="text" id="artist2-name" class="input" placeholder="e.g. dotnine" />
-          <button class="date-save-btn" id="artist2-name-save" onclick="saveArtistField('artist2Name', 'artist2-name', 'artist2-name-save')">Save</button>
+          <input type="text" id="artist2-name" class="input" placeholder="e.g. dotnine" oninput="autosaveField('artist2Name', 'artist2-name', 'artist2-name-status')" onblur="saveFieldNow('artist2Name', 'artist2-name', 'artist2-name-status')" />
         </div>
+        <div class="date-preview" id="artist2-name-status"></div>
       </div>
 
       <div class="date-row">
         <div class="date-label">ARTIST 2 BIO</div>
         <div class="bio-input-row">
-          <textarea id="artist2-bio" class="input bio-input" placeholder="bio..."></textarea>
+          <textarea id="artist2-bio" class="input bio-input" placeholder="bio..." oninput="autosaveField('artist2Bio', 'artist2-bio', 'artist2-bio-status')" onblur="saveFieldNow('artist2Bio', 'artist2-bio', 'artist2-bio-status')"></textarea>
           <div class="bio-btn-col">
-            <button class="date-save-btn" id="artist2-bio-save" onclick="saveArtistField('artist2Bio', 'artist2-bio', 'artist2-bio-save')">Save</button>
             <button class="date-save-btn btn-clear" onclick="clearArtistField('artist2Bio', 'artist2-bio')">Clear</button>
           </div>
         </div>
+        <div class="date-preview" id="artist2-bio-status"></div>
       </div>
+    </div>
+
+    <!-- ARCHIVE MEDIA -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">Archive</div>
+        <button class="link-btn" onclick="loadAdminArchive()">Refresh</button>
+      </div>
+      <div class="date-row" style="margin-top:0">
+        <div class="date-label">UPLOAD PHOTOS & VIDEOS — photos can carry an optional polaroid caption</div>
+        <input type="file" id="archive-file" class="input-file" accept="image/*,video/*" multiple onchange="uploadArchiveFiles(this)" />
+        <div class="photo-status" id="archive-upload-status"></div>
+      </div>
+      <div id="archive-grid" class="archive-grid"></div>
     </div>
 
     <!-- PARTICIPANTS -->
@@ -484,13 +533,17 @@ const HTML = `<!DOCTYPE html>
       </div>
       <div id="archive-content"><div class="archive-empty">Loading...</div></div>
     </div>
+    </div>
   </div>
 
 </div>
 <script>
+  const SUPABASE_URL = "__SUPABASE_URL__";
+  const SUPABASE_ANON_KEY = "__SUPABASE_ANON_KEY__";
   let adminSecret = sessionStorage.getItem("lsd_admin_secret") || "";
   let allParticipants = [];
   let selected = new Set();
+  let archiveItems = [];
 
   if (adminSecret) tryAutoLogin();
 
@@ -534,6 +587,118 @@ const HTML = `<!DOCTYPE html>
     loadParticipants();
     loadArchive();
     loadSettings();
+    loadAdminArchive();
+  }
+
+  // ── Archive media manager ──
+
+  async function loadAdminArchive() {
+    try {
+      const res = await fetch("/api/admin/archive", { headers: { "x-admin-secret": adminSecret } });
+      const data = await res.json();
+      archiveItems = data.items || [];
+    } catch { archiveItems = []; }
+    renderArchiveGrid();
+  }
+
+  function renderArchiveGrid() {
+    const grid = document.getElementById("archive-grid");
+    if (!archiveItems.length) {
+      grid.innerHTML = '<p style="color:#666;font-size:0.85rem">Nothing in the archive yet — upload photos or videos above.</p>';
+      return;
+    }
+    grid.innerHTML = archiveItems.map(item => \`
+      <div class="archive-card">
+        \${item.type === "photo"
+          ? \`<img class="archive-thumb" src="\${esc(item.url)}" alt="" />\`
+          : \`<video class="archive-thumb" src="\${esc(item.url)}" muted preload="metadata"></video>\`}
+        <div class="archive-card-body">
+          \${item.type === "photo"
+            ? \`<input class="archive-caption-input" placeholder="caption…" value="\${esc(item.caption || "")}" oninput="autosaveArchiveCaption('\${item.id}', this)" onblur="saveArchiveCaptionNow('\${item.id}', this)" />\`
+            : \`<span class="archive-type-tag">video</span>\`}
+          <div class="archive-card-foot">
+            <span class="archive-caption-status" id="archive-status-\${item.id}"></span>
+            <button class="link-btn archive-del" onclick="removeArchiveItem('\${item.id}')">delete</button>
+          </div>
+        </div>
+      </div>
+    \`).join("");
+  }
+
+  async function uploadArchiveFiles(input) {
+    const files = Array.from(input.files || []);
+    if (!files.length) return;
+    const status = document.getElementById("archive-upload-status");
+    status.classList.remove("error");
+    let done = 0, failed = 0;
+    for (const file of files) {
+      status.textContent = \`Uploading \${done + failed + 1} of \${files.length}…\`;
+      try {
+        const type = file.type.startsWith("video/") ? "video" : "photo";
+        const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+        const storagePath = \`\${type}s/\${Date.now()}-\${safeName}\`;
+        // Straight to Supabase storage — videos are too big for the API's body limit
+        const up = await fetch(\`\${SUPABASE_URL}/storage/v1/object/archive/\${storagePath}\`, {
+          method: "POST",
+          headers: {
+            "Authorization": \`Bearer \${SUPABASE_ANON_KEY}\`,
+            "apikey": SUPABASE_ANON_KEY,
+            "Content-Type": file.type || "application/octet-stream"
+          },
+          body: file
+        });
+        if (!up.ok) throw new Error(\`storage upload failed (\${up.status})\`);
+        const reg = await fetch("/api/admin/archive", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "x-admin-secret": adminSecret },
+          body: JSON.stringify({ type, storagePath })
+        });
+        if (!reg.ok) throw new Error("register failed");
+        done++;
+      } catch (err) {
+        console.error("[archive-upload]", err);
+        failed++;
+      }
+    }
+    input.value = "";
+    status.textContent = failed ? \`\${done} uploaded, \${failed} failed — try again.\` : \`Uploaded \${done} ✓\`;
+    if (failed) status.classList.add("error");
+    setTimeout(() => { if (!failed) status.textContent = ""; }, 3000);
+    loadAdminArchive();
+  }
+
+  const archiveCaptionTimers = {};
+  function autosaveArchiveCaption(id, input) {
+    clearTimeout(archiveCaptionTimers[id]);
+    archiveCaptionTimers[id] = setTimeout(() => saveArchiveCaption(id, input), 1200);
+  }
+  function saveArchiveCaptionNow(id, input) {
+    clearTimeout(archiveCaptionTimers[id]);
+    saveArchiveCaption(id, input);
+  }
+  async function saveArchiveCaption(id, input) {
+    const status = document.getElementById(\`archive-status-\${id}\`);
+    if (status) status.textContent = "Saving…";
+    await fetch("/api/admin/archive-caption", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-admin-secret": adminSecret },
+      body: JSON.stringify({ id, caption: input.value.trim() })
+    });
+    if (status) {
+      status.textContent = "Saved ✓";
+      setTimeout(() => { status.textContent = ""; }, 2000);
+    }
+  }
+
+  async function removeArchiveItem(id) {
+    if (!confirm("Delete this from the archive?")) return;
+    await fetch("/api/admin/archive-delete", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-admin-secret": adminSecret },
+      body: JSON.stringify({ id })
+    });
+    archiveItems = archiveItems.filter(i => i.id !== id);
+    renderArchiveGrid();
   }
 
   async function loadSettings() {
@@ -652,18 +817,31 @@ const HTML = `<!DOCTYPE html>
     });
   }
 
-  async function saveArtistField(key, inputId, btnId) {
+  const autosaveTimers = {};
+  function autosaveField(key, inputId, statusId, delay = 1200) {
+    clearTimeout(autosaveTimers[inputId]);
+    autosaveTimers[inputId] = setTimeout(() => {
+      saveArtistField(key, inputId, statusId);
+    }, delay);
+  }
+
+  function saveFieldNow(key, inputId, statusId) {
+    clearTimeout(autosaveTimers[inputId]);
+    saveArtistField(key, inputId, statusId);
+  }
+
+  async function saveArtistField(key, inputId, statusId) {
     const input = document.getElementById(inputId);
-    const btn = document.getElementById(btnId);
-    btn.disabled = true;
+    const status = document.getElementById(statusId);
+    if (status) status.textContent = "Saving…";
     await fetch("/api/admin/settings", {
       method: "POST",
       headers: { "Content-Type": "application/json", "x-admin-secret": adminSecret },
       body: JSON.stringify({ [key]: input.value.trim() || null })
     });
-    btn.classList.add("saved");
-    btn.textContent = "Saved ✓";
-    setTimeout(() => { btn.disabled = false; btn.classList.remove("saved"); btn.textContent = "Save"; }, 2000);
+    if (!status) return;
+    status.textContent = "Saved ✓";
+    setTimeout(() => { status.textContent = ""; }, 2000);
   }
 
   async function setImHere(enabled) {
@@ -690,23 +868,18 @@ const HTML = `<!DOCTYPE html>
 
   async function savePortalDate(which) {
     const input = document.getElementById(which === "next" ? "next-portal-date" : "upcoming-portal-date");
-    const btn = document.getElementById(which === "next" ? "next-portal-save" : "upcoming-portal-save");
+    const preview = document.getElementById(which === "next" ? "next-portal-preview" : "upcoming-portal-preview");
     const key = which === "next" ? "nextPortalDate" : "upcomingPortalDate";
 
-    btn.disabled = true;
     await fetch("/api/admin/settings", {
       method: "POST",
       headers: { "Content-Type": "application/json", "x-admin-secret": adminSecret },
       body: JSON.stringify({ [key]: input.value || null })
     });
 
-    btn.classList.add("saved");
-    btn.textContent = "Saved ✓";
-    setTimeout(() => {
-      btn.disabled = false;
-      btn.classList.remove("saved");
-      btn.textContent = "Save";
-    }, 2000);
+    const formatted = input.value ? fmtPortalDate(input.value) : "";
+    preview.textContent = formatted ? \`\${formatted} · saved ✓\` : "saved ✓";
+    setTimeout(() => { preview.textContent = formatted; }, 2000);
   }
 
   async function clearPortalDate(which) {
@@ -847,17 +1020,35 @@ const HTML = `<!DOCTYPE html>
     \`).join("");
   }
 
+  const BLAST_PREVIEW_COUNT = 4;
+  let blastLogs = [];
+  let blastShowAll = false;
+
   async function loadArchive() {
     const res = await fetch("/api/admin/blasts", { headers: { "x-admin-secret": adminSecret } });
     const data = await res.json();
+    blastLogs = data.logs || [];
+    blastShowAll = false;
+    renderBlastArchive();
+  }
+
+  function showAllBlasts() {
+    blastShowAll = true;
+    renderBlastArchive();
+  }
+
+  function renderBlastArchive() {
     const el = document.getElementById("archive-content");
 
-    if (!data.logs?.length) {
+    if (!blastLogs.length) {
       el.innerHTML = '<div class="archive-empty">No blasts sent yet.</div>';
       return;
     }
 
-    el.innerHTML = data.logs.map((log, i) => \`
+    const visible = blastShowAll ? blastLogs : blastLogs.slice(0, BLAST_PREVIEW_COUNT);
+    const hidden = blastLogs.length - visible.length;
+
+    el.innerHTML = visible.map((log, i) => \`
       <div class="archive-entry" id="arc-\${i}">
         <div class="archive-summary" onclick="toggleArchive(\${i})">
           <div class="archive-meta">
@@ -883,7 +1074,9 @@ const HTML = `<!DOCTYPE html>
           \`).join("")}
         </div>
       </div>
-    \`).join("");
+    \`).join("") + (hidden > 0
+      ? \`<button class="date-save-btn blast-load-rest" onclick="showAllBlasts()">Load the rest (\${hidden} more)</button>\`
+      : "");
   }
 
   function toggleArchive(i) {
@@ -907,7 +1100,14 @@ function adminPortalRouter() {
   const router = Router();
   router.get("/", (req, res) => {
     res.setHeader("Content-Type", "text/html");
-    res.send(HTML);
+    // Injected at request time — env vars aren't loaded yet when this module's
+    // template literal is evaluated (dotenv.config runs after requires).
+    res.send(
+      HTML.replace("__SUPABASE_URL__", process.env.SUPABASE_URL || "").replace(
+        "__SUPABASE_ANON_KEY__",
+        process.env.SUPABASE_ANON_KEY || ""
+      )
+    );
   });
   return router;
 }

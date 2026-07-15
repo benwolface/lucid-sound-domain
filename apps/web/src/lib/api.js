@@ -71,3 +71,7 @@ export function apiUpdateContactEmail({ name, email, referralCode }) {
 export function apiGetSettings() {
   return apiRequest("/settings");
 }
+
+export function apiGetArchive() {
+  return apiRequest("/archive");
+}

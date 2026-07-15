@@ -4,6 +4,7 @@ import {
   apiJoinWaitlist,
   apiCheckReferrer,
   apiLookupRefCode,
+  apiGetArchive,
   apiGetSettings,
   apiUpdateContactEmail,
 } from "./lib/api";
@@ -180,10 +181,11 @@ function WelcomeModal({ onClose }) {
 
 const JOURNEY_SECTIONS = [
   { id: "home", label: "Regulation" },
-  { id: "domain", label: "Understand" },
+  { id: "domain", label: "Arrival" },
   { id: "flow", label: "Program" },
-  { id: "contact", label: "Featuring" },
-  { id: "contribute", label: "Contribute" },
+  { id: "contact", label: "Selectors" },
+  { id: "archive", label: "Archive" },
+  { id: "contribute", label: "Participate" },
 ];
 
 function Home({
@@ -334,13 +336,13 @@ function Home({
           <p className="home-next-date">
             {nextPortalDate ? fmtPortalDate(nextPortalDate) : "date TBD"}
           </p>
+          <p className="home-next-time">7:00 – 10:30p</p>
           {nextPortalGuest && (
-            <p className="home-next-guest">w/ {nextPortalGuest}</p>
+            <p className="home-next-guest">w/{nextPortalGuest}</p>
           )}
           <p className="home-next-address">
             1340 Turk St Apt 418 · San Francisco CA
           </p>
-          <p className="home-next-time">7:00 – 11:00p</p>
           <CalendarButtons nextPortalDate={nextPortalDate} />
           <p className="home-upcoming-title">Upcoming portals</p>
           <p className="home-upcoming-date">
@@ -349,7 +351,7 @@ function Home({
               : "date TBD"}
           </p>
           {upcomingPortalGuest && (
-            <p className="home-upcoming-guest">w/ {upcomingPortalGuest}</p>
+            <p className="home-upcoming-guest">w/{upcomingPortalGuest}</p>
           )}
           <a
             href="https://www.instagram.com/lucidsounddomain/"
@@ -394,22 +396,22 @@ function Home({
             <div className="j-domain-cols">
               {/* Left: all text */}
               <div className="j-domain-text">
-                <h2 className="j-animate j-section-heading">Understand</h2>
+                <h2 className="j-animate j-section-heading">Arrival</h2>
                 <p className="j-animate j-domain-intro">
-                  The Lucid Sound Domain is an intimate, deep listening dance
-                  floor that requires nothing from you except your presence.
+                  The Lucid Sound Domain is a deep listening dance floor that
+                  asks for nothing except your presence.
                 </p>
                 <p className="j-animate j-domain-intro">
-                  A space to find respite from the chaos of life in the city and
-                  share a moment of intentional relaxation.
+                  In return, it offers something rare: uninterrupted
+                  listening.
                 </p>
                 <p className="j-animate j-domain-intro">
-                  The intention here is to cultivate a space to explore the
-                  concept of mind expansion through deep listening.
+                  A place to slow down before moving again.
                 </p>
                 <p className="j-animate j-domain-disclaimer">
-                  We request there be no talking or cell phone use in the
-                  listening room during Regulation (8-9p).
+                  Please help protect the listening experience by
+                  refraining from conversation and phone use during
+                  Regulation (8:00-9:00 PM).
                 </p>
               </div>
 
@@ -455,32 +457,34 @@ function Home({
           <section id="j-flow" className="j-section" data-section="flow">
             <h2 className="j-animate j-section-heading">Program</h2>
             <div className="j-animate j-attend-schedule">
-              <p className="j-attend-slot">7:00p - Arrival</p>
+              <p className="j-attend-slot">7:00 PM · Arrival</p>
               <p className="j-attend-note">
-                get cozy, peruse the wares, settle into the space
+                Settle into the space, browse the library, and prepare to
+                listen.
               </p>
-              <p className="j-attend-slot">
-                7:50p - Doors Close. Late Entry Cannot Be Guaranteed
-              </p>
-              <p className="j-attend-slot">
-                8:00p - Regulation w/ {artist1Name || "trytab"}
-              </p>
-              <p className="j-attend-slot">
-                9:00 - 9:30p - Break & snacks
-              </p>
-              <p className="j-attend-slot">
-                9:30 - 10:30p - Low-end Ritual w/{" "}
-                {artist2Name || "dotnine"}{" "}
-              </p>
+              <p className="j-attend-slot">7:45 PM · Final Arrival</p>
               <p className="j-attend-note">
-                guiding us from meditative deep listening into low end movement
+                The listening room is sealed from 8:00-9:00 PM.
               </p>
+              <p className="j-attend-slot">
+                8:00 PM · Regulation w/ {artist1Name || "trytab"}
+              </p>
+              <p className="j-attend-note">Silent deep listening.</p>
+              <p className="j-attend-slot">9:00 PM · Recess</p>
+              <p className="j-attend-note">
+                Tea, snacks, and time to nourish yourself. I recommend
+                bringing dinner or eating beforehand.
+              </p>
+              <p className="j-attend-slot">
+                9:30 PM · Sensory Ritual w/ {artist2Name || "dotnine"}
+              </p>
+              <p className="j-attend-note">From stillness into movement.</p>
             </div>
           </section>
 
-          {/* ── Featuring ── */}
+          {/* ── Selectors ── */}
           <section id="j-contact" className="j-section" data-section="contact">
-            <h2 className="j-animate j-section-heading">Featuring</h2>
+            <h2 className="j-animate j-section-heading">Selectors</h2>
             <div className="j-animate j-artist-grid">
               <div className="j-artist-card">
                 <div className="j-artist-photo-wrap">
@@ -523,25 +527,39 @@ function Home({
             </div>
           </section>
 
-          {/* ── Contribute ── */}
+          {/* ── Archive ── */}
+          <section id="j-archive" className="j-section" data-section="archive">
+            <h2 className="j-animate j-section-heading">Archive</h2>
+            <ArchiveSection />
+          </section>
+
+          {/* ── Participate ── */}
           <section
             id="j-contribute"
             className="j-section"
             data-section="contribute"
           >
-            <h2 className="j-animate j-section-heading">Contribute</h2>
+            <h2 className="j-animate j-section-heading">Participate</h2>
             <p className="j-animate j-section-copy">
-              if you&apos;d like to contribute to the co-creation of Regulation
-              through sound, visualization, food, drink or any other way, please
-              reach out at{" "}
-              <a className="j-inline-link" href="sms:9805059936">
-                (980)-505-9936
-              </a>
-              .
+              The Lucid Sound Domain is built on the trust of the people who
+              gather within it.
             </p>
             <p className="j-animate j-section-copy" style={{ marginTop: 20 }}>
-              if you&apos;d like to bring a trusted friend into the domain for
-              the next portal opening, click here for your unique invite link
+              If you&apos;d like to participate in Lucid through sound, food,
+              documentation, or in any other way, please reach out to me.
+            </p>
+            <p className="j-animate j-section-copy" style={{ marginTop: 20 }}>
+              <a
+                className="j-inline-link"
+                href="mailto:portal@lucidsounddomain.com"
+              >
+                portal@lucidsounddomain.com
+              </a>
+            </p>
+            <p className="j-animate j-section-copy" style={{ marginTop: 20 }}>
+              Know someone who belongs within the Domain?
+              <br />
+              Share your unique invitation.
             </p>
             <InviteLinkButton referralCode={referralCode} />
             <SectionScrollHint
@@ -824,6 +842,304 @@ function MobileTimeline({ active, pageRef, navReady }) {
         </a>
       ))}
     </nav>
+  );
+}
+
+// ── Archive: time capsule ──
+
+// Deterministic pseudo-random so the pile scatters the same way per photo
+function scatterRand(i, salt) {
+  const x = Math.sin(i * 127.1 + salt * 311.7) * 43758.5453;
+  return x - Math.floor(x);
+}
+
+function ArchiveSection() {
+  const [photos, setPhotos] = useState([]);
+  const [videos, setVideos] = useState([]);
+  const [reelIdx, setReelIdx] = useState(null);
+  const [zoomPhoto, setZoomPhoto] = useState(null);
+
+  useEffect(() => {
+    apiGetArchive()
+      .then(({ photos, videos }) => {
+        setPhotos(photos ?? []);
+        setVideos(videos ?? []);
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (!zoomPhoto) return;
+    const onKey = (e) => {
+      if (e.key === "Escape") setZoomPhoto(null);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [zoomPhoto]);
+
+  if (!photos.length && !videos.length) {
+    return (
+      <p className="j-animate j-archive-empty">
+        the archive is still being written. return after the next portal.
+      </p>
+    );
+  }
+
+  return (
+    <>
+      {photos.length > 0 && (
+        <>
+          <p className="j-animate j-archive-hint">
+            moments preserved from previous portals
+          </p>
+          <PolaroidPile photos={photos} onPhotoClick={setZoomPhoto} />
+        </>
+      )}
+      {videos.length > 0 && (
+        <>
+          <p className="j-animate j-archive-hint j-archive-hint--reels">
+            recovered reels — hold one up to the light
+          </p>
+          <div className="j-animate reel-shelf">
+            {videos.map((v, i) => (
+              <button
+                key={v.id}
+                type="button"
+                className="reel"
+                onClick={() => setReelIdx(i)}
+                aria-label={`play reel ${i + 1}`}
+              >
+                <ReelIcon />
+                <span className="reel-label">
+                  reel {String(i + 1).padStart(2, "0")}
+                </span>
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+      {reelIdx !== null && (
+        <ProjectorOverlay
+          videos={videos}
+          idx={reelIdx}
+          setIdx={setReelIdx}
+          onClose={() => setReelIdx(null)}
+        />
+      )}
+      {zoomPhoto && (
+        <div className="polaroid-lightbox" onClick={() => setZoomPhoto(null)}>
+          <div
+            className="polaroid polaroid--zoom"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <img
+              src={zoomPhoto.url}
+              alt={zoomPhoto.caption || "archive photo"}
+              draggable={false}
+            />
+            {zoomPhoto.caption && (
+              <span className="polaroid-caption">{zoomPhoto.caption}</span>
+            )}
+          </div>
+          <button
+            type="button"
+            className="projector-close"
+            onClick={() => setZoomPhoto(null)}
+            aria-label="put the photo back"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+    </>
+  );
+}
+
+function PolaroidPile({ photos, onPhotoClick }) {
+  const wrapRef = useRef(null);
+  // id -> { x, y (% of container), rot (deg) }
+  const [pos, setPos] = useState({});
+  // z-order: last id in the array sits on top
+  const [order, setOrder] = useState([]);
+  const dragRef = useRef(null);
+
+  useEffect(() => {
+    const next = {};
+    photos.forEach((ph, i) => {
+      next[ph.id] = {
+        x: 4 + scatterRand(i, 1) * 62,
+        y: 4 + scatterRand(i, 2) * 44,
+        rot: -13 + scatterRand(i, 3) * 26,
+      };
+    });
+    setPos(next);
+    setOrder(photos.map((ph) => ph.id));
+  }, [photos]);
+
+  function onPointerDown(e, id) {
+    const wrap = wrapRef.current;
+    const p = pos[id];
+    if (!wrap || !p) return;
+    e.currentTarget.setPointerCapture(e.pointerId);
+    const rect = wrap.getBoundingClientRect();
+    dragRef.current = {
+      id,
+      startX: e.clientX,
+      startY: e.clientY,
+      origX: (p.x / 100) * rect.width,
+      origY: (p.y / 100) * rect.height,
+      rect,
+      moved: 0,
+    };
+    setOrder((o) => [...o.filter((x) => x !== id), id]);
+  }
+
+  function onPointerMove(e) {
+    const d = dragRef.current;
+    if (!d) return;
+    d.moved = Math.max(
+      d.moved,
+      Math.hypot(e.clientX - d.startX, e.clientY - d.startY),
+    );
+    const nx = d.origX + (e.clientX - d.startX);
+    const ny = d.origY + (e.clientY - d.startY);
+    setPos((p) => ({
+      ...p,
+      [d.id]: {
+        ...p[d.id],
+        x: Math.max(-8, Math.min(80, (nx / d.rect.width) * 100)),
+        y: Math.max(-4, Math.min(86, (ny / d.rect.height) * 100)),
+      },
+    }));
+  }
+
+  function onPointerUp() {
+    const d = dragRef.current;
+    dragRef.current = null;
+    // Barely moved = a tap, not a drag — hold the photo up to look closer
+    if (d && d.moved < 6 && onPhotoClick) {
+      const ph = photos.find((x) => x.id === d.id);
+      if (ph) onPhotoClick(ph);
+    }
+  }
+
+  return (
+    <div ref={wrapRef} className="j-animate polaroid-table">
+      {photos.map((ph) => {
+        const p = pos[ph.id];
+        if (!p) return null;
+        return (
+          <div
+            key={ph.id}
+            className="polaroid"
+            style={{
+              left: `${p.x}%`,
+              top: `${p.y}%`,
+              transform: `rotate(${p.rot}deg)`,
+              zIndex: order.indexOf(ph.id) + 1,
+            }}
+            onPointerDown={(e) => onPointerDown(e, ph.id)}
+            onPointerMove={onPointerMove}
+            onPointerUp={onPointerUp}
+            onPointerCancel={onPointerUp}
+          >
+            <img src={ph.url} alt={ph.caption || "archive photo"} draggable={false} />
+            {ph.caption && <span className="polaroid-caption">{ph.caption}</span>}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function ReelIcon() {
+  const holes = [...Array(6)].map((_, i) => {
+    const a = (i / 6) * Math.PI * 2 - Math.PI / 2;
+    return (
+      <circle
+        key={i}
+        cx={50 + Math.cos(a) * 26}
+        cy={50 + Math.sin(a) * 26}
+        r="10.5"
+        fill="#0a0a0a"
+      />
+    );
+  });
+  return (
+    <svg viewBox="0 0 100 100" aria-hidden="true">
+      <circle cx="50" cy="50" r="48" fill="#1c1c1c" stroke="#3a3a3a" strokeWidth="2" />
+      <circle cx="50" cy="50" r="43" fill="#242424" />
+      {holes}
+      <circle cx="50" cy="50" r="9" fill="#0a0a0a" stroke="#3a3a3a" strokeWidth="2" />
+    </svg>
+  );
+}
+
+function ProjectorOverlay({ videos, idx, setIdx, onClose }) {
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === "Escape") onClose();
+      if (e.key === "ArrowLeft")
+        setIdx((i) => (i - 1 + videos.length) % videos.length);
+      if (e.key === "ArrowRight") setIdx((i) => (i + 1) % videos.length);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [videos.length, setIdx, onClose]);
+
+  const v = videos[idx];
+  if (!v) return null;
+
+  return (
+    <div className="projector-overlay" onClick={onClose}>
+      <div className="projector-beam" />
+      <div className="projector-stage" onClick={(e) => e.stopPropagation()}>
+        <div className="filmstrip">
+          <div className="filmstrip-holes" />
+          <video
+            key={v.id}
+            className="filmstrip-video"
+            src={v.url}
+            autoPlay
+            loop
+            playsInline
+            controls
+            preload="metadata"
+          />
+          <div className="filmstrip-holes" />
+        </div>
+        <div className="projector-controls">
+          <button
+            type="button"
+            className="projector-arrow"
+            onClick={() => setIdx((i) => (i - 1 + videos.length) % videos.length)}
+            aria-label="previous reel"
+          >
+            ‹
+          </button>
+          <span className="projector-counter">
+            reel {String(idx + 1).padStart(2, "0")} /{" "}
+            {String(videos.length).padStart(2, "0")}
+          </span>
+          <button
+            type="button"
+            className="projector-arrow"
+            onClick={() => setIdx((i) => (i + 1) % videos.length)}
+            aria-label="next reel"
+          >
+            ›
+          </button>
+        </div>
+      </div>
+      <button
+        type="button"
+        className="projector-close"
+        onClick={onClose}
+        aria-label="close projector"
+      >
+        ✕
+      </button>
+    </div>
   );
 }
 
@@ -1908,7 +2224,10 @@ function Landing({ onHome, onDomainScreen, imHereEnabled, nextPortalDate }) {
             {nextPortalDate ? fmtPortalDate(nextPortalDate) : "date TBD"}
           </p>
           <p className="home-timing">
-            Doors close at 7:50p. Late Entry Not Guaranteed.
+            7:00 PM – 10:30 PM. Please arrive before 7:45 PM.
+            <br />
+            To protect the listening experience, there is no entry from
+            8:00–9:00 PM.
           </p>
         </div>
         <div ref={diskRef} className="accretion-disk" />
@@ -1961,7 +2280,7 @@ function Landing({ onHome, onDomainScreen, imHereEnabled, nextPortalDate }) {
                 className="arrival-btn"
                 onClick={handleFirstArrival}
               >
-                first arrival
+                i'm new
               </button>
               <button
                 type="button"
