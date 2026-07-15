@@ -57,10 +57,14 @@ function confirmPage(message) {
   return `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body style="${CONFIRM_PAGE_STYLE}"><div style="${CONFIRM_BOX_STYLE}"><p style="margin:0;font-size:15px;line-height:1.75">${message}</p></div></body></html>`;
 }
 
-const twilioClient =
-  process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN
-    ? require("twilio")(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN)
-    : null;
+let twilioClient = null;
+if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN) {
+  try {
+    twilioClient = require("twilio")(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
+  } catch (err) {
+    console.error("[waitlist] twilio package not installed, SMS notify disabled:", err.message);
+  }
+}
 
 async function notifyOwner(name, email, referredBy) {
   if (!twilioClient || !process.env.TWILIO_TO || !process.env.TWILIO_FROM) return;
