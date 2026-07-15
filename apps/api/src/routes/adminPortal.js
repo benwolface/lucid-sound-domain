@@ -335,6 +335,14 @@ const HTML = `<!DOCTYPE html>
       </div>
 
       <div class="date-row">
+        <div class="date-label">NEXT PORTAL GUEST (optional — shows as "w/ ___" under the date)</div>
+        <div class="date-input-row">
+          <input type="text" id="next-portal-guest" class="input" placeholder="e.g. dotnine" />
+          <button class="date-save-btn" id="next-portal-guest-save" onclick="saveArtistField('nextPortalGuest', 'next-portal-guest', 'next-portal-guest-save')">Save</button>
+        </div>
+      </div>
+
+      <div class="date-row">
         <div class="date-label">UPCOMING PORTAL DATE</div>
         <div class="date-input-row">
           <input type="date" id="upcoming-portal-date" class="input" oninput="updateDatePreview('upcoming')" />
@@ -342,6 +350,14 @@ const HTML = `<!DOCTYPE html>
           <button class="date-save-btn" id="upcoming-portal-clear" onclick="clearPortalDate('upcoming')">Clear</button>
         </div>
         <div class="date-preview" id="upcoming-portal-preview"></div>
+      </div>
+
+      <div class="date-row">
+        <div class="date-label">UPCOMING PORTAL GUEST (optional — shows as "w/ ___" under the date)</div>
+        <div class="date-input-row">
+          <input type="text" id="upcoming-portal-guest" class="input" placeholder="e.g. dotnine" />
+          <button class="date-save-btn" id="upcoming-portal-guest-save" onclick="saveArtistField('upcomingPortalGuest', 'upcoming-portal-guest', 'upcoming-portal-guest-save')">Save</button>
+        </div>
       </div>
     </div>
 
@@ -532,6 +548,8 @@ const HTML = `<!DOCTYPE html>
       document.getElementById("upcoming-portal-date").value = data.upcomingPortalDate;
       updateDatePreview("upcoming");
     }
+    if (data.nextPortalGuest) document.getElementById("next-portal-guest").value = data.nextPortalGuest;
+    if (data.upcomingPortalGuest) document.getElementById("upcoming-portal-guest").value = data.upcomingPortalGuest;
     if (data.artist1Name) document.getElementById("artist1-name").value = data.artist1Name;
     if (data.artist1Bio) document.getElementById("artist1-bio").value = data.artist1Bio;
     if (data.artist2Name) document.getElementById("artist2-name").value = data.artist2Name;

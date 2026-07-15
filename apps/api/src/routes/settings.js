@@ -11,6 +11,8 @@ function settingsRouter() {
         imHereEnabled: settings.im_here_enabled,
         nextPortalDate: settings.next_portal_date ?? null,
         upcomingPortalDate: settings.upcoming_portal_date ?? null,
+        nextPortalGuest: settings.next_portal_guest ?? null,
+        upcomingPortalGuest: settings.upcoming_portal_guest ?? null,
         artist1Name: settings.artist1_name ?? null,
         artist1Bio: settings.artist1_bio ?? null,
         artist2Name: settings.artist2_name ?? null,
@@ -20,7 +22,7 @@ function settingsRouter() {
       });
     } catch (err) {
       console.error("[settings]", err);
-      return res.json({ imHereEnabled: false, nextPortalDate: null, upcomingPortalDate: null, artist1Name: null, artist1Bio: null, artist2Name: null, artist2Bio: null, artist1PhotoUrl: null, artist2PhotoUrl: null });
+      return res.json({ imHereEnabled: false, nextPortalDate: null, upcomingPortalDate: null, nextPortalGuest: null, upcomingPortalGuest: null, artist1Name: null, artist1Bio: null, artist2Name: null, artist2Bio: null, artist1PhotoUrl: null, artist2PhotoUrl: null });
     }
   });
 
