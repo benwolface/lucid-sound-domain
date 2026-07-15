@@ -185,7 +185,7 @@ const JOURNEY_SECTIONS = [
   { id: "flow", label: "Program" },
   { id: "contact", label: "Selectors" },
   { id: "archive", label: "Archive" },
-  { id: "contribute", label: "Contribute" },
+  { id: "contribute", label: "Participate" },
 ];
 
 function Home({
@@ -533,25 +533,33 @@ function Home({
             <ArchiveSection />
           </section>
 
-          {/* ── Contribute ── */}
+          {/* ── Participate ── */}
           <section
             id="j-contribute"
             className="j-section"
             data-section="contribute"
           >
-            <h2 className="j-animate j-section-heading">Contribute</h2>
+            <h2 className="j-animate j-section-heading">Participate</h2>
             <p className="j-animate j-section-copy">
-              if you&apos;d like to contribute to the co-creation of Regulation
-              through sound, visualization, food, drink or any other way, please
-              reach out at{" "}
-              <a className="j-inline-link" href="sms:9805059936">
-                (980)-505-9936
-              </a>
-              .
+              The Lucid Sound Domain is built on the trust of the people who
+              gather within it.
             </p>
             <p className="j-animate j-section-copy" style={{ marginTop: 20 }}>
-              if you&apos;d like to bring a trusted friend into the domain for
-              the next portal opening, click here for your unique invite link
+              If you&apos;d like to contribute to Lucid through sound, food or
+              in any other way, please reach out to me.
+            </p>
+            <p className="j-animate j-section-copy" style={{ marginTop: 20 }}>
+              <a
+                className="j-inline-link"
+                href="mailto:manivannan.senthil@gmail.com"
+              >
+                manivannan.senthil@gmail.com
+              </a>
+            </p>
+            <p className="j-animate j-section-copy" style={{ marginTop: 20 }}>
+              Know someone who belongs within the Domain?
+              <br />
+              Share your unique invitation.
             </p>
             <InviteLinkButton referralCode={referralCode} />
             <SectionScrollHint
