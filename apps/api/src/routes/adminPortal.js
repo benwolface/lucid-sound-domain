@@ -152,6 +152,8 @@ const HTML = `<!DOCTYPE html>
       justify-content: center; color: #444; font-size: 1.4rem;
     }
     .photo-upload-col { display: flex; flex-direction: column; gap: 6px; flex: 1; }
+    .photo-status { font-size: 0.78rem; color: #555; min-height: 1em; }
+    .photo-status.error { color: #f87171; }
     input[type="file"].input-file {
       display: block; color: #888; font-size: 0.82rem;
       background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 8px;
@@ -348,13 +350,14 @@ const HTML = `<!DOCTYPE html>
       <div class="section-title" style="margin-bottom:14px">Artists</div>
 
       <div class="date-row">
-        <div class="date-label">ARTIST 1 — Regulation set</div>
+        <div class="date-label">ARTIST 1 PHOTO</div>
         <div class="photo-upload-row">
           <div class="photo-placeholder" id="artist1-photo-placeholder">＋</div>
           <img id="artist1-photo-preview" class="photo-preview" alt="Artist 1" />
           <div class="photo-upload-col">
-            <input type="file" id="artist1-photo-file" class="input-file" accept="image/*" onchange="uploadArtistPhoto('1', 'artist1-photo-file', 'artist1-photo-preview', 'artist1-photo-placeholder')" />
-            <button class="date-save-btn btn-clear" onclick="clearArtistPhoto('1','artist1-photo-preview','artist1-photo-placeholder')">Remove photo</button>
+            <input type="file" id="artist1-photo-file" class="input-file" accept="image/*" onchange="uploadArtistPhoto('1', 'artist1-photo-file', 'artist1-photo-preview', 'artist1-photo-placeholder', 'artist1-photo-status')" />
+            <button class="date-save-btn btn-clear" onclick="clearArtistPhoto('1','artist1-photo-preview','artist1-photo-placeholder','artist1-photo-status')">Remove photo</button>
+            <div class="photo-status" id="artist1-photo-status"></div>
           </div>
         </div>
       </div>
@@ -381,13 +384,14 @@ const HTML = `<!DOCTYPE html>
       <hr class="divider" />
 
       <div class="date-row">
-        <div class="date-label">ARTIST 2 — Movement set</div>
+        <div class="date-label">ARTIST 2 PHOTO</div>
         <div class="photo-upload-row">
           <div class="photo-placeholder" id="artist2-photo-placeholder">＋</div>
           <img id="artist2-photo-preview" class="photo-preview" alt="Artist 2" />
           <div class="photo-upload-col">
-            <input type="file" id="artist2-photo-file" class="input-file" accept="image/*" onchange="uploadArtistPhoto('2', 'artist2-photo-file', 'artist2-photo-preview', 'artist2-photo-placeholder')" />
-            <button class="date-save-btn btn-clear" onclick="clearArtistPhoto('2','artist2-photo-preview','artist2-photo-placeholder')">Remove photo</button>
+            <input type="file" id="artist2-photo-file" class="input-file" accept="image/*" onchange="uploadArtistPhoto('2', 'artist2-photo-file', 'artist2-photo-preview', 'artist2-photo-placeholder', 'artist2-photo-status')" />
+            <button class="date-save-btn btn-clear" onclick="clearArtistPhoto('2','artist2-photo-preview','artist2-photo-placeholder','artist2-photo-status')">Remove photo</button>
+            <div class="photo-status" id="artist2-photo-status"></div>
           </div>
         </div>
       </div>
@@ -544,38 +548,80 @@ const HTML = `<!DOCTYPE html>
     }
   }
 
-  async function uploadArtistPhoto(artist, fileInputId, previewId, placeholderId) {
-    const file = document.getElementById(fileInputId).files[0];
+  const MAX_PHOTO_BYTES = 2.5 * 1024 * 1024; // base64 inflates ~37% — stays under the 4mb API body limit
+
+  async function uploadArtistPhoto(artist, fileInputId, previewId, placeholderId, statusId) {
+    const fileInput = document.getElementById(fileInputId);
+    const file = fileInput.files[0];
+    const status = document.getElementById(statusId);
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = async (e) => {
+
+    if (file.size > MAX_PHOTO_BYTES) {
+      status.textContent = "Photo too large — keep it under 2.5MB.";
+      status.classList.add("error");
+      fileInput.value = "";
+      return;
+    }
+
+    status.classList.remove("error");
+    status.textContent = "Uploading…";
+
+    try {
+      const dataUrl = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+
       const res = await fetch("/api/admin/upload-artist-photo", {
         method: "POST",
         headers: { "Content-Type": "application/json", "x-admin-secret": adminSecret },
-        body: JSON.stringify({ artist, dataUrl: e.target.result })
+        body: JSON.stringify({ artist, dataUrl })
       });
-      if (!res.ok) return;
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error || \`Upload failed (\${res.status})\`);
+      }
       const { url } = await res.json();
       const preview = document.getElementById(previewId);
       const placeholder = document.getElementById(placeholderId);
       preview.src = url + "?t=" + Date.now();
       preview.style.display = "block";
       placeholder.style.display = "none";
-    };
-    reader.readAsDataURL(file);
+      status.textContent = "Uploaded ✓";
+      setTimeout(() => { status.textContent = ""; }, 2000);
+    } catch (err) {
+      console.error("[upload-artist-photo]", err);
+      status.textContent = err.message || "Upload failed — try again.";
+      status.classList.add("error");
+    } finally {
+      fileInput.value = "";
+    }
   }
 
-  async function clearArtistPhoto(artist, previewId, placeholderId) {
-    await fetch("/api/admin/upload-artist-photo", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "x-admin-secret": adminSecret },
-      body: JSON.stringify({ artist, dataUrl: null, clear: true })
-    });
-    const preview = document.getElementById(previewId);
-    const placeholder = document.getElementById(placeholderId);
-    preview.style.display = "none";
-    preview.src = "";
-    placeholder.style.display = "flex";
+  async function clearArtistPhoto(artist, previewId, placeholderId, statusId) {
+    const status = document.getElementById(statusId);
+    status.classList.remove("error");
+    status.textContent = "Removing…";
+    try {
+      const res = await fetch("/api/admin/upload-artist-photo", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-admin-secret": adminSecret },
+        body: JSON.stringify({ artist, dataUrl: null, clear: true })
+      });
+      if (!res.ok) throw new Error(\`Remove failed (\${res.status})\`);
+      const preview = document.getElementById(previewId);
+      const placeholder = document.getElementById(placeholderId);
+      preview.style.display = "none";
+      preview.src = "";
+      placeholder.style.display = "flex";
+      status.textContent = "";
+    } catch (err) {
+      console.error("[clear-artist-photo]", err);
+      status.textContent = "Remove failed — try again.";
+      status.classList.add("error");
+    }
   }
 
   async function clearArtistField(key, inputId) {

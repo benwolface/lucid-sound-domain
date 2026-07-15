@@ -19,7 +19,9 @@ dotenv.config();
 function createApp() {
   const app = express();
 
-  app.use(express.json({ limit: "1mb" }));
+  // 4mb accounts for base64 inflating photo uploads by ~37% while staying under
+  // Vercel's serverless function request body ceiling (~4.5mb).
+  app.use(express.json({ limit: "4mb" }));
   app.use(cookieParser());
 
   // In dev we proxy the frontend to this API, but keeping CORS for safety.
@@ -52,6 +54,15 @@ function createApp() {
   // Basic 404
   app.use((req, res) => {
     res.status(404).json({ error: "not_found" });
+  });
+
+  // Body-parser errors (e.g. payload too large) land here instead of Express's default HTML page.
+  app.use((err, req, res, next) => {
+    if (err?.type === "entity.too.large") {
+      return res.status(413).json({ error: "File is too large." });
+    }
+    console.error("[app]", err);
+    return res.status(500).json({ error: "Something went wrong." });
   });
 
   return app;
