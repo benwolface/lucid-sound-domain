@@ -882,8 +882,7 @@ function ArchiveSection() {
       {photos.length > 0 && (
         <>
           <p className="j-animate j-archive-hint">
-            sift through the pile — drag the photos around, tap one to hold
-            it closer
+            sift through the pile. tap one to hold it closer
           </p>
           <PolaroidPile photos={photos} onPhotoClick={setZoomPhoto} />
         </>
