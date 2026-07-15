@@ -2199,21 +2199,55 @@ body {
   align-items: center;
   gap: 10px;
   padding: 6px;
+  transition: transform 0.35s ease;
+}
+
+.reel:hover,
+.reel:focus-visible {
+  transform: translateY(-4px);
 }
 
 .reel svg {
-  width: clamp(64px, 9vw, 96px);
+  width: clamp(72px, 10vw, 104px);
   height: auto;
-  transition:
-    transform 0.6s cubic-bezier(0.22, 1, 0.36, 1),
-    filter 0.3s ease;
-  filter: drop-shadow(0 0 0 rgba(255, 140, 10, 0));
+  color: rgba(255, 255, 255, 0.45);
+  transition: filter 0.3s ease, color 0.3s ease;
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.5));
+}
+
+.reel-spinner {
+  transform-origin: center;
+  transform-box: fill-box;
 }
 
 .reel:hover svg,
 .reel:focus-visible svg {
-  transform: rotate(45deg);
-  filter: drop-shadow(0 0 14px rgba(255, 140, 10, 0.35));
+  color: #8fef4a;
+  filter: drop-shadow(0 6px 16px rgba(0, 0, 0, 0.6))
+    drop-shadow(0 0 16px rgba(255, 140, 10, 0.38));
+}
+
+.reel:hover .reel-spinner,
+.reel:focus-visible .reel-spinner {
+  animation: reel-spin 3.2s linear infinite;
+}
+
+@keyframes reel-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Play glyph in the hub — always faintly there so it reads as clickable,
+   ignites on hover while the reel turns around it */
+.reel-play {
+  opacity: 0.55;
+  transition: opacity 0.3s ease;
+}
+
+.reel:hover .reel-play,
+.reel:focus-visible .reel-play {
+  opacity: 1;
 }
 
 .reel-label {
@@ -2222,6 +2256,12 @@ body {
   letter-spacing: 0.2em;
   text-transform: uppercase;
   color: rgba(255, 255, 255, 0.45);
+  transition: color 0.3s ease;
+}
+
+.reel:hover .reel-label,
+.reel:focus-visible .reel-label {
+  color: #8fef4a;
 }
 
 /* Projector overlay — the light goes through the reel */
@@ -2421,7 +2461,7 @@ body {
   }
 
   .reel svg {
-    width: 58px;
+    width: 66px;
   }
 
   .filmstrip-holes {

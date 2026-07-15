@@ -1154,19 +1154,49 @@ function ReelIcon() {
     return (
       <circle
         key={i}
-        cx={50 + Math.cos(a) * 26}
-        cy={50 + Math.sin(a) * 26}
-        r="10.5"
+        cx={50 + Math.cos(a) * 27}
+        cy={50 + Math.sin(a) * 27}
+        r="10"
         fill="#0a0a0a"
+        stroke="#3d3d3d"
+        strokeWidth="1.2"
+      />
+    );
+  });
+  const bolts = [...Array(6)].map((_, i) => {
+    const a = ((i + 0.5) / 6) * Math.PI * 2 - Math.PI / 2;
+    return (
+      <circle
+        key={i}
+        cx={50 + Math.cos(a) * 43.5}
+        cy={50 + Math.sin(a) * 43.5}
+        r="1.7"
+        fill="#0d0d0d"
+        stroke="#4a4a4a"
+        strokeWidth="0.6"
       />
     );
   });
   return (
     <svg viewBox="0 0 100 100" aria-hidden="true">
-      <circle cx="50" cy="50" r="48" fill="#1c1c1c" stroke="#3a3a3a" strokeWidth="2" />
-      <circle cx="50" cy="50" r="43" fill="#242424" />
-      {holes}
-      <circle cx="50" cy="50" r="9" fill="#0a0a0a" stroke="#3a3a3a" strokeWidth="2" />
+      <defs>
+        <radialGradient id="reel-metal" cx="38%" cy="32%" r="80%">
+          <stop offset="0%" stopColor="#3d3d3d" />
+          <stop offset="55%" stopColor="#262626" />
+          <stop offset="100%" stopColor="#161616" />
+        </radialGradient>
+      </defs>
+      {/* Everything but the play glyph spins on hover */}
+      <g className="reel-spinner">
+        <circle cx="50" cy="50" r="48" fill="#101010" stroke="#4a4a4a" strokeWidth="2" />
+        <circle cx="50" cy="50" r="44.5" fill="url(#reel-metal)" />
+        {/* wound film between the flanges */}
+        <circle cx="50" cy="50" r="27" fill="none" stroke="#121212" strokeWidth="21" opacity="0.55" />
+        {holes}
+        {bolts}
+        <circle cx="50" cy="50" r="12.5" fill="#0a0a0a" stroke="#4a4a4a" strokeWidth="1.6" />
+      </g>
+      <polygon className="reel-play" points="46.5,43.5 46.5,56.5 58,50" fill="currentColor" />
     </svg>
   );
 }
