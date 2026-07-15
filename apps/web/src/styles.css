@@ -1193,6 +1193,7 @@ body {
   color: #fff;
   letter-spacing: 0.04em;
   margin: 0 0 8px 0;
+  text-align: center;
 }
 
 .j-artist-card-bio {
@@ -2198,21 +2199,55 @@ body {
   align-items: center;
   gap: 10px;
   padding: 6px;
+  transition: transform 0.35s ease;
+}
+
+.reel:hover,
+.reel:focus-visible {
+  transform: translateY(-4px);
 }
 
 .reel svg {
-  width: clamp(64px, 9vw, 96px);
+  width: clamp(72px, 10vw, 104px);
   height: auto;
-  transition:
-    transform 0.6s cubic-bezier(0.22, 1, 0.36, 1),
-    filter 0.3s ease;
-  filter: drop-shadow(0 0 0 rgba(255, 140, 10, 0));
+  color: rgba(255, 255, 255, 0.45);
+  transition: filter 0.3s ease, color 0.3s ease;
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.5));
+}
+
+.reel-spinner {
+  transform-origin: center;
+  transform-box: fill-box;
 }
 
 .reel:hover svg,
 .reel:focus-visible svg {
-  transform: rotate(45deg);
-  filter: drop-shadow(0 0 14px rgba(255, 140, 10, 0.35));
+  color: #8fef4a;
+  filter: drop-shadow(0 6px 16px rgba(0, 0, 0, 0.6))
+    drop-shadow(0 0 16px rgba(255, 140, 10, 0.38));
+}
+
+.reel:hover .reel-spinner,
+.reel:focus-visible .reel-spinner {
+  animation: reel-spin 3.2s linear infinite;
+}
+
+@keyframes reel-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Play glyph in the hub — always faintly there so it reads as clickable,
+   ignites on hover while the reel turns around it */
+.reel-play {
+  opacity: 0.55;
+  transition: opacity 0.3s ease;
+}
+
+.reel:hover .reel-play,
+.reel:focus-visible .reel-play {
+  opacity: 1;
 }
 
 .reel-label {
@@ -2221,6 +2256,12 @@ body {
   letter-spacing: 0.2em;
   text-transform: uppercase;
   color: rgba(255, 255, 255, 0.45);
+  transition: color 0.3s ease;
+}
+
+.reel:hover .reel-label,
+.reel:focus-visible .reel-label {
+  color: #8fef4a;
 }
 
 /* Projector overlay — the light goes through the reel */
@@ -2420,7 +2461,7 @@ body {
   }
 
   .reel svg {
-    width: 58px;
+    width: 66px;
   }
 
   .filmstrip-holes {
@@ -2444,4 +2485,129 @@ body {
     padding-left: 8px;
     padding-right: 8px;
   }
+}
+
+/* ── RSVP — bottom-right of the Regulation viewport ── */
+
+.rsvp-block {
+  position: absolute;
+  right: clamp(28px, 7vw, 110px);
+  bottom: clamp(88px, 16vh, 160px);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+  max-width: 320px;
+  text-align: right;
+  z-index: 3;
+}
+
+.rsvp-capacity {
+  font-family: "Akira Expanded", sans-serif;
+  font-size: clamp(0.5rem, 0.9vw, 0.68rem);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #8fef4a;
+  margin: 0;
+  text-shadow:
+    0 0 8px rgba(143, 239, 74, 0.6),
+    0 0 22px rgba(143, 239, 74, 0.28);
+}
+
+.rsvp-copy {
+  font-family: "Cormorant Garamond", serif;
+  font-style: italic;
+  font-size: clamp(0.95rem, 1.6vw, 1.2rem);
+  color: rgba(255, 255, 255, 0.75);
+  margin: 0;
+}
+
+.rsvp-btns {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.rsvp-btn {
+  padding: 10px 22px;
+  border-radius: 99px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.03);
+  color: rgba(255, 255, 255, 0.6);
+  font-family: "Akira Expanded", sans-serif;
+  font-size: clamp(0.44rem, 0.8vw, 0.6rem);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  cursor: pointer;
+  /* Slow, quiet transition — the pressed state settles in rather than snaps */
+  transition:
+    background 0.7s ease,
+    border-color 0.7s ease,
+    color 0.7s ease,
+    box-shadow 0.7s ease,
+    transform 0.7s ease;
+}
+
+.rsvp-btn:hover:not(:disabled):not(.is-pressed) {
+  border-color: rgba(255, 255, 255, 0.45);
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.rsvp-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.rsvp-btn.is-pressed {
+  background: rgba(143, 239, 74, 0.14);
+  border-color: rgba(143, 239, 74, 0.75);
+  color: #8fef4a;
+  transform: translateY(1px) scale(0.98);
+  box-shadow:
+    inset 0 0 14px rgba(143, 239, 74, 0.22),
+    0 0 16px rgba(143, 239, 74, 0.18);
+}
+
+.rsvp-btn--waitlist {
+  border-color: rgba(143, 239, 74, 0.4);
+  color: rgba(143, 239, 74, 0.85);
+}
+
+.rsvp-state {
+  font-family: "Cormorant Garamond", serif;
+  font-style: italic;
+  font-size: clamp(0.95rem, 1.6vw, 1.15rem);
+  color: rgba(255, 255, 255, 0.85);
+  margin: 0;
+}
+
+@media (max-width: 768px) {
+  /* On phones the corner would collide with centered content — flow it
+     under the home content instead, still right-leaning */
+  .rsvp-block {
+    position: static;
+    align-items: center;
+    text-align: center;
+    margin: 26px auto 0;
+    max-width: none;
+  }
+
+  .rsvp-btns {
+    justify-content: center;
+  }
+}
+
+.rsvp-error {
+  font-family: "Cormorant Garamond", serif;
+  font-style: italic;
+  font-size: clamp(0.85rem, 1.4vw, 1rem);
+  color: rgba(248, 113, 113, 0.85);
+  margin: 0;
+}
+
+.filmstrip-iframe {
+  aspect-ratio: 16 / 9;
+  border: 0;
 }

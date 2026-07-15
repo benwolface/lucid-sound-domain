@@ -317,18 +317,29 @@ function archivePublicUrl(storagePath) {
   return publicUrl;
 }
 
+// For youtube items, storage_path holds the video id rather than a bucket path
+function shapeArchiveItem(item) {
+  const isYoutube = item.type === "youtube";
+  return {
+    id: item.id,
+    type: item.type,
+    caption: item.caption,
+    url: isYoutube
+      ? `https://www.youtube.com/embed/${item.storage_path}`
+      : archivePublicUrl(item.storage_path),
+    thumb: isYoutube
+      ? `https://img.youtube.com/vi/${item.storage_path}/hqdefault.jpg`
+      : null,
+  };
+}
+
 async function getArchiveItems() {
   const { data, error } = await supabase
     .from("archive_items")
     .select("id, type, storage_path, caption, created_at")
     .order("created_at", { ascending: true });
   if (error) throw error;
-  return (data ?? []).map((item) => ({
-    id: item.id,
-    type: item.type,
-    caption: item.caption,
-    url: archivePublicUrl(item.storage_path),
-  }));
+  return (data ?? []).map(shapeArchiveItem);
 }
 
 async function createArchiveItem({ type, storagePath, caption = null }) {
@@ -338,7 +349,7 @@ async function createArchiveItem({ type, storagePath, caption = null }) {
     .select()
     .single();
   if (error) throw error;
-  return { id: data.id, type: data.type, caption: data.caption, url: archivePublicUrl(data.storage_path) };
+  return shapeArchiveItem(data);
 }
 
 async function updateArchiveCaption({ id, caption }) {
@@ -357,7 +368,8 @@ async function deleteArchiveItem(id) {
     .select()
     .maybeSingle();
   if (error) throw error;
-  if (data?.storage_path) {
+  // youtube items have no stored file — storage_path is just the video id
+  if (data?.storage_path && data.type !== "youtube") {
     const { error: storageError } = await supabase.storage
       .from("archive")
       .remove([data.storage_path]);
@@ -365,8 +377,73 @@ async function deleteArchiveItem(id) {
   }
 }
 
+// ---------- RSVPs (Supabase) ----------
+
+async function countAttending(portalDate) {
+  const { count, error } = await supabase
+    .from("rsvps")
+    .select("id", { count: "exact", head: true })
+    .eq("portal_date", portalDate)
+    .eq("status", "attending");
+  if (error) throw error;
+  return count ?? 0;
+}
+
+async function getRsvp({ participantId, portalDate }) {
+  const { data, error } = await supabase
+    .from("rsvps")
+    .select("id, status")
+    .eq("participant_id", participantId)
+    .eq("portal_date", portalDate)
+    .maybeSingle();
+  if (error) throw error;
+  return data ?? null;
+}
+
+async function upsertRsvp({ participantId, portalDate, status }) {
+  const { error } = await supabase
+    .from("rsvps")
+    .upsert(
+      {
+        participant_id: participantId,
+        portal_date: portalDate,
+        status,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "participant_id,portal_date" }
+    );
+  if (error) throw error;
+}
+
+async function clearRsvps(portalDate) {
+  const { error } = await supabase
+    .from("rsvps")
+    .delete()
+    .eq("portal_date", portalDate);
+  if (error) throw error;
+}
+
+async function getRsvpRoster(portalDate) {
+  const { data, error } = await supabase
+    .from("rsvps")
+    .select("id, status, created_at, updated_at, participants(name, email, phone_number)")
+    .eq("portal_date", portalDate)
+    .order("created_at", { ascending: true });
+  if (error) throw error;
+  return (data ?? []).map((r) => ({
+    id: r.id,
+    status: r.status,
+    respondedAt: r.created_at,
+    name: r.participants?.name ?? null,
+    email: r.participants?.email ?? null,
+    phone: r.participants?.phone_number ?? null,
+  }));
+}
+
 module.exports = {
   attachVisitorUser,
+  clearRsvps,
+  countAttending,
   confirmParticipantEmail,
   createArchiveItem,
   createEvent,
@@ -388,8 +465,11 @@ module.exports = {
   getAllParticipants,
   getArchiveItems,
   getBlastLogs,
+  getRsvp,
+  getRsvpRoster,
   getSettings,
   logBlast,
+  upsertRsvp,
   updateArchiveCaption,
   updateArtistPhotoUrl,
   updateArtists,

@@ -190,6 +190,20 @@ const HTML = `<!DOCTYPE html>
     .archive-del { color: #a05252; font-size: 0.72rem; }
     .archive-del:hover { color: #f87171; }
     .blast-load-rest { display: block; width: 100%; margin-top: 12px; text-align: center; }
+
+    /* ATTENDANCE */
+    .att-group-title {
+      font-size: 0.72rem; color: #666; text-transform: uppercase;
+      letter-spacing: 0.08em; margin: 16px 0 6px;
+    }
+    .att-row {
+      display: flex; justify-content: space-between; gap: 10px;
+      padding: 6px 0; border-bottom: 1px solid #1a1a1a; font-size: 0.85rem;
+    }
+    .att-row:last-child { border-bottom: none; }
+    .att-name { color: #e5e5e5; }
+    .att-contact { color: #666; font-family: monospace; font-size: 0.78rem; }
+    .att-empty { color: #555; font-size: 0.8rem; padding: 4px 0; }
     input[type="file"].input-file {
       display: block; color: #888; font-size: 0.82rem;
       background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 8px;
@@ -396,6 +410,24 @@ const HTML = `<!DOCTYPE html>
       </div>
     </div>
 
+    <!-- ATTENDANCE -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">Attendance</div>
+        <div class="selection-controls">
+          <button class="link-btn" onclick="loadAttendance()">Refresh</button>
+          <button class="link-btn archive-del" onclick="resetAttendance()">Reset all</button>
+        </div>
+      </div>
+      <div class="result-summary">
+        <div class="stat success"><div class="stat-num" id="att-confirmed">—</div><div class="stat-label">Confirmed</div></div>
+        <div class="stat"><div class="stat-num" id="att-remaining">—</div><div class="stat-label">Spots left</div></div>
+        <div class="stat"><div class="stat-num" id="att-waitlist">—</div><div class="stat-label">Waitlist</div></div>
+      </div>
+      <div class="date-preview" id="att-note" style="margin-top:0"></div>
+      <div id="att-lists"></div>
+    </div>
+
     <!-- ARTISTS -->
     <div class="section">
       <div class="section-title" style="margin-bottom:14px">Artists</div>
@@ -477,6 +509,14 @@ const HTML = `<!DOCTYPE html>
         <div class="date-label">UPLOAD PHOTOS & VIDEOS — photos can carry an optional polaroid caption</div>
         <input type="file" id="archive-file" class="input-file" accept="image/*,video/*" multiple onchange="uploadArchiveFiles(this)" />
         <div class="photo-status" id="archive-upload-status"></div>
+      </div>
+      <div class="date-row">
+        <div class="date-label">OR ADD A YOUTUBE LINK — shows as a reel</div>
+        <div class="date-input-row">
+          <input type="text" id="archive-youtube" class="input" placeholder="https://youtu.be/…" />
+          <button class="date-save-btn" onclick="addYoutubeReel()">Add</button>
+        </div>
+        <div class="photo-status" id="archive-youtube-status"></div>
       </div>
       <div id="archive-grid" class="archive-grid"></div>
     </div>
@@ -588,6 +628,48 @@ const HTML = `<!DOCTYPE html>
     loadArchive();
     loadSettings();
     loadAdminArchive();
+    loadAttendance();
+  }
+
+  // ── Attendance (real numbers — guests only ever see "Capacity: limited") ──
+
+  async function loadAttendance() {
+    try {
+      const res = await fetch("/api/admin/attendance", { headers: { "x-admin-secret": adminSecret } });
+      const data = await res.json();
+      const confirmed = data.attending.length;
+      document.getElementById("att-confirmed").textContent = confirmed;
+      document.getElementById("att-remaining").textContent = Math.max(0, data.hardCap - confirmed);
+      document.getElementById("att-waitlist").textContent = data.waitlist.length;
+      document.getElementById("att-note").textContent = data.portalDate
+        ? \`Portal \${data.portalDate} — guests see "full" at \${data.publicCap}; hard cap \${data.hardCap} (\${data.hardCap - data.publicCap} held back for guest DJ needs).\`
+        : "Set a next portal date to open RSVPs.";
+      const row = (r, i) => \`<div class="att-row"><span class="att-name">\${i != null ? (i + 1) + ". " : ""}\${esc(r.name || "—")}</span><span class="att-contact">\${esc(r.email || r.phone || "")}</span></div>\`;
+      document.getElementById("att-lists").innerHTML =
+        \`<div class="att-group-title">Confirmed (\${confirmed})</div>\` +
+        (data.attending.map(r => row(r)).join("") || '<div class="att-empty">no one yet</div>') +
+        \`<div class="att-group-title">Waitlist — contact in this order (\${data.waitlist.length})</div>\` +
+        (data.waitlist.map((r, i) => row(r, i)).join("") || '<div class="att-empty">empty</div>') +
+        \`<div class="att-group-title">Will not attend (\${data.notAttending.length})</div>\` +
+        (data.notAttending.map(r => row(r)).join("") || '<div class="att-empty">none</div>');
+    } catch (err) {
+      console.error("[attendance]", err);
+    }
+  }
+
+  async function resetAttendance() {
+    if (!confirm("Reset ALL RSVPs for the current portal? Everyone will have to respond again.")) return;
+    try {
+      const res = await fetch("/api/admin/attendance-reset", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-admin-secret": adminSecret },
+      });
+      if (!res.ok) throw new Error("reset failed");
+      loadAttendance();
+    } catch (err) {
+      console.error("[attendance-reset]", err);
+      alert("Reset failed — try again.");
+    }
   }
 
   // ── Archive media manager ──
@@ -611,11 +693,13 @@ const HTML = `<!DOCTYPE html>
       <div class="archive-card">
         \${item.type === "photo"
           ? \`<img class="archive-thumb" src="\${esc(item.url)}" alt="" />\`
-          : \`<video class="archive-thumb" src="\${esc(item.url)}" muted preload="metadata"></video>\`}
+          : item.type === "youtube"
+            ? \`<img class="archive-thumb" src="\${esc(item.thumb)}" alt="" />\`
+            : \`<video class="archive-thumb" src="\${esc(item.url)}" muted preload="metadata"></video>\`}
         <div class="archive-card-body">
           \${item.type === "photo"
             ? \`<input class="archive-caption-input" placeholder="caption…" value="\${esc(item.caption || "")}" oninput="autosaveArchiveCaption('\${item.id}', this)" onblur="saveArchiveCaptionNow('\${item.id}', this)" />\`
-            : \`<span class="archive-type-tag">video</span>\`}
+            : \`<span class="archive-type-tag">\${item.type === "youtube" ? "youtube reel" : "video"}</span>\`}
           <div class="archive-card-foot">
             <span class="archive-caption-status" id="archive-status-\${item.id}"></span>
             <button class="link-btn archive-del" onclick="removeArchiveItem('\${item.id}')">delete</button>
@@ -623,6 +707,32 @@ const HTML = `<!DOCTYPE html>
         </div>
       </div>
     \`).join("");
+  }
+
+  async function addYoutubeReel() {
+    const input = document.getElementById("archive-youtube");
+    const status = document.getElementById("archive-youtube-status");
+    const url = input.value.trim();
+    if (!url) return;
+    status.classList.remove("error");
+    status.textContent = "Adding…";
+    try {
+      const res = await fetch("/api/admin/archive", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-admin-secret": adminSecret },
+        body: JSON.stringify({ type: "youtube", youtubeUrl: url })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Add failed");
+      input.value = "";
+      status.textContent = "Added ✓";
+      setTimeout(() => { status.textContent = ""; }, 2000);
+      loadAdminArchive();
+    } catch (err) {
+      console.error("[archive-youtube]", err);
+      status.textContent = err.message || "Add failed — check the link.";
+      status.classList.add("error");
+    }
   }
 
   async function uploadArchiveFiles(input) {

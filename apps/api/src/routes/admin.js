@@ -2,11 +2,13 @@ const { Router } = require("express");
 const { z } = require("zod");
 const { Resend } = require("resend");
 const {
+  clearRsvps,
   createArchiveItem,
   deleteArchiveItem,
   getAllParticipants,
   getArchiveItems,
   getBlastLogs,
+  getRsvpRoster,
   logBlast,
   getSettings,
   updateArchiveCaption,
@@ -16,6 +18,7 @@ const {
   updatePortalDates,
 } = require("../store");
 const { createClient } = require("@supabase/supabase-js");
+const { PUBLIC_CAP, HARD_CAP } = require("./rsvp");
 const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_ANON_KEY,
@@ -337,6 +340,53 @@ function adminRouter() {
     return res.json({ url: publicUrl });
   });
 
+  // GET /api/admin/attendance — real RSVP numbers for the current portal
+  router.get("/attendance", async (req, res) => {
+    try {
+      const settings = await getSettings();
+      const portalDate = settings.next_portal_date ?? null;
+      if (!portalDate) {
+        return res.json({
+          portalDate: null,
+          publicCap: PUBLIC_CAP,
+          hardCap: HARD_CAP,
+          attending: [],
+          notAttending: [],
+          waitlist: [],
+        });
+      }
+      const roster = await getRsvpRoster(portalDate);
+      return res.json({
+        portalDate,
+        publicCap: PUBLIC_CAP,
+        hardCap: HARD_CAP,
+        attending: roster.filter((r) => r.status === "attending"),
+        notAttending: roster.filter((r) => r.status === "not_attending"),
+        // roster is ordered by created_at, so waitlist order = contact order
+        waitlist: roster.filter((r) => r.status === "waitlist"),
+      });
+    } catch (err) {
+      console.error("[admin/attendance]", err);
+      return res.status(500).json({ error: "Failed to fetch attendance." });
+    }
+  });
+
+  // POST /api/admin/attendance-reset — wipe all RSVPs for the current portal
+  router.post("/attendance-reset", async (req, res) => {
+    try {
+      const settings = await getSettings();
+      const portalDate = settings.next_portal_date ?? null;
+      if (!portalDate) {
+        return res.status(400).json({ error: "No portal date set." });
+      }
+      await clearRsvps(portalDate);
+      return res.json({ status: "ok" });
+    } catch (err) {
+      console.error("[admin/attendance-reset]", err);
+      return res.status(500).json({ error: "Failed to reset RSVPs." });
+    }
+  });
+
   // GET /api/admin/archive — all archive items (for the admin manager)
   router.get("/archive", async (req, res) => {
     try {
@@ -348,20 +398,33 @@ function adminRouter() {
     }
   });
 
-  // POST /api/admin/archive — register an item already uploaded to the archive bucket
-  // (the browser uploads directly to Supabase storage — videos are too large for this API)
+  // POST /api/admin/archive — register an item already uploaded to the archive
+  // bucket (the browser uploads directly to Supabase storage — videos are too
+  // large for this API), or a YouTube link via { type: "youtube", youtubeUrl }.
   router.post("/archive", async (req, res) => {
-    const { type, storagePath, caption } = req.body || {};
-    if (type !== "photo" && type !== "video") {
-      return res.status(400).json({ error: "type must be photo or video." });
+    const { type, storagePath, youtubeUrl, caption } = req.body || {};
+    if (!["photo", "video", "youtube"].includes(type)) {
+      return res.status(400).json({ error: "type must be photo, video, or youtube." });
     }
-    if (!storagePath || typeof storagePath !== "string") {
+
+    let path = storagePath;
+    if (type === "youtube") {
+      const match = String(youtubeUrl || "").match(
+        /(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([\w-]{6,20})/
+      );
+      if (!match) {
+        return res.status(400).json({ error: "Couldn't read that YouTube link." });
+      }
+      path = match[1]; // storage_path holds the video id for youtube items
+    }
+
+    if (!path || typeof path !== "string") {
       return res.status(400).json({ error: "storagePath required." });
     }
     try {
       const item = await createArchiveItem({
         type,
-        storagePath,
+        storagePath: path,
         caption: typeof caption === "string" && caption.trim() ? caption.trim() : null,
       });
       return res.json({ item });

@@ -10,7 +10,8 @@ function archiveRouter() {
       const items = await getArchiveItems();
       return res.json({
         photos: items.filter((i) => i.type === "photo"),
-        videos: items.filter((i) => i.type === "video"),
+        // youtube embeds sit on the reel shelf alongside uploaded videos
+        videos: items.filter((i) => i.type === "video" || i.type === "youtube"),
       });
     } catch (err) {
       console.error("[archive]", err);

@@ -6,6 +6,8 @@ import {
   apiLookupRefCode,
   apiGetArchive,
   apiGetSettings,
+  apiRsvpRespond,
+  apiRsvpStatus,
   apiUpdateContactEmail,
 } from "./lib/api";
 import "./styles.css";
@@ -379,6 +381,7 @@ function Home({
             </svg>
           </a>
         </div>
+        <RsvpBlock referralCode={referralCode} />
         <ScrollHint onClick={scrollToJourney} visible={heroHintVisible} />
       </div>
 
@@ -845,6 +848,99 @@ function MobileTimeline({ active, pageRef, navReady }) {
   );
 }
 
+// ── RSVP — guests only ever see "Capacity: limited", never numbers ──
+function RsvpBlock({ referralCode }) {
+  const [state, setState] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    apiRsvpStatus(referralCode)
+      .then(setState)
+      .catch(() => {});
+  }, [referralCode]);
+
+  if (!state || !state.open) return null;
+
+  async function respond(response) {
+    if (busy) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await apiRsvpRespond({ referralCode, response });
+      if (res.status === "full") {
+        // Capacity was taken while they were deciding
+        setState((s) => ({ ...s, full: true, copy: res.copy }));
+      } else {
+        setState((s) => ({
+          ...s,
+          full: res.full,
+          copy: res.copy,
+          myStatus: res.myStatus,
+        }));
+      }
+    } catch (err) {
+      // A 404 means the session's referral code no longer matches a
+      // participant — they need to re-enter through the portal
+      setError(
+        /404/.test(err?.message || "")
+          ? "we can't find your entry — return through the portal and try again."
+          : "something went wrong — try again.",
+      );
+    }
+    setBusy(false);
+  }
+
+  const { full, copy, myStatus } = state;
+  // "Will attend" is closed off once full — unless it's already theirs
+  const attendClosed = full && myStatus !== "attending";
+
+  return (
+    <div className="rsvp-block">
+      <p className="rsvp-capacity">Capacity is limited.</p>
+      <p className="rsvp-copy">{copy || "Will you be attending?"}</p>
+      {referralCode && (
+        <>
+          <div className="rsvp-btns">
+            <button
+              type="button"
+              className={`rsvp-btn${myStatus === "attending" ? " is-pressed" : ""}`}
+              disabled={busy || attendClosed}
+              onClick={() => respond("attending")}
+            >
+              Will attend
+            </button>
+            <button
+              type="button"
+              className={`rsvp-btn${myStatus === "not_attending" ? " is-pressed" : ""}`}
+              disabled={busy}
+              onClick={() => respond("not_attending")}
+            >
+              Will not attend
+            </button>
+          </div>
+          {attendClosed &&
+            (myStatus === "waitlist" ? (
+              <p className="rsvp-state">
+                you're on the list — we'll reach out if a space opens.
+              </p>
+            ) : (
+              <button
+                type="button"
+                className="rsvp-btn rsvp-btn--waitlist"
+                disabled={busy}
+                onClick={() => respond("waitlist")}
+              >
+                join waitlist
+              </button>
+            ))}
+          {error && <p className="rsvp-error">{error}</p>}
+        </>
+      )}
+    </div>
+  );
+}
+
 // ── Archive: time capsule ──
 
 // Deterministic pseudo-random so the pile scatters the same way per photo
@@ -911,7 +1007,7 @@ function ArchiveSection() {
               >
                 <ReelIcon />
                 <span className="reel-label">
-                  reel {String(i + 1).padStart(2, "0")}
+                  Regulation {String(i + 1).padStart(2, "0")}
                 </span>
               </button>
             ))}
@@ -1058,19 +1154,49 @@ function ReelIcon() {
     return (
       <circle
         key={i}
-        cx={50 + Math.cos(a) * 26}
-        cy={50 + Math.sin(a) * 26}
-        r="10.5"
+        cx={50 + Math.cos(a) * 27}
+        cy={50 + Math.sin(a) * 27}
+        r="10"
         fill="#0a0a0a"
+        stroke="#3d3d3d"
+        strokeWidth="1.2"
+      />
+    );
+  });
+  const bolts = [...Array(6)].map((_, i) => {
+    const a = ((i + 0.5) / 6) * Math.PI * 2 - Math.PI / 2;
+    return (
+      <circle
+        key={i}
+        cx={50 + Math.cos(a) * 43.5}
+        cy={50 + Math.sin(a) * 43.5}
+        r="1.7"
+        fill="#0d0d0d"
+        stroke="#4a4a4a"
+        strokeWidth="0.6"
       />
     );
   });
   return (
     <svg viewBox="0 0 100 100" aria-hidden="true">
-      <circle cx="50" cy="50" r="48" fill="#1c1c1c" stroke="#3a3a3a" strokeWidth="2" />
-      <circle cx="50" cy="50" r="43" fill="#242424" />
-      {holes}
-      <circle cx="50" cy="50" r="9" fill="#0a0a0a" stroke="#3a3a3a" strokeWidth="2" />
+      <defs>
+        <radialGradient id="reel-metal" cx="38%" cy="32%" r="80%">
+          <stop offset="0%" stopColor="#3d3d3d" />
+          <stop offset="55%" stopColor="#262626" />
+          <stop offset="100%" stopColor="#161616" />
+        </radialGradient>
+      </defs>
+      {/* Everything but the play glyph spins on hover */}
+      <g className="reel-spinner">
+        <circle cx="50" cy="50" r="48" fill="#101010" stroke="#4a4a4a" strokeWidth="2" />
+        <circle cx="50" cy="50" r="44.5" fill="url(#reel-metal)" />
+        {/* wound film between the flanges */}
+        <circle cx="50" cy="50" r="27" fill="none" stroke="#121212" strokeWidth="21" opacity="0.55" />
+        {holes}
+        {bolts}
+        <circle cx="50" cy="50" r="12.5" fill="#0a0a0a" stroke="#4a4a4a" strokeWidth="1.6" />
+      </g>
+      <polygon className="reel-play" points="46.5,43.5 46.5,56.5 58,50" fill="currentColor" />
     </svg>
   );
 }
@@ -1096,16 +1222,27 @@ function ProjectorOverlay({ videos, idx, setIdx, onClose }) {
       <div className="projector-stage" onClick={(e) => e.stopPropagation()}>
         <div className="filmstrip">
           <div className="filmstrip-holes" />
-          <video
-            key={v.id}
-            className="filmstrip-video"
-            src={v.url}
-            autoPlay
-            loop
-            playsInline
-            controls
-            preload="metadata"
-          />
+          {v.type === "youtube" ? (
+            <iframe
+              key={v.id}
+              className="filmstrip-video filmstrip-iframe"
+              src={`${v.url}?autoplay=1&rel=0`}
+              title={`archive reel ${idx + 1}`}
+              allow="autoplay; encrypted-media; fullscreen"
+              allowFullScreen
+            />
+          ) : (
+            <video
+              key={v.id}
+              className="filmstrip-video"
+              src={v.url}
+              autoPlay
+              loop
+              playsInline
+              controls
+              preload="metadata"
+            />
+          )}
           <div className="filmstrip-holes" />
         </div>
         <div className="projector-controls">
@@ -1118,7 +1255,7 @@ function ProjectorOverlay({ videos, idx, setIdx, onClose }) {
             ‹
           </button>
           <span className="projector-counter">
-            reel {String(idx + 1).padStart(2, "0")} /{" "}
+            Regulation {String(idx + 1).padStart(2, "0")} /{" "}
             {String(videos.length).padStart(2, "0")}
           </span>
           <button
