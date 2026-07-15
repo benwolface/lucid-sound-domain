@@ -20,6 +20,11 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ["**/*.{js,css,html,ico,svg,woff2}"],
+        // /admin and /api live on a completely different server (the API
+        // project, reached via the vercel.json rewrite) — without this, the
+        // service worker's default navigation fallback intercepts them and
+        // serves the cached SPA shell instead of ever hitting the network.
+        navigateFallbackDenylist: [/^\/admin/, /^\/api\//],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
