@@ -571,6 +571,14 @@ body {
     0 0 24px rgba(143, 239, 74, 0.2);
 }
 
+.home-upcoming-guest {
+  font-family: "Excrallik", cursive;
+  font-size: clamp(0.68rem, 1.2vw, 0.92rem);
+  color: rgba(143, 239, 74, 0.78);
+  letter-spacing: 0.05em;
+  margin: -4px 0 10px 0;
+}
+
 .home-next-label {
   font-family: "Akira Expanded", sans-serif;
   font-size: clamp(0.48rem, 0.85vw, 0.65rem);
@@ -592,6 +600,14 @@ body {
   text-shadow:
     0 0 12px rgba(143, 239, 74, 0.65),
     0 0 32px rgba(143, 239, 74, 0.28);
+}
+
+.home-next-guest {
+  font-family: "Excrallik", cursive;
+  font-size: clamp(0.72rem, 1.3vw, 1rem);
+  color: rgba(143, 239, 74, 0.78);
+  letter-spacing: 0.05em;
+  margin: -4px 0 10px 0;
 }
 
 .home-ig-link {

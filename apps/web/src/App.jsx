@@ -77,6 +77,8 @@ export default function App() {
   const [imHereEnabled, setImHereEnabled] = useState(false);
   const [nextPortalDate, setNextPortalDate] = useState(null);
   const [upcomingPortalDate, setUpcomingPortalDate] = useState(null);
+  const [nextPortalGuest, setNextPortalGuest] = useState(null);
+  const [upcomingPortalGuest, setUpcomingPortalGuest] = useState(null);
   const [artist1Name, setArtist1Name] = useState(null);
   const [artist1Bio, setArtist1Bio] = useState(null);
   const [artist2Name, setArtist2Name] = useState(null);
@@ -91,6 +93,8 @@ export default function App() {
           imHereEnabled,
           nextPortalDate,
           upcomingPortalDate,
+          nextPortalGuest,
+          upcomingPortalGuest,
           artist1Name,
           artist1Bio,
           artist2Name,
@@ -101,6 +105,8 @@ export default function App() {
           setImHereEnabled(!!imHereEnabled);
           setNextPortalDate(nextPortalDate ?? null);
           setUpcomingPortalDate(upcomingPortalDate ?? null);
+          setNextPortalGuest(nextPortalGuest ?? null);
+          setUpcomingPortalGuest(upcomingPortalGuest ?? null);
           setArtist1Name(artist1Name ?? null);
           setArtist1Bio(artist1Bio ?? null);
           setArtist2Name(artist2Name ?? null);
@@ -130,6 +136,8 @@ export default function App() {
           referralCode={referralCode}
           nextPortalDate={nextPortalDate}
           upcomingPortalDate={upcomingPortalDate}
+          nextPortalGuest={nextPortalGuest}
+          upcomingPortalGuest={upcomingPortalGuest}
           artist1Name={artist1Name}
           artist1Bio={artist1Bio}
           artist2Name={artist2Name}
@@ -182,6 +190,8 @@ function Home({
   referralCode,
   nextPortalDate,
   upcomingPortalDate,
+  nextPortalGuest,
+  upcomingPortalGuest,
   artist1Name,
   artist1Bio,
   artist2Name,
@@ -324,6 +334,9 @@ function Home({
           <p className="home-next-date">
             {nextPortalDate ? fmtPortalDate(nextPortalDate) : "date TBD"}
           </p>
+          {nextPortalGuest && (
+            <p className="home-next-guest">w/ {nextPortalGuest}</p>
+          )}
           <p className="home-next-address">
             1340 Turk St Apt 418 · San Francisco CA
           </p>
@@ -335,6 +348,9 @@ function Home({
               ? fmtPortalDate(upcomingPortalDate)
               : "date TBD"}
           </p>
+          {upcomingPortalGuest && (
+            <p className="home-upcoming-guest">w/ {upcomingPortalGuest}</p>
+          )}
           <a
             href="https://www.instagram.com/lucidsounddomain/"
             target="_blank"

@@ -245,7 +245,7 @@ async function getAllParticipants() {
 async function getSettings() {
   const { data, error } = await supabase
     .from("app_settings")
-    .select("im_here_enabled, next_portal_date, upcoming_portal_date, artist1_name, artist1_bio, artist2_name, artist2_bio, artist1_photo_url, artist2_photo_url")
+    .select("im_here_enabled, next_portal_date, upcoming_portal_date, next_portal_guest, upcoming_portal_guest, artist1_name, artist1_bio, artist2_name, artist2_bio, artist1_photo_url, artist2_photo_url")
     .single();
   if (error) throw error;
   return data;
@@ -259,10 +259,12 @@ async function updateImHereEnabled(enabled) {
   if (error) throw error;
 }
 
-async function updatePortalDates({ nextPortalDate, upcomingPortalDate }) {
+async function updatePortalDates({ nextPortalDate, upcomingPortalDate, nextPortalGuest, upcomingPortalGuest }) {
   const updates = {};
   if (nextPortalDate !== undefined) updates.next_portal_date = nextPortalDate || null;
   if (upcomingPortalDate !== undefined) updates.upcoming_portal_date = upcomingPortalDate || null;
+  if (nextPortalGuest !== undefined) updates.next_portal_guest = nextPortalGuest || null;
+  if (upcomingPortalGuest !== undefined) updates.upcoming_portal_guest = upcomingPortalGuest || null;
   const { error } = await supabase
     .from("app_settings")
     .update(updates)

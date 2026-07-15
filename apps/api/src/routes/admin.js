@@ -93,6 +93,8 @@ function adminRouter() {
         imHereEnabled: settings.im_here_enabled,
         nextPortalDate: settings.next_portal_date ?? null,
         upcomingPortalDate: settings.upcoming_portal_date ?? null,
+        nextPortalGuest: settings.next_portal_guest ?? null,
+        upcomingPortalGuest: settings.upcoming_portal_guest ?? null,
         artist1Name: settings.artist1_name ?? null,
         artist1Bio: settings.artist1_bio ?? null,
         artist2Name: settings.artist2_name ?? null,
@@ -112,6 +114,8 @@ function adminRouter() {
       imHereEnabled,
       nextPortalDate,
       upcomingPortalDate,
+      nextPortalGuest,
+      upcomingPortalGuest,
       artist1Name,
       artist1Bio,
       artist2Name,
@@ -121,8 +125,13 @@ function adminRouter() {
       if (typeof imHereEnabled === "boolean") {
         await updateImHereEnabled(imHereEnabled);
       }
-      if (nextPortalDate !== undefined || upcomingPortalDate !== undefined) {
-        await updatePortalDates({ nextPortalDate, upcomingPortalDate });
+      if (
+        nextPortalDate !== undefined ||
+        upcomingPortalDate !== undefined ||
+        nextPortalGuest !== undefined ||
+        upcomingPortalGuest !== undefined
+      ) {
+        await updatePortalDates({ nextPortalDate, upcomingPortalDate, nextPortalGuest, upcomingPortalGuest });
       }
       if (
         artist1Name !== undefined ||
@@ -142,6 +151,8 @@ function adminRouter() {
         imHereEnabled: settings.im_here_enabled,
         nextPortalDate: settings.next_portal_date ?? null,
         upcomingPortalDate: settings.upcoming_portal_date ?? null,
+        nextPortalGuest: settings.next_portal_guest ?? null,
+        upcomingPortalGuest: settings.upcoming_portal_guest ?? null,
         artist1Name: settings.artist1_name ?? null,
         artist1Bio: settings.artist1_bio ?? null,
         artist2Name: settings.artist2_name ?? null,
