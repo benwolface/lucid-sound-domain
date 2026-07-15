@@ -1960,7 +1960,7 @@ function Landing({ onHome, onDomainScreen, imHereEnabled, nextPortalDate }) {
                 className="arrival-btn"
                 onClick={handleFirstArrival}
               >
-                first arrival
+                i'm new
               </button>
               <button
                 type="button"
