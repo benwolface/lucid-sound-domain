@@ -1210,6 +1210,11 @@ function adminPortalRouter() {
   const router = Router();
   router.get("/", (req, res) => {
     res.setHeader("Content-Type", "text/html");
+    // This route is reached via a Vercel rewrite from the web project's
+    // domain (an absolute-URL rewrite) — its edge cache has been observed
+    // ignoring must-revalidate and serving a stale response indefinitely.
+    // no-store is unambiguous: never cache this, anywhere, full stop.
+    res.setHeader("Cache-Control", "no-store, must-revalidate");
     // Injected at request time — env vars aren't loaded yet when this module's
     // template literal is evaluated (dotenv.config runs after requires).
     res.send(
