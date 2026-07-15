@@ -407,8 +407,9 @@ function Home({
                   A place to slow down before moving again.
                 </p>
                 <p className="j-animate j-domain-disclaimer">
-                  We request there be no talking or cell phone use in the
-                  listening room during Regulation (8-9p).
+                  Please help protect the listening experience by
+                  refraining from conversation and phone use during
+                  Regulation (8:00-9:00 PM).
                 </p>
               </div>
 
