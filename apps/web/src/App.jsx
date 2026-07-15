@@ -334,10 +334,10 @@ function Home({
           <p className="home-next-date">
             {nextPortalDate ? fmtPortalDate(nextPortalDate) : "date TBD"}
           </p>
+          <p className="home-next-time">7:00 – 10:30p</p>
           {nextPortalGuest && (
             <p className="home-next-guest">w/{nextPortalGuest}</p>
           )}
-          <p className="home-next-time">7:00 – 10:30p</p>
           <p className="home-next-address">
             1340 Turk St Apt 418 · San Francisco CA
           </p>
