@@ -337,10 +337,10 @@ function Home({
           {nextPortalGuest && (
             <p className="home-next-guest">w/{nextPortalGuest}</p>
           )}
+          <p className="home-next-time">7:00 – 10:30p</p>
           <p className="home-next-address">
             1340 Turk St Apt 418 · San Francisco CA
           </p>
-          <p className="home-next-time">7:00 – 11:00p</p>
           <CalendarButtons nextPortalDate={nextPortalDate} />
           <p className="home-upcoming-title">Upcoming portals</p>
           <p className="home-upcoming-date">
