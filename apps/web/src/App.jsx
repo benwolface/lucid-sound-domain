@@ -182,7 +182,7 @@ const JOURNEY_SECTIONS = [
   { id: "home", label: "Regulation" },
   { id: "domain", label: "Arrival" },
   { id: "flow", label: "Program" },
-  { id: "contact", label: "Featuring" },
+  { id: "contact", label: "Selectors" },
   { id: "contribute", label: "Contribute" },
 ];
 
@@ -480,9 +480,9 @@ function Home({
             </div>
           </section>
 
-          {/* ── Featuring ── */}
+          {/* ── Selectors ── */}
           <section id="j-contact" className="j-section" data-section="contact">
-            <h2 className="j-animate j-section-heading">Featuring</h2>
+            <h2 className="j-animate j-section-heading">Selectors</h2>
             <div className="j-animate j-artist-grid">
               <div className="j-artist-card">
                 <div className="j-artist-photo-wrap">
