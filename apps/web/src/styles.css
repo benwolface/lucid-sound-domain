@@ -775,7 +775,9 @@ body {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: 80px clamp(24px, 5vw, 64px) 80px clamp(40px, 8vw, 120px);
+  /* Top-heavy padding shifts the centered block ~45px down — titles
+     shouldn't start right at the top of the viewport */
+  padding: 170px clamp(24px, 5vw, 64px) 80px clamp(40px, 8vw, 120px);
   position: relative;
   scroll-snap-align: start;
   scroll-snap-stop: always;
@@ -1761,9 +1763,9 @@ body {
     flex-direction: column;
     justify-content: center;
     align-items: flex-start;
-    /* top: clears fixed logo. bottom: clears nav bar. together they shift the
-       flex center point into the true visible midpoint of the screen. */
-    padding: 64px 24px calc(64px + 58px + env(safe-area-inset-bottom)) 24px;
+    /* top: clears fixed logo (+ breathing room so titles don't start at
+       the top). bottom: clears nav bar. */
+    padding: 100px 24px calc(64px + 58px + env(safe-area-inset-bottom)) 24px;
     min-height: 100svh;
   }
 

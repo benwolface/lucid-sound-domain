@@ -545,15 +545,15 @@ function Home({
               gather within it.
             </p>
             <p className="j-animate j-section-copy" style={{ marginTop: 20 }}>
-              If you&apos;d like to contribute to Lucid through sound, food or
-              in any other way, please reach out to me.
+              If you&apos;d like to participate in Lucid through sound, food,
+              documentation, or in any other way, please reach out to me.
             </p>
             <p className="j-animate j-section-copy" style={{ marginTop: 20 }}>
               <a
                 className="j-inline-link"
-                href="mailto:manivannan.senthil@gmail.com"
+                href="mailto:portal@lucidsounddomain.com"
               >
-                manivannan.senthil@gmail.com
+                portal@lucidsounddomain.com
               </a>
             </p>
             <p className="j-animate j-section-copy" style={{ marginTop: 20 }}>
@@ -890,7 +890,7 @@ function ArchiveSection() {
       {photos.length > 0 && (
         <>
           <p className="j-animate j-archive-hint">
-            sift through the pile. tap one to hold it closer
+            moments preserved from previous portals
           </p>
           <PolaroidPile photos={photos} onPhotoClick={setZoomPhoto} />
         </>
