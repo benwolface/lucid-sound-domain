@@ -455,26 +455,28 @@ function Home({
           <section id="j-flow" className="j-section" data-section="flow">
             <h2 className="j-animate j-section-heading">Program</h2>
             <div className="j-animate j-attend-schedule">
-              <p className="j-attend-slot">7:00p - Arrival</p>
+              <p className="j-attend-slot">7:00 PM · Arrival</p>
               <p className="j-attend-note">
-                get cozy, peruse the wares, settle into the space
+                Settle into the space, browse the library, and prepare to
+                listen.
               </p>
-              <p className="j-attend-slot">
-                7:50p - Doors Close. Late Entry Cannot Be Guaranteed
-              </p>
-              <p className="j-attend-slot">
-                8:00p - Regulation w/ {artist1Name || "trytab"}
-              </p>
-              <p className="j-attend-slot">
-                9:00 - 9:30p - Break & snacks
-              </p>
-              <p className="j-attend-slot">
-                9:30 - 10:30p - Low-end Ritual w/{" "}
-                {artist2Name || "dotnine"}{" "}
-              </p>
+              <p className="j-attend-slot">7:45 PM · Final Arrival</p>
               <p className="j-attend-note">
-                guiding us from meditative deep listening into low end movement
+                The listening room is sealed from 8:00-9:00 PM.
               </p>
+              <p className="j-attend-slot">
+                8:00 PM · Regulation w/ {artist1Name || "trytab"}
+              </p>
+              <p className="j-attend-note">Deep listening in silence.</p>
+              <p className="j-attend-slot">9:00 PM · Recess</p>
+              <p className="j-attend-note">
+                Tea, snacks, and time to nourish yourself. I recommend
+                bringing dinner or eating beforehand.
+              </p>
+              <p className="j-attend-slot">
+                9:30 PM · Sensory Ritual w/ {artist2Name || "dotnine"}
+              </p>
+              <p className="j-attend-note">From stillness into movement.</p>
             </div>
           </section>
 
