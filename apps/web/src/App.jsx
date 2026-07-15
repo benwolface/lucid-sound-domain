@@ -849,6 +849,7 @@ function ArchiveSection() {
   const [photos, setPhotos] = useState([]);
   const [videos, setVideos] = useState([]);
   const [reelIdx, setReelIdx] = useState(null);
+  const [zoomPhoto, setZoomPhoto] = useState(null);
 
   useEffect(() => {
     apiGetArchive()
@@ -858,6 +859,15 @@ function ArchiveSection() {
       })
       .catch(() => {});
   }, []);
+
+  useEffect(() => {
+    if (!zoomPhoto) return;
+    const onKey = (e) => {
+      if (e.key === "Escape") setZoomPhoto(null);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [zoomPhoto]);
 
   if (!photos.length && !videos.length) {
     return (
@@ -872,9 +882,10 @@ function ArchiveSection() {
       {photos.length > 0 && (
         <>
           <p className="j-animate j-archive-hint">
-            sift through the pile — drag the photos around
+            sift through the pile — drag the photos around, tap one to hold
+            it closer
           </p>
-          <PolaroidPile photos={photos} />
+          <PolaroidPile photos={photos} onPhotoClick={setZoomPhoto} />
         </>
       )}
       {videos.length > 0 && (
@@ -908,11 +919,36 @@ function ArchiveSection() {
           onClose={() => setReelIdx(null)}
         />
       )}
+      {zoomPhoto && (
+        <div className="polaroid-lightbox" onClick={() => setZoomPhoto(null)}>
+          <div
+            className="polaroid polaroid--zoom"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <img
+              src={zoomPhoto.url}
+              alt={zoomPhoto.caption || "archive photo"}
+              draggable={false}
+            />
+            {zoomPhoto.caption && (
+              <span className="polaroid-caption">{zoomPhoto.caption}</span>
+            )}
+          </div>
+          <button
+            type="button"
+            className="projector-close"
+            onClick={() => setZoomPhoto(null)}
+            aria-label="put the photo back"
+          >
+            ✕
+          </button>
+        </div>
+      )}
     </>
   );
 }
 
-function PolaroidPile({ photos }) {
+function PolaroidPile({ photos, onPhotoClick }) {
   const wrapRef = useRef(null);
   // id -> { x, y (% of container), rot (deg) }
   const [pos, setPos] = useState({});
@@ -946,6 +982,7 @@ function PolaroidPile({ photos }) {
       origX: (p.x / 100) * rect.width,
       origY: (p.y / 100) * rect.height,
       rect,
+      moved: 0,
     };
     setOrder((o) => [...o.filter((x) => x !== id), id]);
   }
@@ -953,6 +990,10 @@ function PolaroidPile({ photos }) {
   function onPointerMove(e) {
     const d = dragRef.current;
     if (!d) return;
+    d.moved = Math.max(
+      d.moved,
+      Math.hypot(e.clientX - d.startX, e.clientY - d.startY),
+    );
     const nx = d.origX + (e.clientX - d.startX);
     const ny = d.origY + (e.clientY - d.startY);
     setPos((p) => ({
@@ -966,7 +1007,13 @@ function PolaroidPile({ photos }) {
   }
 
   function onPointerUp() {
+    const d = dragRef.current;
     dragRef.current = null;
+    // Barely moved = a tap, not a drag — hold the photo up to look closer
+    if (d && d.moved < 6 && onPhotoClick) {
+      const ph = photos.find((x) => x.id === d.id);
+      if (ph) onPhotoClick(ph);
+    }
   }
 
   return (
