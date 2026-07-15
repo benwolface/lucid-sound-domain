@@ -1583,7 +1583,7 @@ body {
   transform: translateY(0);
 }
 
-/* ── Understand: list + image side by side ── */
+/* ── Arrival: list + image side by side ── */
 .j-space-image-row {
   display: flex;
   align-items: flex-start;

@@ -180,7 +180,7 @@ function WelcomeModal({ onClose }) {
 
 const JOURNEY_SECTIONS = [
   { id: "home", label: "Regulation" },
-  { id: "domain", label: "Understand" },
+  { id: "domain", label: "Arrival" },
   { id: "flow", label: "Program" },
   { id: "contact", label: "Featuring" },
   { id: "contribute", label: "Contribute" },
@@ -394,18 +394,17 @@ function Home({
             <div className="j-domain-cols">
               {/* Left: all text */}
               <div className="j-domain-text">
-                <h2 className="j-animate j-section-heading">Understand</h2>
+                <h2 className="j-animate j-section-heading">Arrival</h2>
                 <p className="j-animate j-domain-intro">
-                  The Lucid Sound Domain is an intimate, deep listening dance
-                  floor that requires nothing from you except your presence.
+                  The Lucid Sound Domain is a deep listening dance floor that
+                  asks for nothing except your presence.
                 </p>
                 <p className="j-animate j-domain-intro">
-                  A space to find respite from the chaos of life in the city and
-                  share a moment of intentional relaxation.
+                  In return, it offers something rare: uninterrupted
+                  listening.
                 </p>
                 <p className="j-animate j-domain-intro">
-                  The intention here is to cultivate a space to explore the
-                  concept of mind expansion through deep listening.
+                  A place to slow down before moving again.
                 </p>
                 <p className="j-animate j-domain-disclaimer">
                   We request there be no talking or cell phone use in the
