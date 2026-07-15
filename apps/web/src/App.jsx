@@ -467,7 +467,7 @@ function Home({
               <p className="j-attend-slot">
                 8:00 PM · Regulation w/ {artist1Name || "trytab"}
               </p>
-              <p className="j-attend-note">Deep listening in silence.</p>
+              <p className="j-attend-note">Silent deep listening.</p>
               <p className="j-attend-slot">9:00 PM · Recess</p>
               <p className="j-attend-note">
                 Tea, snacks, and time to nourish yourself. I recommend
