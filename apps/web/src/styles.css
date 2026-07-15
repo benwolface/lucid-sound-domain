@@ -1399,8 +1399,8 @@ body {
 /* Each node is a tiny portal — a black disc that ignites when active */
 .j-node-dot {
   position: relative;
-  width: 11px;
-  height: 11px;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
   background: radial-gradient(circle at 38% 35%, #17130e 0%, #000 65%);
   box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.14);
@@ -1411,14 +1411,15 @@ body {
     transform 0.5s ease;
 }
 
-/* Dashed orbit ring — always faintly turning, like the welcome ring */
+/* Dashed orbit ring — always faintly turning, like the welcome ring.
+   Integer offsets (no translate(-50%,-50%)) keep it pixel-concentric
+   with the dot while it spins. */
 .j-node-ring {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 21px;
-  height: 21px;
+  top: calc(50% - 11px);
+  left: calc(50% - 11px);
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
   border: 1px dashed rgba(255, 255, 255, 0.14);
   animation: nav-orbit 16s linear infinite;
@@ -1427,7 +1428,7 @@ body {
 
 @keyframes nav-orbit {
   to {
-    transform: translate(-50%, -50%) rotate(360deg);
+    transform: rotate(360deg);
   }
 }
 
@@ -1688,9 +1689,8 @@ body {
 
 .j-mnode-ring {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  top: calc(50% - 9px);
+  left: calc(50% - 9px);
   width: 18px;
   height: 18px;
   border-radius: 50%;

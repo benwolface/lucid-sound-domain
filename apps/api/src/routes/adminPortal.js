@@ -157,14 +157,14 @@ const HTML = `<!DOCTYPE html>
 
     /* ARCHIVE */
     .archive-grid {
-      display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      display: grid; grid-template-columns: repeat(2, 1fr);
       gap: 12px; margin-top: 14px;
     }
     .archive-card {
       background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 8px;
       overflow: hidden; display: flex; flex-direction: column;
     }
-    .archive-thumb { width: 100%; height: 110px; object-fit: cover; display: block; background: #000; }
+    .archive-thumb { width: 100%; height: 170px; object-fit: cover; display: block; background: #000; }
     .archive-card-body { padding: 8px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
     .archive-caption-input {
       background: #111; border: 1px solid #2a2a2a; border-radius: 5px;
@@ -180,6 +180,7 @@ const HTML = `<!DOCTYPE html>
     .archive-caption-status { font-size: 0.7rem; color: #555; }
     .archive-del { color: #a05252; font-size: 0.72rem; }
     .archive-del:hover { color: #f87171; }
+    .blast-load-rest { display: block; width: 100%; margin-top: 12px; text-align: center; }
     input[type="file"].input-file {
       display: block; color: #888; font-size: 0.82rem;
       background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 8px;
@@ -1008,17 +1009,35 @@ const HTML = `<!DOCTYPE html>
     \`).join("");
   }
 
+  const BLAST_PREVIEW_COUNT = 4;
+  let blastLogs = [];
+  let blastShowAll = false;
+
   async function loadArchive() {
     const res = await fetch("/api/admin/blasts", { headers: { "x-admin-secret": adminSecret } });
     const data = await res.json();
+    blastLogs = data.logs || [];
+    blastShowAll = false;
+    renderBlastArchive();
+  }
+
+  function showAllBlasts() {
+    blastShowAll = true;
+    renderBlastArchive();
+  }
+
+  function renderBlastArchive() {
     const el = document.getElementById("archive-content");
 
-    if (!data.logs?.length) {
+    if (!blastLogs.length) {
       el.innerHTML = '<div class="archive-empty">No blasts sent yet.</div>';
       return;
     }
 
-    el.innerHTML = data.logs.map((log, i) => \`
+    const visible = blastShowAll ? blastLogs : blastLogs.slice(0, BLAST_PREVIEW_COUNT);
+    const hidden = blastLogs.length - visible.length;
+
+    el.innerHTML = visible.map((log, i) => \`
       <div class="archive-entry" id="arc-\${i}">
         <div class="archive-summary" onclick="toggleArchive(\${i})">
           <div class="archive-meta">
@@ -1044,7 +1063,9 @@ const HTML = `<!DOCTYPE html>
           \`).join("")}
         </div>
       </div>
-    \`).join("");
+    \`).join("") + (hidden > 0
+      ? \`<button class="date-save-btn blast-load-rest" onclick="showAllBlasts()">Load the rest (\${hidden} more)</button>\`
+      : "");
   }
 
   function toggleArchive(i) {
