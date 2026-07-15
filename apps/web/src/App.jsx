@@ -335,7 +335,7 @@ function Home({
             {nextPortalDate ? fmtPortalDate(nextPortalDate) : "date TBD"}
           </p>
           {nextPortalGuest && (
-            <p className="home-next-guest">w/ {nextPortalGuest}</p>
+            <p className="home-next-guest">w/{nextPortalGuest}</p>
           )}
           <p className="home-next-address">
             1340 Turk St Apt 418 · San Francisco CA
@@ -349,7 +349,7 @@ function Home({
               : "date TBD"}
           </p>
           {upcomingPortalGuest && (
-            <p className="home-upcoming-guest">w/ {upcomingPortalGuest}</p>
+            <p className="home-upcoming-guest">w/{upcomingPortalGuest}</p>
           )}
           <a
             href="https://www.instagram.com/lucidsounddomain/"
