@@ -162,7 +162,7 @@ async function findWaitlistEntryByName(name) {
 async function findParticipant({ name, email }) {
   const { data } = await supabase
     .from("participants")
-    .select("id, name, email, referrals, referred_by")
+    .select("id, name, email, referral_code, referrals, referred_by")
     .eq("email", email)
     .ilike("name", name)
     .maybeSingle();
@@ -205,6 +205,15 @@ async function findParticipantByReferralCode(code) {
   return data ?? null;
 }
 
+async function confirmParticipantEmail(referralCode) {
+  const { error } = await supabase
+    .from("participants")
+    .update({ email_confirmed_at: new Date().toISOString() })
+    .eq("referral_code", referralCode)
+    .is("email_confirmed_at", null);
+  if (error) throw error;
+}
+
 async function createParticipant({ name, email, phone = null, referredBy = null }) {
   const referral_code = generateReferralCode();
   const { data, error } = await supabase
@@ -216,11 +225,11 @@ async function createParticipant({ name, email, phone = null, referredBy = null 
   return data;
 }
 
-async function updateParticipantEmail({ name, email }) {
+async function updateParticipantEmail({ referralCode, email }) {
   const { error } = await supabase
     .from("participants")
     .update({ email })
-    .ilike("name", name);
+    .eq("referral_code", referralCode);
   if (error) throw error;
 }
 
@@ -299,6 +308,7 @@ async function getBlastLogs() {
 
 module.exports = {
   attachVisitorUser,
+  confirmParticipantEmail,
   createEvent,
   createParticipant,
   createSession,

@@ -61,10 +61,10 @@ export function apiLookupRefCode(code) {
   return apiRequest(`/waitlist/referral/${encodeURIComponent(code)}`);
 }
 
-export function apiUpdateContactEmail({ name, email }) {
+export function apiUpdateContactEmail({ name, email, referralCode }) {
   return apiRequest("/waitlist/update-email", {
     method: "POST",
-    body: JSON.stringify({ name, email })
+    body: JSON.stringify({ name, email, referralCode })
   });
 }
 
