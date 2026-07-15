@@ -163,8 +163,7 @@ function WelcomeModal({ onClose }) {
         <button className="welcome-close" onClick={onClose} aria-label="close">
           ✕
         </button>
-        <p>check your inbox.</p>
-        <p>we sent you a note.</p>
+        <p>a confirmation email has been sent!</p>
         <p>(if you don't see it, it might be in promos)</p>
       </div>
     </div>
@@ -1413,9 +1412,10 @@ function Landing({ onHome, onDomainScreen, imHereEnabled, nextPortalDate }) {
       await apiUpdateContactEmail({
         name: returningName.trim(),
         email: contact.trim(),
+        referralCode: returningReferralCode,
       });
       setIsPressing(false);
-      handlePowerPress(returningReferralCode);
+      handlePowerPress(returningReferralCode, null, true);
     } catch {
       setIsPressing(false);
       handleRejection("returning");
