@@ -2144,6 +2144,7 @@ body {
   touch-action: none;
   user-select: none;
   -webkit-user-select: none;
+  -webkit-touch-callout: none;
 }
 
 .polaroid:active {
@@ -2388,4 +2389,57 @@ body {
   bottom: 18px;
   font-size: 1.3rem;
   white-space: normal;
+}
+
+/* ── Archive on phones ── */
+@media (max-width: 768px) {
+  .polaroid {
+    width: 128px;
+    padding: 8px 8px 34px;
+  }
+
+  .polaroid-caption {
+    font-size: 0.85rem;
+    bottom: 8px;
+  }
+
+  .polaroid-table {
+    height: min(46svh, 420px);
+  }
+
+  .polaroid--zoom {
+    width: min(88vw, 480px);
+    padding: 12px 12px 54px;
+  }
+
+  .polaroid--zoom .polaroid-caption {
+    font-size: 1.1rem;
+    bottom: 14px;
+  }
+
+  .reel svg {
+    width: 58px;
+  }
+
+  .filmstrip-holes {
+    height: 20px;
+    background-size: 26px 10px;
+  }
+
+  .projector-controls {
+    gap: 18px;
+  }
+}
+
+/* Six nav stops need tighter labels on small phones */
+@media (max-width: 480px) {
+  .j-mnode-label {
+    font-size: 0.32rem;
+    letter-spacing: 0.08em;
+  }
+
+  .j-timeline-mobile {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
 }

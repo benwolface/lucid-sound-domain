@@ -1096,6 +1096,7 @@ function ProjectorOverlay({ videos, idx, setIdx, onClose }) {
             loop
             playsInline
             controls
+            preload="metadata"
           />
           <div className="filmstrip-holes" />
         </div>
