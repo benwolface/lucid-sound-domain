@@ -134,7 +134,7 @@ const HTML = `<!DOCTYPE html>
     textarea.input { resize: vertical; min-height: 100px; line-height: 1.5; }
     #blast-html { min-height: 180px; font-family: monospace; font-size: 0.82rem; }
     .bio-input-row { display: flex; gap: 8px; align-items: flex-start; }
-    textarea.bio-input { min-height: 72px; resize: vertical; }
+    textarea.bio-input { min-height: 140px; resize: vertical; }
     .bio-btn-col { display: flex; flex-direction: column; gap: 6px; flex-shrink: 0; }
     .btn-clear { color: #888; }
     .btn-clear:hover { border-color: #555; color: #f87171; }
