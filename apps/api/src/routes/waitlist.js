@@ -38,7 +38,9 @@ async function sendWelcomeEmail(email, referralCode) {
 
   const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body style="font-family:Georgia,serif;font-size:16px;line-height:1.6;color:#1a1a1a;padding:24px 16px"><div style="max-width:560px"><p>welcome to the lucid sound domain.</p><p>this is how we'll reach you about our upcoming portals and entry instructions.</p><p>if this landed in promotions, moving it to your inbox helps keep it there so that you don't miss the next one.</p><p style="margin:28px 0"><a href="${confirmUrl}" style="display:inline-block;background:#8FEF4A;color:#0d0d0d;text-decoration:none;font-family:Georgia,serif;font-size:15px;padding:12px 24px;border-radius:8px">I'm ready to step through</a></p><p>see you inside.</p><p style="margin-top:32px;font-size:12px;color:#aaa;border-top:1px solid #eee;padding-top:12px">To opt out, reply with "stop".</p></div></body></html>`;
 
-  await resend.emails.send({
+  // resend.emails.send() returns { data, error } rather than throwing on
+  // API-level failures — must check error explicitly or failures go silent.
+  const { data, error } = await resend.emails.send({
     from: `${FROM_NAME} <${FROM_EMAIL}>`,
     to: email,
     reply_to: FROM_EMAIL,
@@ -46,6 +48,10 @@ async function sendWelcomeEmail(email, referralCode) {
     text,
     html,
   });
+  if (error) {
+    throw new Error(`Resend error: ${error.name || "unknown"} — ${error.message || JSON.stringify(error)}`);
+  }
+  console.log("[waitlist/welcome-email] sent", data?.id, "to", email);
 }
 
 const CONFIRM_PAGE_STYLE =
