@@ -1907,7 +1907,10 @@ function Landing({ onHome, onDomainScreen, imHereEnabled, nextPortalDate }) {
             {nextPortalDate ? fmtPortalDate(nextPortalDate) : "date TBD"}
           </p>
           <p className="home-timing">
-            Doors close at 7:50p. Late Entry Not Guaranteed.
+            7:00 PM – 10:30 PM. Please arrive before 7:45 PM.
+            <br />
+            To protect the listening experience, there is no entry from
+            8:00–9:00 PM.
           </p>
         </div>
         <div ref={diskRef} className="accretion-disk" />
