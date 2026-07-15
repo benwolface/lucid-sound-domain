@@ -18,7 +18,8 @@ const HTML = `<!DOCTYPE html>
       justify-content: center;
       padding: 24px;
     }
-    #app { width: 100%; max-width: 640px; }
+    #app { width: 100%; max-width: 1100px; }
+    #login { max-width: 640px; margin: 0 auto; }
 
     /* LOGIN */
     #login { text-align: center; }
@@ -61,11 +62,17 @@ const HTML = `<!DOCTYPE html>
     #login .btn { width: 100%; }
     .error-msg { color: #f87171; font-size: 0.85rem; margin-top: 8px; }
 
-    /* MAIN */
-    #main { display: none; }
+    /* MAIN — two-column grid of section cards (JS shows it with display:grid) */
+    #main {
+      display: none;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      align-items: start;
+    }
     .header {
+      grid-column: 1 / -1;
       display: flex; align-items: center; justify-content: space-between;
-      margin-bottom: 28px;
+      margin-bottom: 8px;
     }
     .header h1 { font-size: 1.25rem; font-weight: 600; }
 
@@ -74,7 +81,10 @@ const HTML = `<!DOCTYPE html>
       border: 1px solid #1e1e1e;
       border-radius: 12px;
       padding: 20px;
-      margin-bottom: 16px;
+      margin-bottom: 0;
+    }
+    @media (max-width: 900px) {
+      #main { grid-template-columns: 1fr; }
     }
     .section-header {
       display: flex;
@@ -572,7 +582,7 @@ const HTML = `<!DOCTYPE html>
 
   function showMain() {
     document.getElementById("login").style.display = "none";
-    document.getElementById("main").style.display = "block";
+    document.getElementById("main").style.display = "grid";
     loadParticipants();
     loadArchive();
     loadSettings();
