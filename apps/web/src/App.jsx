@@ -6,9 +6,8 @@ import {
   apiLookupRefCode,
   apiGetArchive,
   apiGetSettings,
-  apiRsvpRespond,
-  apiRsvpStatus,
   apiUpdateContactEmail,
+  apiGetPrivateSettings,
 } from "./lib/api";
 import "./styles.css";
 
@@ -21,11 +20,15 @@ const PORTAL_FINAL_ARRIVAL_LABEL = "7:45 PM";
 const PORTAL_END_LABEL = "10:30 PM";
 const PORTAL_DATE_PENDING_COPY = "next date opening soon";
 const UPCOMING_DATE_PENDING_COPY = "more soon";
-const PUBLIC_PORTAL_LOCATION = "San Francisco, CA";
-const CALENDAR_LOCATION = "San Francisco, CA";
+const PUBLIC_PORTAL_LOCATION = "location revealed after login";
+const PUBLIC_CALENDAR_LOCATION = "Location revealed after login";
+const PRIVATE_LOCATION_PENDING = "location shared with confirmed guests";
 const CALENDAR_DESCRIPTION =
   "The next portal opens. Arrival details are shared with confirmed guests. lucidsounddomain.com";
 const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)";
+const DOMAIN_CORE_LINE =
+  "a deep listening dance floor that asks for nothing except your presence";
+const PORTAL_RITUALS = ["arrive unrushed", "listen fully", "move when moved"];
 
 function prefersReducedMotion() {
   return (
@@ -111,6 +114,7 @@ export default function App() {
   const [artist2Bio, setArtist2Bio] = useState(null);
   const [artist1PhotoUrl, setArtist1PhotoUrl] = useState(null);
   const [artist2PhotoUrl, setArtist2PhotoUrl] = useState(null);
+  const [privatePortalLocation, setPrivatePortalLocation] = useState(null);
 
   useEffect(() => {
     apiGetSettings()
@@ -144,6 +148,20 @@ export default function App() {
       .catch(() => {});
   }, []);
 
+  useEffect(() => {
+    if (!referralCode) {
+      setPrivatePortalLocation(null);
+      return;
+    }
+    apiGetPrivateSettings(referralCode)
+      .then(({ portalLocation }) => {
+        setPrivatePortalLocation(portalLocation || null);
+      })
+      .catch(() => {
+        setPrivatePortalLocation(null);
+      });
+  }, [referralCode]);
+
   function handleHome(code, isNew = false) {
     const resolved = code ?? null;
     saveSession(resolved);
@@ -170,20 +188,34 @@ export default function App() {
           artist2Bio={artist2Bio}
           artist1PhotoUrl={artist1PhotoUrl}
           artist2PhotoUrl={artist2PhotoUrl}
+          privatePortalLocation={privatePortalLocation}
+          onLoginRequested={() => setScreen("auth")}
         />
         {showWelcomeModal && (
           <WelcomeModal onClose={() => setShowWelcomeModal(false)} />
         )}
       </>
     );
+  if (screen === "auth")
+    return (
+      <Landing
+        mode="auth"
+        onHome={handleHome}
+        onDomainScreen={() => setScreen("domain")}
+        onBackHome={() => setScreen("home")}
+        imHereEnabled={false}
+        nextPortalDate={nextPortalDate}
+      />
+    );
   if (screen === "domain")
     return <DomainScreen onBack={() => setScreen("landing")} />;
   return (
     <div className="app">
       <Landing
+        mode="entry"
         onHome={handleHome}
         onDomainScreen={() => setScreen("domain")}
-        imHereEnabled={imHereEnabled}
+        imHereEnabled={false}
         nextPortalDate={nextPortalDate}
       />
     </div>
@@ -225,7 +257,13 @@ function Home({
   artist2Bio,
   artist1PhotoUrl,
   artist2PhotoUrl,
+  privatePortalLocation,
+  onLoginRequested,
 }) {
+  const isLoggedIn = !!referralCode;
+  const visiblePortalLocation = isLoggedIn
+    ? privatePortalLocation || PRIVATE_LOCATION_PENDING
+    : PUBLIC_PORTAL_LOCATION;
   const [bg] = useState(
     () => HOME_BACKGROUNDS[Math.floor(Math.random() * HOME_BACKGROUNDS.length)],
   );
@@ -358,6 +396,14 @@ function Home({
         <span className="home-logo-word">SOUND</span>
         <span className="home-logo-word">DOMAIN</span>
       </div>
+      <button
+        type="button"
+        className={`home-auth-btn${isLoggedIn ? " is-logged-in" : ""}`}
+        onClick={isLoggedIn ? undefined : onLoginRequested}
+        aria-disabled={isLoggedIn}
+      >
+        {isLoggedIn ? "portal access" : "login"}
+      </button>
 
       {/* ── First viewport ── */}
       <div
@@ -366,6 +412,19 @@ function Home({
       >
         <div className="home-center">
           <p className="home-regulation-title">( Regulation )</p>
+          <p className="home-essence">{DOMAIN_CORE_LINE}</p>
+          <div className="home-ritual-row" aria-label="Domain ritual">
+            {PORTAL_RITUALS.map((ritual, index) => (
+              <span key={ritual} className="home-ritual-item">
+                {ritual}
+                {index < PORTAL_RITUALS.length - 1 && (
+                  <span className="home-ritual-divider" aria-hidden="true">
+                    /
+                  </span>
+                )}
+              </span>
+            ))}
+          </div>
           <p className="home-next-label">next portal opening on</p>
           <p className="home-next-date">
             {nextPortalDate
@@ -378,8 +437,14 @@ function Home({
           {nextPortalGuest && (
             <p className="home-next-guest">w/{nextPortalGuest}</p>
           )}
-          <p className="home-next-address">{PUBLIC_PORTAL_LOCATION}</p>
-          <CalendarButtons nextPortalDate={nextPortalDate} />
+          <p className="home-next-address">
+            {visiblePortalLocation}
+          </p>
+          <CalendarButtons
+            nextPortalDate={nextPortalDate}
+            portalLocation={visiblePortalLocation}
+            hasPrivateLocation={isLoggedIn && !!privatePortalLocation}
+          />
           <p className="home-upcoming-title">Upcoming portals</p>
           <p className="home-upcoming-date">
             {upcomingPortalDate
@@ -415,7 +480,6 @@ function Home({
             </svg>
           </a>
         </div>
-        <RsvpBlock referralCode={referralCode} />
         <ScrollHint onClick={scrollToJourney} visible={heroHintVisible} />
       </div>
 
@@ -608,7 +672,10 @@ function Home({
               <br />
               Share your unique invitation.
             </p>
-            <InviteLinkButton referralCode={referralCode} />
+            <InviteLinkButton
+              referralCode={referralCode}
+              onLoginRequested={onLoginRequested}
+            />
             <SectionScrollHint
               nextId="j-outro"
               containerRef={pageRef}
@@ -889,99 +956,6 @@ function MobileTimeline({ active, pageRef, navReady }) {
         </a>
       ))}
     </nav>
-  );
-}
-
-// ── RSVP — guests only ever see "Capacity: limited", never numbers ──
-function RsvpBlock({ referralCode }) {
-  const [state, setState] = useState(null);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    apiRsvpStatus(referralCode)
-      .then(setState)
-      .catch(() => {});
-  }, [referralCode]);
-
-  if (!state || !state.open) return null;
-
-  async function respond(response) {
-    if (busy) return;
-    setBusy(true);
-    setError(null);
-    try {
-      const res = await apiRsvpRespond({ referralCode, response });
-      if (res.status === "full") {
-        // Capacity was taken while they were deciding
-        setState((s) => ({ ...s, full: true, copy: res.copy }));
-      } else {
-        setState((s) => ({
-          ...s,
-          full: res.full,
-          copy: res.copy,
-          myStatus: res.myStatus,
-        }));
-      }
-    } catch (err) {
-      // A 404 means the session's referral code no longer matches a
-      // participant — they need to re-enter through the portal
-      setError(
-        /404/.test(err?.message || "")
-          ? "we can't find your entry — return through the portal and try again."
-          : "something went wrong — try again.",
-      );
-    }
-    setBusy(false);
-  }
-
-  const { full, copy, myStatus } = state;
-  // "Will attend" is closed off once full — unless it's already theirs
-  const attendClosed = full && myStatus !== "attending";
-
-  return (
-    <div className="rsvp-block">
-      <p className="rsvp-capacity">Capacity is limited.</p>
-      <p className="rsvp-copy">{copy || "Will you be attending?"}</p>
-      {referralCode && (
-        <>
-          <div className="rsvp-btns">
-            <button
-              type="button"
-              className={`rsvp-btn${myStatus === "attending" ? " is-pressed" : ""}`}
-              disabled={busy || attendClosed}
-              onClick={() => respond("attending")}
-            >
-              Will attend
-            </button>
-            <button
-              type="button"
-              className={`rsvp-btn${myStatus === "not_attending" ? " is-pressed" : ""}`}
-              disabled={busy}
-              onClick={() => respond("not_attending")}
-            >
-              Will not attend
-            </button>
-          </div>
-          {attendClosed &&
-            (myStatus === "waitlist" ? (
-              <p className="rsvp-state">
-                you're on the list — we'll reach out if a space opens.
-              </p>
-            ) : (
-              <button
-                type="button"
-                className="rsvp-btn rsvp-btn--waitlist"
-                disabled={busy}
-                onClick={() => respond("waitlist")}
-              >
-                join waitlist
-              </button>
-            ))}
-          {error && <p className="rsvp-error">{error}</p>}
-        </>
-      )}
-    </div>
   );
 }
 
@@ -1342,8 +1316,13 @@ function escapeIcsText(value) {
     .replace(/\n/g, "\\n");
 }
 
-function CalendarButtons({ nextPortalDate }) {
+function CalendarButtons({
+  nextPortalDate,
+  portalLocation = PUBLIC_CALENDAR_LOCATION,
+  hasPrivateLocation = false,
+}) {
   const cal = portalCalDates(nextPortalDate);
+  const location = hasPrivateLocation ? portalLocation : PUBLIC_CALENDAR_LOCATION;
 
   const ics = cal
     ? [
@@ -1357,7 +1336,7 @@ function CalendarButtons({ nextPortalDate }) {
         `DTEND;TZID=${PORTAL_TIME_ZONE}:${cal.end}`,
         "SUMMARY:Lucid Sound Domain - Portal Opening",
         `DESCRIPTION:${escapeIcsText(CALENDAR_DESCRIPTION)}`,
-        `LOCATION:${escapeIcsText(CALENDAR_LOCATION)}`,
+        `LOCATION:${escapeIcsText(location)}`,
         "URL:https://lucidsounddomain.com",
         "END:VEVENT",
         "END:VCALENDAR",
@@ -1371,7 +1350,7 @@ function CalendarButtons({ nextPortalDate }) {
         text: "Lucid Sound Domain - Portal Opening",
         dates: `${cal.start}/${cal.end}`,
         details: CALENDAR_DESCRIPTION,
-        location: CALENDAR_LOCATION,
+        location,
         ctz: PORTAL_TIME_ZONE,
       }).toString()
     : null;
@@ -1524,7 +1503,7 @@ function PowerIcon() {
   );
 }
 
-function InviteLinkButton({ referralCode }) {
+function InviteLinkButton({ referralCode, onLoginRequested }) {
   const [copied, setCopied] = useState(false);
   const inviteUrl = referralCode
     ? `https://lucidsounddomain.com/?ref=${referralCode}`
@@ -1538,6 +1517,20 @@ function InviteLinkButton({ referralCode }) {
     } catch {
       setCopied(false);
     }
+  }
+
+  if (!referralCode) {
+    return (
+      <button
+        type="button"
+        className="j-animate j-invite-power"
+        onClick={onLoginRequested}
+        aria-label="Login for invite link"
+      >
+        <PowerIcon />
+        <span>login for invite link</span>
+      </button>
+    );
   }
 
   return (
@@ -1632,7 +1625,15 @@ function isEmailValid(value) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
 }
 
-function Landing({ onHome, onDomainScreen, imHereEnabled, nextPortalDate }) {
+function Landing({
+  mode = "entry",
+  onHome,
+  onDomainScreen,
+  onBackHome,
+  imHereEnabled,
+  nextPortalDate,
+}) {
+  const isAuthMode = mode === "auth";
   const [bg] = useState(
     () =>
       LANDING_BACKGROUNDS[
@@ -1640,8 +1641,8 @@ function Landing({ onHome, onDomainScreen, imHereEnabled, nextPortalDate }) {
       ],
   );
 
-  // step: 'arrival' → ('name' → 'contact' → 'referral') | ('returning' → 'returning-email'?)
-  const [step, setStep] = useState("arrival");
+  // step: 'enter' | 'arrival' → ('name' → 'contact' → 'referral') | ('returning' → 'returning-email'?)
+  const [step, setStep] = useState(() => (isAuthMode ? "arrival" : "enter"));
   const [name, setName] = useState("");
   const [contact, setContact] = useState("");
   const [referrer, setReferrer] = useState("");
@@ -1775,6 +1776,11 @@ function Landing({ onHome, onDomainScreen, imHereEnabled, nextPortalDate }) {
         });
       }
     }, 100);
+  }
+
+  function handleEnterDomain() {
+    skipIntroRef.current?.();
+    handlePowerPress(null);
   }
 
   // ── Arrival choice: returning → check name in DB ──
@@ -2397,10 +2403,22 @@ function Landing({ onHome, onDomainScreen, imHereEnabled, nextPortalDate }) {
 
   return (
     <div
-      className={`landing${imHereEnabled ? " landing--has-here" : ""}`}
+      className={`landing landing--${mode}${imHereEnabled ? " landing--has-here" : ""}`}
       onClick={() => skipIntroRef.current?.()}
       onTouchStart={() => skipIntroRef.current?.()}
     >
+      {isAuthMode && onBackHome && (
+        <button
+          type="button"
+          className="landing-back-home"
+          onClick={(e) => {
+            e.stopPropagation();
+            onBackHome();
+          }}
+        >
+          ← back
+        </button>
+      )}
       <div
         ref={bgSlideRef}
         className="bg-slide"
@@ -2431,6 +2449,7 @@ function Landing({ onHome, onDomainScreen, imHereEnabled, nextPortalDate }) {
       <div ref={welcomeRef} className="welcome-wrap">
         <div ref={portalInfoRef} className="landing-portal-info">
           <p className="landing-portal-title">( Regulation )</p>
+          <p className="landing-portal-essence">{DOMAIN_CORE_LINE}</p>
           <p className="landing-portal-label">next portal opening on</p>
           <p className="landing-portal-date">
             {nextPortalDate
@@ -2486,7 +2505,17 @@ function Landing({ onHome, onDomainScreen, imHereEnabled, nextPortalDate }) {
           onSubmit={handleSubmit}
           autoComplete="off"
         >
-          {step === "arrival" ? (
+          {step === "enter" ? (
+            <div className="arrival-choice arrival-choice--single">
+              <button
+                type="button"
+                className="arrival-btn arrival-btn--enter"
+                onClick={handleEnterDomain}
+              >
+                enter the domain
+              </button>
+            </div>
+          ) : step === "arrival" ? (
             <div
               className={`arrival-choice${imHereEnabled ? " arrival-choice--has-here" : ""}`}
             >

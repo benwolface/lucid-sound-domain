@@ -72,6 +72,12 @@ export function apiGetSettings() {
   return apiRequest("/settings");
 }
 
+export function apiGetPrivateSettings(referralCode) {
+  return apiRequest(
+    `/settings/private?ref=${encodeURIComponent(referralCode)}`
+  );
+}
+
 export function apiGetArchive() {
   return apiRequest("/archive");
 }

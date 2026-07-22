@@ -66,6 +66,8 @@ For the frontend to talk to the API, ensure `VITE_API_BASE_URL` is set appropria
   (write-only); if lost, replace rather than recover.
 - [x] `ADMIN_SECRET` set in Vercel (Preview scoped to `staging-branch` +
   Production), matching local `.env`.
+- [ ] `PORTAL_LOCATION_PRIVATE` set in Vercel/local API env if the exact
+  event address should be revealed after a valid login/session.
 - [x] Sending domain verified in Resend: DKIM (`resend._domainkey.lucidsounddomain.com`) + SPF/MX (`send.lucidsounddomain.com`) are live.
 - [x] DMARC record added (`_dmarc.lucidsounddomain.com`, `p=none`) so Gmail/Yahoo have an alignment signal instead of just DKIM.
 
@@ -77,4 +79,4 @@ engagement signal meant to improve placement over time.
 
 - [x] Lucid Sound Domain archive — time-capsule section: draggable polaroids with captions + film-reel video projector, managed from the admin panel.
 - [ ] Food deposit — a way for people to put down a deposit for food.
-- [ ] RSVP with remaining spots — an RSVP flow that tracks and displays how many spots are left.
+- [ ] Partiful capacity sync — admin can paste the Partiful link and analyze a Guest List CSV export for capacity state.

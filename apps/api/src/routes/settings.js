@@ -1,5 +1,5 @@
 const { Router } = require("express");
-const { getSettings } = require("../store");
+const { findParticipantByReferralCode, getSettings } = require("../store");
 
 function settingsRouter() {
   const router = Router();
@@ -23,6 +23,27 @@ function settingsRouter() {
     } catch (err) {
       console.error("[settings]", err);
       return res.json({ imHereEnabled: false, nextPortalDate: null, upcomingPortalDate: null, nextPortalGuest: null, upcomingPortalGuest: null, artist1Name: null, artist1Bio: null, artist2Name: null, artist2Bio: null, artist1PhotoUrl: null, artist2PhotoUrl: null });
+    }
+  });
+
+  router.get("/private", async (req, res) => {
+    const ref = typeof req.query.ref === "string" ? req.query.ref.trim() : "";
+    if (!ref) {
+      return res.status(401).json({ error: "referral code required." });
+    }
+
+    try {
+      const participant = await findParticipantByReferralCode(ref);
+      if (!participant) {
+        return res.status(404).json({ error: "entry not found." });
+      }
+
+      return res.json({
+        portalLocation: process.env.PORTAL_LOCATION_PRIVATE || null,
+      });
+    } catch (err) {
+      console.error("[settings/private]", err);
+      return res.status(500).json({ error: "Failed to fetch private settings." });
     }
   });
 

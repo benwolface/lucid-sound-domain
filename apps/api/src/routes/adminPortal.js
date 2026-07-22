@@ -204,6 +204,67 @@ const HTML = `<!DOCTYPE html>
     .att-name { color: #e5e5e5; }
     .att-contact { color: #666; font-family: monospace; font-size: 0.78rem; }
     .att-empty { color: #555; font-size: 0.8rem; padding: 4px 0; }
+    .partiful-csv {
+      min-height: 116px;
+      resize: vertical;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.78rem;
+      line-height: 1.45;
+    }
+    .capacity-state {
+      margin-top: 14px;
+      padding: 14px;
+      border-radius: 10px;
+      border: 1px solid #2a2a2a;
+      background: #151515;
+    }
+    .capacity-state-label {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: #888;
+      margin-bottom: 5px;
+    }
+    .capacity-state-main { font-size: 1rem; color: #e5e5e5; }
+    .capacity-state.open { border-color: #14532d; }
+    .capacity-state.open .capacity-state-label { color: #4ade80; }
+    .capacity-state.watch { border-color: #854d0e; }
+    .capacity-state.watch .capacity-state-label { color: #facc15; }
+    .capacity-state.tight,
+    .capacity-state.full,
+    .capacity-state.over { border-color: #7f1d1d; }
+    .capacity-state.tight .capacity-state-label,
+    .capacity-state.full .capacity-state-label,
+    .capacity-state.over .capacity-state-label { color: #f87171; }
+    .partiful-kpis {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .partiful-kpi {
+      background: #1a1a1a;
+      border-radius: 8px;
+      padding: 10px;
+      text-align: center;
+    }
+    .partiful-kpi-num { font-size: 1.25rem; font-weight: 700; color: #e5e5e5; }
+    .partiful-kpi-label { font-size: 0.68rem; color: #666; margin-top: 2px; }
+    .partiful-list {
+      max-height: 190px;
+      overflow-y: auto;
+      margin-top: 8px;
+    }
+    .partiful-help {
+      color: #666;
+      font-size: 0.78rem;
+      line-height: 1.45;
+      margin-top: 6px;
+    }
+    .partiful-help a { color: #aaa; }
+    @media (max-width: 540px) {
+      .partiful-kpis { grid-template-columns: repeat(2, 1fr); }
+    }
     input[type="file"].input-file {
       display: block; color: #888; font-size: 0.82rem;
       background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 8px;
@@ -410,22 +471,48 @@ const HTML = `<!DOCTYPE html>
       </div>
     </div>
 
-    <!-- ATTENDANCE -->
+    <!-- PARTIFUL CAPACITY -->
     <div class="section">
       <div class="section-header">
-        <div class="section-title">Attendance</div>
+        <div class="section-title">Partiful Capacity</div>
         <div class="selection-controls">
-          <button class="link-btn" onclick="loadAttendance()">Refresh</button>
-          <button class="link-btn archive-del" onclick="resetAttendance()">Reset all</button>
+          <button class="link-btn" onclick="analyzePartifulCsv()">Refresh</button>
+          <button class="link-btn archive-del" onclick="clearPartifulData()">Clear</button>
         </div>
       </div>
-      <div class="result-summary">
-        <div class="stat success"><div class="stat-num" id="att-confirmed">—</div><div class="stat-label">Confirmed</div></div>
-        <div class="stat"><div class="stat-num" id="att-remaining">—</div><div class="stat-label">Spots left</div></div>
-        <div class="stat"><div class="stat-num" id="att-waitlist">—</div><div class="stat-label">Waitlist</div></div>
+
+      <div class="date-row" style="margin-top:0">
+        <div class="date-label">PARTIFUL EVENT LINK</div>
+        <input type="url" id="partiful-link" class="input" placeholder="https://partiful.com/e/..." oninput="savePartifulPrefs()" />
+        <div class="partiful-help">Saved locally in this browser for reference. The link alone does not expose guest data.</div>
       </div>
-      <div class="date-preview" id="att-note" style="margin-top:0"></div>
-      <div id="att-lists"></div>
+
+      <div class="date-row">
+        <div class="date-label">ROOM CAPACITY</div>
+        <div class="date-input-row">
+          <input type="number" id="partiful-capacity" class="input" min="1" step="1" value="18" oninput="savePartifulPrefs(); analyzePartifulCsv()" />
+          <input type="file" id="partiful-csv-file" class="input-file" accept=".csv,text/csv" onchange="loadPartifulCsvFile(this)" />
+        </div>
+        <div class="partiful-help">Export CSV from Partiful Guest List, then upload it here. Guest data stays in this admin browser session.</div>
+      </div>
+
+      <div class="date-row">
+        <div class="date-label">OR PASTE PARTIFUL CSV</div>
+        <textarea id="partiful-csv" class="input partiful-csv" placeholder="Paste the Partiful Guest List CSV here..." oninput="analyzePartifulCsv()"></textarea>
+      </div>
+
+      <div class="capacity-state" id="partiful-state">
+        <div class="capacity-state-label">Awaiting export</div>
+        <div class="capacity-state-main">Add a Partiful CSV to calculate capacity.</div>
+      </div>
+
+      <div class="result-summary">
+        <div class="stat success"><div class="stat-num" id="partiful-confirmed">—</div><div class="stat-label">Confirmed</div></div>
+        <div class="stat"><div class="stat-num" id="partiful-remaining">—</div><div class="stat-label">Spots left</div></div>
+        <div class="stat"><div class="stat-num" id="partiful-waitlist">—</div><div class="stat-label">Waitlist</div></div>
+      </div>
+      <div class="date-preview" id="partiful-note" style="margin-top:0"></div>
+      <div id="partiful-breakdown"></div>
     </div>
 
     <!-- ARTISTS -->
@@ -584,6 +671,7 @@ const HTML = `<!DOCTYPE html>
   let allParticipants = [];
   let selected = new Set();
   let archiveItems = [];
+  let partifulGuests = [];
 
   if (adminSecret) tryAutoLogin();
 
@@ -628,48 +716,234 @@ const HTML = `<!DOCTYPE html>
     loadArchive();
     loadSettings();
     loadAdminArchive();
-    loadAttendance();
+    loadPartifulPrefs();
+    analyzePartifulCsv();
   }
 
-  // ── Attendance (real numbers — guests only ever see "Capacity: limited") ──
+  // ── Partiful capacity — CSV stays client-side in this admin session ──
 
-  async function loadAttendance() {
-    try {
-      const res = await fetch("/api/admin/attendance", { headers: { "x-admin-secret": adminSecret } });
-      const data = await res.json();
-      const confirmed = data.attending.length;
-      document.getElementById("att-confirmed").textContent = confirmed;
-      document.getElementById("att-remaining").textContent = Math.max(0, data.hardCap - confirmed);
-      document.getElementById("att-waitlist").textContent = data.waitlist.length;
-      document.getElementById("att-note").textContent = data.portalDate
-        ? \`Portal \${data.portalDate} — guests see "full" at \${data.publicCap}; hard cap \${data.hardCap} (\${data.hardCap - data.publicCap} held back for guest DJ needs).\`
-        : "Set a next portal date to open RSVPs.";
-      const row = (r, i) => \`<div class="att-row"><span class="att-name">\${i != null ? (i + 1) + ". " : ""}\${esc(r.name || "—")}</span><span class="att-contact">\${esc(r.email || r.phone || "")}</span></div>\`;
-      document.getElementById("att-lists").innerHTML =
-        \`<div class="att-group-title">Confirmed (\${confirmed})</div>\` +
-        (data.attending.map(r => row(r)).join("") || '<div class="att-empty">no one yet</div>') +
-        \`<div class="att-group-title">Waitlist — contact in this order (\${data.waitlist.length})</div>\` +
-        (data.waitlist.map((r, i) => row(r, i)).join("") || '<div class="att-empty">empty</div>') +
-        \`<div class="att-group-title">Will not attend (\${data.notAttending.length})</div>\` +
-        (data.notAttending.map(r => row(r)).join("") || '<div class="att-empty">none</div>');
-    } catch (err) {
-      console.error("[attendance]", err);
+  function loadPartifulPrefs() {
+    document.getElementById("partiful-link").value = localStorage.getItem("lsd_partiful_link") || "";
+    document.getElementById("partiful-capacity").value = localStorage.getItem("lsd_partiful_capacity") || "18";
+  }
+
+  function savePartifulPrefs() {
+    localStorage.setItem("lsd_partiful_link", document.getElementById("partiful-link").value.trim());
+    localStorage.setItem("lsd_partiful_capacity", document.getElementById("partiful-capacity").value || "18");
+  }
+
+  function clearPartifulData() {
+    if (!confirm("Clear the Partiful link and current CSV analysis from this browser?")) return;
+    localStorage.removeItem("lsd_partiful_link");
+    localStorage.removeItem("lsd_partiful_capacity");
+    document.getElementById("partiful-link").value = "";
+    document.getElementById("partiful-capacity").value = "18";
+    document.getElementById("partiful-csv").value = "";
+    document.getElementById("partiful-csv-file").value = "";
+    partifulGuests = [];
+    renderPartifulAnalysis(null);
+  }
+
+  async function loadPartifulCsvFile(input) {
+    const file = input.files && input.files[0];
+    if (!file) return;
+    const text = await file.text();
+    document.getElementById("partiful-csv").value = text;
+    analyzePartifulCsv();
+  }
+
+  function parseCsv(text) {
+    const rows = [];
+    let row = [];
+    let field = "";
+    let inQuotes = false;
+    for (let i = 0; i < text.length; i++) {
+      const ch = text[i];
+      const next = text[i + 1];
+      if (ch === '"') {
+        if (inQuotes && next === '"') {
+          field += '"';
+          i++;
+        } else {
+          inQuotes = !inQuotes;
+        }
+      } else if (ch === "," && !inQuotes) {
+        row.push(field);
+        field = "";
+      } else if ((ch === "\\n" || ch === "\\r") && !inQuotes) {
+        if (ch === "\\r" && next === "\\n") i++;
+        row.push(field);
+        if (row.some(cell => String(cell).trim())) rows.push(row);
+        row = [];
+        field = "";
+      } else {
+        field += ch;
+      }
     }
+    row.push(field);
+    if (row.some(cell => String(cell).trim())) rows.push(row);
+    return rows;
   }
 
-  async function resetAttendance() {
-    if (!confirm("Reset ALL RSVPs for the current portal? Everyone will have to respond again.")) return;
+  function norm(value) {
+    return String(value || "").toLowerCase().replace(/[^a-z0-9]+/g, "");
+  }
+
+  function firstField(obj, candidates) {
+    for (const candidate of candidates) {
+      const key = Object.keys(obj).find(k => norm(k) === norm(candidate));
+      if (key && String(obj[key] || "").trim()) return String(obj[key]).trim();
+    }
+    return "";
+  }
+
+  function firstMatchingField(obj, fragments) {
+    const key = Object.keys(obj).find(k => fragments.some(fragment => norm(k).includes(norm(fragment))));
+    return key ? String(obj[key] || "").trim() : "";
+  }
+
+  function parseCount(value, fallback = 1) {
+    const match = String(value || "").match(/\\d+/);
+    if (!match) return fallback;
+    return Math.max(0, Number(match[0]));
+  }
+
+  function normalizeRsvpStatus(raw) {
+    const value = String(raw || "").toLowerCase().trim();
+    if (!value) return "pending";
+    if (/wait/.test(value)) return "waitlist";
+    if (/no response|not responded|pending|invited|sent|unanswered/.test(value)) return "pending";
+    if (/not attending|declined|can't|cant|cannot|no\\b/.test(value)) return "declined";
+    if (/maybe|interested/.test(value)) return "maybe";
+    if (/going|attending|accepted|confirmed|yes|coming/.test(value)) return "going";
+    return "unknown";
+  }
+
+  function shapePartifulGuest(row) {
+    const first = firstField(row, ["First Name", "First"]);
+    const last = firstField(row, ["Last Name", "Last"]);
+    const name = firstField(row, ["Name", "Guest Name", "Full Name", "Display Name"]) || [first, last].filter(Boolean).join(" ") || "Unnamed guest";
+    const rawStatus =
+      firstField(row, ["RSVP Status", "RSVP", "Status", "Response", "Reply"]) ||
+      firstMatchingField(row, ["rsvp", "status", "response"]);
+    const partySize =
+      firstField(row, ["Party Size", "Guest Count", "Guests", "Total Guests", "Number of Guests"]) ||
+      firstMatchingField(row, ["party", "guestcount", "totalguests"]);
+    const additionalGuests =
+      firstField(row, ["Additional Guests", "Plus Ones", "Plus One", "Additional Guest Count"]) ||
+      firstMatchingField(row, ["additional", "plus"]);
+    const count = partySize ? parseCount(partySize, 1) : 1 + parseCount(additionalGuests, 0);
+    const email = firstField(row, ["Email", "Email Address"]);
+    const phone = firstField(row, ["Phone", "Phone Number"]);
+    return {
+      name,
+      statusRaw: rawStatus || "pending",
+      status: normalizeRsvpStatus(rawStatus),
+      count,
+      email,
+      phone,
+    };
+  }
+
+  function analyzePartifulCsv() {
+    savePartifulPrefs();
+    const text = document.getElementById("partiful-csv").value.trim();
+    if (!text) {
+      partifulGuests = [];
+      renderPartifulAnalysis(null);
+      return;
+    }
+
     try {
-      const res = await fetch("/api/admin/attendance-reset", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "x-admin-secret": adminSecret },
+      const rows = parseCsv(text);
+      if (rows.length < 2) throw new Error("CSV needs a header row and at least one guest row.");
+      const headers = rows[0].map(h => String(h || "").trim());
+      partifulGuests = rows.slice(1).map(values => {
+        const obj = {};
+        headers.forEach((header, i) => { obj[header || ("column_" + i)] = values[i] || ""; });
+        return shapePartifulGuest(obj);
       });
-      if (!res.ok) throw new Error("reset failed");
-      loadAttendance();
+      renderPartifulAnalysis(buildPartifulSummary(partifulGuests));
     } catch (err) {
-      console.error("[attendance-reset]", err);
-      alert("Reset failed — try again.");
+      console.error("[partiful-csv]", err);
+      const state = document.getElementById("partiful-state");
+      state.className = "capacity-state over";
+      state.innerHTML = '<div class="capacity-state-label">CSV problem</div><div class="capacity-state-main">' + esc(err.message || "Could not read that CSV.") + '</div>';
     }
+  }
+
+  function buildPartifulSummary(guests) {
+    const capacity = Math.max(1, Number(document.getElementById("partiful-capacity").value || 18));
+    const groups = { going: [], waitlist: [], maybe: [], declined: [], pending: [], unknown: [] };
+    guests.forEach(guest => {
+      (groups[guest.status] || groups.unknown).push(guest);
+    });
+    const confirmed = groups.going.reduce((sum, guest) => sum + guest.count, 0);
+    const waitlist = groups.waitlist.reduce((sum, guest) => sum + guest.count, 0);
+    const remaining = capacity - confirmed;
+    let state = "open";
+    let label = "Open";
+    let copy = "Capacity looks healthy.";
+    if (remaining < 0) {
+      state = "over"; label = "Over capacity"; copy = Math.abs(remaining) + " over capacity. Time to close Partiful or move people to waitlist.";
+    } else if (remaining === 0) {
+      state = "full"; label = "Full"; copy = "Capacity is full. Close RSVPs or waitlist new guests.";
+    } else if (remaining <= 2) {
+      state = "tight"; label = "Tight"; copy = remaining + " spot" + (remaining === 1 ? "" : "s") + " left. Keep a close eye on plus-ones.";
+    } else if (confirmed / capacity >= 0.75) {
+      state = "watch"; label = "Watch"; copy = remaining + " spots left. Capacity is starting to matter.";
+    }
+    return { capacity, confirmed, waitlist, remaining, state, label, copy, groups, totalRows: guests.length };
+  }
+
+  function renderPartifulAnalysis(summary) {
+    if (!summary) {
+      document.getElementById("partiful-confirmed").textContent = "—";
+      document.getElementById("partiful-remaining").textContent = "—";
+      document.getElementById("partiful-waitlist").textContent = "—";
+      document.getElementById("partiful-note").textContent = "Paste or upload a Partiful Guest List CSV to calculate capacity.";
+      document.getElementById("partiful-breakdown").innerHTML = "";
+      const state = document.getElementById("partiful-state");
+      state.className = "capacity-state";
+      state.innerHTML = '<div class="capacity-state-label">Awaiting export</div><div class="capacity-state-main">Add a Partiful CSV to calculate capacity.</div>';
+      return;
+    }
+
+    document.getElementById("partiful-confirmed").textContent = summary.confirmed;
+    document.getElementById("partiful-remaining").textContent = Math.max(0, summary.remaining);
+    document.getElementById("partiful-waitlist").textContent = summary.waitlist;
+    document.getElementById("partiful-note").textContent =
+      summary.totalRows + " exported rows · capacity " + summary.capacity + " · confirmed count includes party size / plus-ones when the CSV includes it.";
+    const state = document.getElementById("partiful-state");
+    state.className = "capacity-state " + summary.state;
+    state.innerHTML = '<div class="capacity-state-label">' + esc(summary.label) + '</div><div class="capacity-state-main">' + esc(summary.copy) + '</div>';
+
+    document.getElementById("partiful-breakdown").innerHTML =
+      '<div class="partiful-kpis">' +
+        kpi(summary.groups.going.length, "going rows") +
+        kpi(summary.groups.maybe.length, "maybe") +
+        kpi(summary.groups.pending.length, "pending") +
+        kpi(summary.groups.declined.length, "declined") +
+      '</div>' +
+      partifulGroup("Confirmed", summary.groups.going, true) +
+      partifulGroup("Waitlist", summary.groups.waitlist, true) +
+      partifulGroup("Maybe / Interested", summary.groups.maybe, false) +
+      partifulGroup("Pending", summary.groups.pending, false);
+  }
+
+  function kpi(num, label) {
+    return '<div class="partiful-kpi"><div class="partiful-kpi-num">' + esc(num) + '</div><div class="partiful-kpi-label">' + esc(label) + '</div></div>';
+  }
+
+  function partifulGroup(title, guests, ordered) {
+    const rows = guests.slice(0, 40).map((guest, i) => {
+      const prefix = ordered ? (i + 1) + ". " : "";
+      const contact = guest.email || guest.phone || "";
+      const count = guest.count > 1 ? " +" + (guest.count - 1) : "";
+      return '<div class="att-row"><span class="att-name">' + esc(prefix + guest.name + count) + '</span><span class="att-contact">' + esc(contact) + '</span></div>';
+    }).join("");
+    const extra = guests.length > 40 ? '<div class="att-empty">' + (guests.length - 40) + ' more not shown</div>' : "";
+    return '<div class="att-group-title">' + esc(title) + ' (' + guests.length + ')</div><div class="partiful-list">' + (rows || '<div class="att-empty">empty</div>') + extra + '</div>';
   }
 
   // ── Archive media manager ──
