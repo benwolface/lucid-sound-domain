@@ -8,6 +8,8 @@ import {
   apiGetSettings,
   apiUpdateContactEmail,
   apiGetPrivateSettings,
+  apiRsvpRespond,
+  apiRsvpStatus,
 } from "./lib/api";
 import "./styles.css";
 
@@ -480,6 +482,7 @@ function Home({
             </svg>
           </a>
         </div>
+        {isLoggedIn && <RsvpBlock referralCode={referralCode} />}
         <ScrollHint onClick={scrollToJourney} visible={heroHintVisible} />
       </div>
 
@@ -956,6 +959,91 @@ function MobileTimeline({ active, pageRef, navReady }) {
         </a>
       ))}
     </nav>
+  );
+}
+
+// ── RSVP — only visible after someone has portal access ──
+function RsvpBlock({ referralCode }) {
+  const [state, setState] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    apiRsvpStatus(referralCode)
+      .then(setState)
+      .catch(() => {});
+  }, [referralCode]);
+
+  if (!state || !state.open) return null;
+
+  async function respond(response) {
+    if (busy) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await apiRsvpRespond({ referralCode, response });
+      if (res.status === "full") {
+        setState((s) => ({ ...s, full: true, copy: res.copy }));
+      } else {
+        setState((s) => ({
+          ...s,
+          full: res.full,
+          copy: res.copy,
+          myStatus: res.myStatus,
+        }));
+      }
+    } catch (err) {
+      setError(
+        /404/.test(err?.message || "")
+          ? "we can't find your entry — return through the portal and try again."
+          : "something went wrong — try again.",
+      );
+    }
+    setBusy(false);
+  }
+
+  const { full, copy, myStatus } = state;
+  const attendClosed = full && myStatus !== "attending";
+
+  return (
+    <div className="rsvp-block">
+      <p className="rsvp-capacity">Capacity is limited.</p>
+      <p className="rsvp-copy">{copy || "Will you be attending?"}</p>
+      <div className="rsvp-btns">
+        <button
+          type="button"
+          className={`rsvp-btn${myStatus === "attending" ? " is-pressed" : ""}`}
+          disabled={busy || attendClosed}
+          onClick={() => respond("attending")}
+        >
+          Will attend
+        </button>
+        <button
+          type="button"
+          className={`rsvp-btn${myStatus === "not_attending" ? " is-pressed" : ""}`}
+          disabled={busy}
+          onClick={() => respond("not_attending")}
+        >
+          Will not attend
+        </button>
+      </div>
+      {attendClosed &&
+        (myStatus === "waitlist" ? (
+          <p className="rsvp-state">
+            you're on the list — we'll reach out if a space opens.
+          </p>
+        ) : (
+          <button
+            type="button"
+            className="rsvp-btn rsvp-btn--waitlist"
+            disabled={busy}
+            onClick={() => respond("waitlist")}
+          >
+            join waitlist
+          </button>
+        ))}
+      {error && <p className="rsvp-error">{error}</p>}
+    </div>
   );
 }
 

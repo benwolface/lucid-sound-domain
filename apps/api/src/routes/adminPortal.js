@@ -471,12 +471,31 @@ const HTML = `<!DOCTYPE html>
       </div>
     </div>
 
-    <!-- PARTIFUL CAPACITY -->
+    <!-- LSD RSVPS -->
     <div class="section">
       <div class="section-header">
-        <div class="section-title">Partiful Capacity</div>
+        <div class="section-title">LSD RSVPs</div>
+        <div class="selection-controls">
+          <button class="link-btn" onclick="loadAttendance()">Refresh</button>
+          <button class="link-btn archive-del" onclick="resetAttendance()">Reset all</button>
+        </div>
+      </div>
+      <div class="result-summary">
+        <div class="stat success"><div class="stat-num" id="att-confirmed">—</div><div class="stat-label">Confirmed</div></div>
+        <div class="stat"><div class="stat-num" id="att-remaining">—</div><div class="stat-label">Spots left</div></div>
+        <div class="stat"><div class="stat-num" id="att-waitlist">—</div><div class="stat-label">Waitlist</div></div>
+      </div>
+      <div class="date-preview" id="att-note" style="margin-top:0"></div>
+      <div id="att-lists"></div>
+    </div>
+
+    <!-- PARTIFUL SNAPSHOT -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">Partiful Snapshot</div>
         <div class="selection-controls">
           <button class="link-btn" onclick="analyzePartifulCsv()">Refresh</button>
+          <button class="link-btn" onclick="openPartifulLink()">Open Partiful</button>
           <button class="link-btn archive-del" onclick="clearPartifulData()">Clear</button>
         </div>
       </div>
@@ -484,16 +503,17 @@ const HTML = `<!DOCTYPE html>
       <div class="date-row" style="margin-top:0">
         <div class="date-label">PARTIFUL EVENT LINK</div>
         <input type="url" id="partiful-link" class="input" placeholder="https://partiful.com/e/..." oninput="savePartifulPrefs()" />
-        <div class="partiful-help">Saved locally in this browser for reference. The link alone does not expose guest data.</div>
+        <div class="partiful-help">Saved locally in this browser as a shortcut. Live RSVP state stays in Partiful; the link alone does not expose guest data.</div>
       </div>
 
       <div class="date-row">
-        <div class="date-label">ROOM CAPACITY</div>
+        <div class="date-label">ROOM CAPACITY FOR SNAPSHOT</div>
         <div class="date-input-row">
           <input type="number" id="partiful-capacity" class="input" min="1" step="1" value="18" oninput="savePartifulPrefs(); analyzePartifulCsv()" />
           <input type="file" id="partiful-csv-file" class="input-file" accept=".csv,text/csv" onchange="loadPartifulCsvFile(this)" />
         </div>
-        <div class="partiful-help">Export CSV from Partiful Guest List, then upload it here. Guest data stays in this admin browser session.</div>
+        <div class="partiful-help">Export a Guest List CSV from Partiful, then upload it here. This is a manual snapshot, not live sync. Guest data stays in this admin browser session.</div>
+        <div class="date-preview" id="partiful-last-imported"></div>
       </div>
 
       <div class="date-row">
@@ -503,7 +523,7 @@ const HTML = `<!DOCTYPE html>
 
       <div class="capacity-state" id="partiful-state">
         <div class="capacity-state-label">Awaiting export</div>
-        <div class="capacity-state-main">Add a Partiful CSV to calculate capacity.</div>
+        <div class="capacity-state-main">Add a Partiful CSV snapshot to calculate capacity.</div>
       </div>
 
       <div class="result-summary">
@@ -672,6 +692,7 @@ const HTML = `<!DOCTYPE html>
   let selected = new Set();
   let archiveItems = [];
   let partifulGuests = [];
+  let lastPartifulCsvText = "";
 
   if (adminSecret) tryAutoLogin();
 
@@ -716,15 +737,58 @@ const HTML = `<!DOCTYPE html>
     loadArchive();
     loadSettings();
     loadAdminArchive();
+    loadAttendance();
     loadPartifulPrefs();
     analyzePartifulCsv();
   }
 
-  // ── Partiful capacity — CSV stays client-side in this admin session ──
+  // ── LSD RSVPs (live internal RSVP data) ──
+
+  async function loadAttendance() {
+    try {
+      const res = await fetch("/api/admin/attendance", { headers: { "x-admin-secret": adminSecret } });
+      const data = await res.json();
+      const confirmed = data.attending.length;
+      document.getElementById("att-confirmed").textContent = confirmed;
+      document.getElementById("att-remaining").textContent = Math.max(0, data.hardCap - confirmed);
+      document.getElementById("att-waitlist").textContent = data.waitlist.length;
+      document.getElementById("att-note").textContent = data.portalDate
+        ? \`Portal \${data.portalDate} — logged-in guests see "full" at \${data.publicCap}; hard cap \${data.hardCap} (\${data.hardCap - data.publicCap} held back).\`
+        : "Set a next portal date to open logged-in RSVPs.";
+      const row = (r, i) => \`<div class="att-row"><span class="att-name">\${i != null ? (i + 1) + ". " : ""}\${esc(r.name || "—")}</span><span class="att-contact">\${esc(r.email || r.phone || "")}</span></div>\`;
+      document.getElementById("att-lists").innerHTML =
+        \`<div class="att-group-title">Confirmed (\${confirmed})</div>\` +
+        (data.attending.map(r => row(r)).join("") || '<div class="att-empty">no one yet</div>') +
+        \`<div class="att-group-title">Waitlist — contact in this order (\${data.waitlist.length})</div>\` +
+        (data.waitlist.map((r, i) => row(r, i)).join("") || '<div class="att-empty">empty</div>') +
+        \`<div class="att-group-title">Will not attend (\${data.notAttending.length})</div>\` +
+        (data.notAttending.map(r => row(r)).join("") || '<div class="att-empty">none</div>');
+    } catch (err) {
+      console.error("[attendance]", err);
+    }
+  }
+
+  async function resetAttendance() {
+    if (!confirm("Reset ALL LSD RSVPs for the current portal? Everyone will have to respond again.")) return;
+    try {
+      const res = await fetch("/api/admin/attendance-reset", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-admin-secret": adminSecret },
+      });
+      if (!res.ok) throw new Error("reset failed");
+      loadAttendance();
+    } catch (err) {
+      console.error("[attendance-reset]", err);
+      alert("Reset failed — try again.");
+    }
+  }
+
+  // ── Partiful snapshot — CSV stays client-side in this admin session ──
 
   function loadPartifulPrefs() {
     document.getElementById("partiful-link").value = localStorage.getItem("lsd_partiful_link") || "";
     document.getElementById("partiful-capacity").value = localStorage.getItem("lsd_partiful_capacity") || "18";
+    renderPartifulLastImported();
   }
 
   function savePartifulPrefs() {
@@ -732,15 +796,52 @@ const HTML = `<!DOCTYPE html>
     localStorage.setItem("lsd_partiful_capacity", document.getElementById("partiful-capacity").value || "18");
   }
 
+  function renderPartifulLastImported() {
+    const el = document.getElementById("partiful-last-imported");
+    if (!el) return;
+    const raw = localStorage.getItem("lsd_partiful_last_imported_at");
+    if (!raw) {
+      el.textContent = "No Partiful CSV snapshot imported yet.";
+      return;
+    }
+    const date = new Date(raw);
+    el.textContent = Number.isNaN(date.getTime())
+      ? "Last Partiful CSV snapshot imported."
+      : "Last Partiful CSV snapshot imported " + date.toLocaleString();
+  }
+
+  function rememberPartifulImport() {
+    localStorage.setItem("lsd_partiful_last_imported_at", new Date().toISOString());
+    renderPartifulLastImported();
+  }
+
+  function openPartifulLink() {
+    const raw = document.getElementById("partiful-link").value.trim();
+    if (!raw) {
+      alert("Paste the Partiful event link first.");
+      return;
+    }
+    try {
+      const url = new URL(raw);
+      if (url.hostname !== "partiful.com" && !url.hostname.endsWith(".partiful.com")) throw new Error("not partiful");
+      window.open(url.toString(), "_blank", "noopener");
+    } catch {
+      alert("That does not look like a Partiful link.");
+    }
+  }
+
   function clearPartifulData() {
-    if (!confirm("Clear the Partiful link and current CSV analysis from this browser?")) return;
+    if (!confirm("Clear the Partiful link and current CSV snapshot from this browser?")) return;
     localStorage.removeItem("lsd_partiful_link");
     localStorage.removeItem("lsd_partiful_capacity");
+    localStorage.removeItem("lsd_partiful_last_imported_at");
     document.getElementById("partiful-link").value = "";
     document.getElementById("partiful-capacity").value = "18";
     document.getElementById("partiful-csv").value = "";
     document.getElementById("partiful-csv-file").value = "";
     partifulGuests = [];
+    lastPartifulCsvText = "";
+    renderPartifulLastImported();
     renderPartifulAnalysis(null);
   }
 
@@ -863,6 +964,10 @@ const HTML = `<!DOCTYPE html>
         headers.forEach((header, i) => { obj[header || ("column_" + i)] = values[i] || ""; });
         return shapePartifulGuest(obj);
       });
+      if (text !== lastPartifulCsvText) {
+        lastPartifulCsvText = text;
+        rememberPartifulImport();
+      }
       renderPartifulAnalysis(buildPartifulSummary(partifulGuests));
     } catch (err) {
       console.error("[partiful-csv]", err);
@@ -901,11 +1006,11 @@ const HTML = `<!DOCTYPE html>
       document.getElementById("partiful-confirmed").textContent = "—";
       document.getElementById("partiful-remaining").textContent = "—";
       document.getElementById("partiful-waitlist").textContent = "—";
-      document.getElementById("partiful-note").textContent = "Paste or upload a Partiful Guest List CSV to calculate capacity.";
+      document.getElementById("partiful-note").textContent = "Paste or upload a Partiful Guest List CSV snapshot to calculate capacity.";
       document.getElementById("partiful-breakdown").innerHTML = "";
       const state = document.getElementById("partiful-state");
       state.className = "capacity-state";
-      state.innerHTML = '<div class="capacity-state-label">Awaiting export</div><div class="capacity-state-main">Add a Partiful CSV to calculate capacity.</div>';
+      state.innerHTML = '<div class="capacity-state-label">Awaiting export</div><div class="capacity-state-main">Add a Partiful CSV snapshot to calculate capacity.</div>';
       return;
     }
 
@@ -913,7 +1018,7 @@ const HTML = `<!DOCTYPE html>
     document.getElementById("partiful-remaining").textContent = Math.max(0, summary.remaining);
     document.getElementById("partiful-waitlist").textContent = summary.waitlist;
     document.getElementById("partiful-note").textContent =
-      summary.totalRows + " exported rows · capacity " + summary.capacity + " · confirmed count includes party size / plus-ones when the CSV includes it.";
+      "Snapshot from " + summary.totalRows + " exported rows · capacity " + summary.capacity + " · confirmed count includes party size / plus-ones when the CSV includes it.";
     const state = document.getElementById("partiful-state");
     state.className = "capacity-state " + summary.state;
     state.innerHTML = '<div class="capacity-state-label">' + esc(summary.label) + '</div><div class="capacity-state-main">' + esc(summary.copy) + '</div>';

@@ -79,4 +79,4 @@ engagement signal meant to improve placement over time.
 
 - [x] Lucid Sound Domain archive — time-capsule section: draggable polaroids with captions + film-reel video projector, managed from the admin panel.
 - [ ] Food deposit — a way for people to put down a deposit for food.
-- [ ] Partiful capacity sync — admin can paste the Partiful link and analyze a Guest List CSV export for capacity state.
+- [ ] Partiful capacity snapshot — admin can save the Partiful link and analyze a manual Guest List CSV export; true live tracking needs a Partiful API/webhook or a first-party LSD RSVP flow.
