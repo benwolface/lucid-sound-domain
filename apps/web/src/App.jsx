@@ -2560,8 +2560,9 @@ function Landing({
             {PORTAL_START_LABEL} – {PORTAL_END_LABEL}. Please arrive before{" "}
             {PORTAL_FINAL_ARRIVAL_LABEL}.
             <br />
-            To protect the listening experience, there is no entry from
-            8:00–9:00 PM.
+            To protect the listening experience,
+            <br />
+            there is no entry from 8:00–9:00 PM.
           </p>
         </div>
         <div ref={diskRef} className="accretion-disk" />

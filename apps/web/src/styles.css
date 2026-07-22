@@ -2112,11 +2112,11 @@ body {
 
 @media (max-width: 768px) {
   .welcome-wrap {
-    --landing-content-offset-y: 0px;
+    --landing-content-offset-y: clamp(42px, 7svh, 58px);
   }
 
   .landing--has-here .welcome-wrap {
-    --landing-content-offset-y: 0px;
+    --landing-content-offset-y: clamp(18px, 4svh, 36px);
   }
 
   .accretion-disk {
@@ -2132,20 +2132,45 @@ body {
 
   .landing-portal-info {
     bottom: calc(100% + clamp(18px, 3.5svh, 26px));
+    width: min(94vw, 620px);
   }
 
   .landing-portal-title {
-    font-size: clamp(1rem, 5.4vw, 1.45rem);
+    font-size: clamp(0.92rem, 4.8vw, 1.32rem);
+    letter-spacing: 0.1em;
     margin-bottom: 10px;
   }
 
+  .landing-portal-essence {
+    max-width: min(84vw, 320px);
+    font-size: clamp(0.98rem, 4.4vw, 1.12rem);
+    line-height: 1.2;
+    overflow-wrap: normal;
+    text-wrap: balance;
+  }
+
   .landing-portal-label {
-    font-size: clamp(0.42rem, 2.1vw, 0.56rem);
+    font-size: clamp(0.4rem, 1.95vw, 0.54rem);
+    letter-spacing: 0.18em;
     margin-bottom: 8px;
   }
 
   .landing-portal-date {
-    font-size: clamp(1rem, 5.2vw, 1.5rem);
+    max-width: 100%;
+    font-size: clamp(1rem, 4vw, 1.24rem);
+    line-height: 1.05;
+    overflow-wrap: anywhere;
+    text-wrap: balance;
+  }
+
+  .landing-portal-info .home-timing {
+    max-width: min(84vw, 330px);
+    margin: 0 auto;
+    font-size: clamp(0.31rem, 1.28vw, 0.44rem);
+    letter-spacing: 0.06em;
+    line-height: 1.42;
+    overflow-wrap: anywhere;
+    text-wrap: balance;
   }
 
   .waitlist-input-wrap {
