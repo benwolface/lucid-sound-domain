@@ -2091,6 +2091,7 @@ function Landing({
       diskRef.current,
       ringRef.current,
       inputWrapRef.current,
+      welcomeTextRef.current,
       whoTextRef.current,
       portalInfoRef.current,
     ].filter(Boolean);
