@@ -15,6 +15,29 @@ import "./styles.css";
 // ── Dev flag — skip the intro so the circle shows immediately ──
 const DEV_SKIP_INTRO = false;
 
+const PORTAL_TIME_ZONE = "America/Los_Angeles";
+const PORTAL_START_LABEL = "7:00 PM";
+const PORTAL_FINAL_ARRIVAL_LABEL = "7:45 PM";
+const PORTAL_END_LABEL = "10:30 PM";
+const PORTAL_DATE_PENDING_COPY = "next date opening soon";
+const UPCOMING_DATE_PENDING_COPY = "more soon";
+const PUBLIC_PORTAL_LOCATION = "San Francisco, CA";
+const CALENDAR_LOCATION = "San Francisco, CA";
+const CALENDAR_DESCRIPTION =
+  "The next portal opens. Arrival details are shared with confirmed guests. lucidsounddomain.com";
+const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)";
+
+function prefersReducedMotion() {
+  return (
+    typeof window !== "undefined" &&
+    window.matchMedia?.(REDUCED_MOTION_QUERY).matches
+  );
+}
+
+function scrollMotionOptions() {
+  return { behavior: prefersReducedMotion() ? "auto" : "smooth" };
+}
+
 // ── Session persistence ──
 const SESSION_KEY = "lsd_session";
 const SESSION_TTL_MS = 5 * 24 * 60 * 60 * 1000; // 5 days
@@ -220,6 +243,13 @@ function Home({
 
   // Entrance sequence: bg → content → nav bar
   useEffect(() => {
+    if (prefersReducedMotion()) {
+      setBgReady(true);
+      setContentReady(true);
+      setNavReady(true);
+      return;
+    }
+
     const t1 = setTimeout(() => setBgReady(true), 80);
     const t2 = setTimeout(() => setContentReady(true), 1400);
     const t3 = setTimeout(() => setNavReady(true), 2600);
@@ -253,7 +283,9 @@ function Home({
             revealed.add(e.target);
             const kids = Array.from(e.target.querySelectorAll(".j-animate"));
             kids.forEach((child, i) => {
-              child.style.transitionDelay = `${i * 110}ms`;
+              child.style.transitionDelay = prefersReducedMotion()
+                ? "0ms"
+                : `${i * 110}ms`;
             });
             e.target.classList.add("is-visible");
           }
@@ -305,7 +337,7 @@ function Home({
   const scrollToJourney = () =>
     pageRef.current
       ?.querySelector("#j-domain")
-      ?.scrollIntoView({ behavior: "smooth" });
+      ?.scrollIntoView(scrollMotionOptions());
 
   return (
     <div ref={pageRef} className="home-page">
@@ -336,21 +368,23 @@ function Home({
           <p className="home-regulation-title">( Regulation )</p>
           <p className="home-next-label">next portal opening on</p>
           <p className="home-next-date">
-            {nextPortalDate ? fmtPortalDate(nextPortalDate) : "date TBD"}
+            {nextPortalDate
+              ? fmtPortalDate(nextPortalDate)
+              : PORTAL_DATE_PENDING_COPY}
           </p>
-          <p className="home-next-time">7:00 – 10:30p</p>
+          <p className="home-next-time">
+            {PORTAL_START_LABEL} – {PORTAL_END_LABEL}
+          </p>
           {nextPortalGuest && (
             <p className="home-next-guest">w/{nextPortalGuest}</p>
           )}
-          <p className="home-next-address">
-            1340 Turk St Apt 418 · San Francisco CA
-          </p>
+          <p className="home-next-address">{PUBLIC_PORTAL_LOCATION}</p>
           <CalendarButtons nextPortalDate={nextPortalDate} />
           <p className="home-upcoming-title">Upcoming portals</p>
           <p className="home-upcoming-date">
             {upcomingPortalDate
               ? fmtPortalDate(upcomingPortalDate)
-              : "date TBD"}
+              : UPCOMING_DATE_PENDING_COPY}
           </p>
           {upcomingPortalGuest && (
             <p className="home-upcoming-guest">w/{upcomingPortalGuest}</p>
@@ -460,17 +494,21 @@ function Home({
           <section id="j-flow" className="j-section" data-section="flow">
             <h2 className="j-animate j-section-heading">Program</h2>
             <div className="j-animate j-attend-schedule">
-              <p className="j-attend-slot">7:00 PM · Arrival</p>
+              <p className="j-attend-slot">{PORTAL_START_LABEL} · Arrival</p>
               <p className="j-attend-note">
                 Settle into the space, browse the library, and prepare to
                 listen.
               </p>
-              <p className="j-attend-slot">7:45 PM · Final Arrival</p>
+              <p className="j-attend-slot">
+                {PORTAL_FINAL_ARRIVAL_LABEL} · Final Arrival
+              </p>
               <p className="j-attend-note">
                 The listening room is sealed from 8:00-9:00 PM.
               </p>
               <p className="j-attend-slot">
-                8:00 PM · Regulation w/ {artist1Name || "trytab"}
+                {artist1Name
+                  ? `8:00 PM · Regulation w/ ${artist1Name}`
+                  : "8:00 PM · Regulation"}
               </p>
               <p className="j-attend-note">Silent deep listening.</p>
               <p className="j-attend-slot">9:00 PM · Recess</p>
@@ -479,7 +517,9 @@ function Home({
                 bringing dinner or eating beforehand.
               </p>
               <p className="j-attend-slot">
-                9:30 PM · Sensory Ritual w/ {artist2Name || "dotnine"}
+                {artist2Name
+                  ? `9:30 PM · Sensory Ritual w/ ${artist2Name}`
+                  : "9:30 PM · Sensory Ritual"}
               </p>
               <p className="j-attend-note">From stillness into movement.</p>
             </div>
@@ -501,9 +541,11 @@ function Home({
                     <div className="j-artist-photo-placeholder" />
                   )}
                 </div>
-                {artist1Name && (
-                  <p className="j-artist-card-name">{artist1Name}</p>
-                )}
+                <p
+                  className={`j-artist-card-name${artist1Name ? "" : " j-artist-card-name--pending"}`}
+                >
+                  {artist1Name || "selector to be announced"}
+                </p>
                 {artist1Bio && (
                   <p className="j-artist-card-bio">{artist1Bio}</p>
                 )}
@@ -520,9 +562,11 @@ function Home({
                     <div className="j-artist-photo-placeholder" />
                   )}
                 </div>
-                {artist2Name && (
-                  <p className="j-artist-card-name">{artist2Name}</p>
-                )}
+                <p
+                  className={`j-artist-card-name${artist2Name ? "" : " j-artist-card-name--pending"}`}
+                >
+                  {artist2Name || "selector to be announced"}
+                </p>
                 {artist2Bio && (
                   <p className="j-artist-card-bio">{artist2Bio}</p>
                 )}
@@ -651,7 +695,7 @@ function SectionScrollHint({ nextId, containerRef, visible, alwaysShow }) {
   const handleClick = () => {
     containerRef.current
       ?.querySelector(`#${nextId}`)
-      ?.scrollIntoView({ behavior: "smooth" });
+      ?.scrollIntoView(scrollMotionOptions());
   };
   return (
     <button
@@ -792,11 +836,11 @@ function JourneyTimeline({ active, pageRef }) {
           onClick={(e) => {
             e.preventDefault();
             if (s.id === "home") {
-              pageRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+              pageRef.current?.scrollTo({ top: 0, ...scrollMotionOptions() });
             } else {
               pageRef.current
                 ?.querySelector(`#j-${s.id}`)
-                ?.scrollIntoView({ behavior: "smooth" });
+                ?.scrollIntoView(scrollMotionOptions());
             }
           }}
           className={`j-node${s.id === active ? " is-active" : ""}${i < activeIdx ? " is-past" : ""}`}
@@ -829,11 +873,11 @@ function MobileTimeline({ active, pageRef, navReady }) {
           onClick={(e) => {
             e.preventDefault();
             if (s.id === "home") {
-              pageRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+              pageRef.current?.scrollTo({ top: 0, ...scrollMotionOptions() });
             } else {
               pageRef.current
                 ?.querySelector(`#j-${s.id}`)
-                ?.scrollIntoView({ behavior: "smooth" });
+                ?.scrollIntoView(scrollMotionOptions());
             }
           }}
           className={`j-mnode${s.id === active ? " is-active" : ""}${i < activeIdx ? " is-past" : ""}`}
@@ -1281,13 +1325,21 @@ function ProjectorOverlay({ videos, idx, setIdx, onClose }) {
 }
 
 function portalCalDates(isoDate) {
-  if (!isoDate) return null;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(isoDate || "")) return null;
   const [year, month, day] = isoDate.split("-").map(Number);
-  // Event: 7pm–10:30pm PDT (UTC-7) = next calendar day 02:00–05:30 UTC
-  const start = new Date(Date.UTC(year, month - 1, day + 1, 2, 0, 0));
-  const end = new Date(Date.UTC(year, month - 1, day + 1, 5, 30, 0));
-  const fmt = (d) => d.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
-  return { start: fmt(start), end: fmt(end) };
+  const date = `${String(year).padStart(4, "0")}${String(month).padStart(2, "0")}${String(day).padStart(2, "0")}`;
+  return {
+    start: `${date}T190000`,
+    end: `${date}T223000`,
+  };
+}
+
+function escapeIcsText(value) {
+  return String(value)
+    .replace(/\\/g, "\\\\")
+    .replace(/,/g, "\\,")
+    .replace(/;/g, "\\;")
+    .replace(/\n/g, "\\n");
 }
 
 function CalendarButtons({ nextPortalDate }) {
@@ -1297,24 +1349,31 @@ function CalendarButtons({ nextPortalDate }) {
     ? [
         "BEGIN:VCALENDAR",
         "VERSION:2.0",
+        "CALSCALE:GREGORIAN",
+        "METHOD:PUBLISH",
         "PRODID:-//Lucid Sound Domain//EN",
         "BEGIN:VEVENT",
-        `DTSTART:${cal.start}`,
-        `DTEND:${cal.end}`,
-        "SUMMARY:Lucid Sound Domain — Portal Opening",
-        "DESCRIPTION:The next portal opens. lucidsounddomain.com",
-        "LOCATION:1340 Turk St Apt 418\\, San Francisco\\, CA 94115",
+        `DTSTART;TZID=${PORTAL_TIME_ZONE}:${cal.start}`,
+        `DTEND;TZID=${PORTAL_TIME_ZONE}:${cal.end}`,
+        "SUMMARY:Lucid Sound Domain - Portal Opening",
+        `DESCRIPTION:${escapeIcsText(CALENDAR_DESCRIPTION)}`,
+        `LOCATION:${escapeIcsText(CALENDAR_LOCATION)}`,
+        "URL:https://lucidsounddomain.com",
         "END:VEVENT",
         "END:VCALENDAR",
       ].join("\r\n")
     : null;
 
   const googleUrl = cal
-    ? "https://calendar.google.com/calendar/render?action=TEMPLATE" +
-      "&text=Lucid+Sound+Domain+%E2%80%94+Portal+Opening" +
-      `&dates=${cal.start}%2F${cal.end}` +
-      "&details=The+next+portal+opens.+lucidsounddomain.com" +
-      "&location=1340+Turk+St+Apt+418%2C+San+Francisco%2C+CA+94115"
+    ? "https://calendar.google.com/calendar/render?" +
+      new URLSearchParams({
+        action: "TEMPLATE",
+        text: "Lucid Sound Domain - Portal Opening",
+        dates: `${cal.start}/${cal.end}`,
+        details: CALENDAR_DESCRIPTION,
+        location: CALENDAR_LOCATION,
+        ctz: PORTAL_TIME_ZONE,
+      }).toString()
     : null;
 
   if (!cal) return null;
@@ -1398,7 +1457,6 @@ function AppleCalIcon() {
       viewBox="0 0 24 24"
       fill="none"
       aria-hidden="true"
-      py=""
     >
       <rect
         x="3"
@@ -1506,6 +1564,11 @@ function DomainScreen({ onBack }) {
   const timeoutRef = useRef(null);
 
   useEffect(() => {
+    if (prefersReducedMotion()) {
+      setVisible(true);
+      return;
+    }
+
     const t = setTimeout(() => setVisible(true), 80);
     return () => clearTimeout(t);
   }, []);
@@ -1513,6 +1576,11 @@ function DomainScreen({ onBack }) {
   // Start typing after fade-in settles
   useEffect(() => {
     if (!visible) return;
+    if (prefersReducedMotion()) {
+      setDisplayed(DOMAIN_MESSAGE);
+      setShowCursor(false);
+      return;
+    }
 
     function typeNext() {
       if (indexRef.current >= DOMAIN_MESSAGE.length) {
@@ -1904,6 +1972,12 @@ function Landing({ onHome, onDomainScreen, imHereEnabled, nextPortalDate }) {
 
   // ── Power button: full shutdown sequence ──
   function handlePowerPress(referralCode, onComplete = null, isNew = false) {
+    if (prefersReducedMotion()) {
+      if (onComplete) onComplete();
+      else onHome(referralCode, isNew);
+      return;
+    }
+
     // 1 — fade out everything except the circle
     const fadeEls = [
       bgSlideRef.current,
@@ -1997,10 +2071,11 @@ function Landing({ onHome, onDomainScreen, imHereEnabled, nextPortalDate }) {
 
   // ── Intro animation ──
   useEffect(() => {
-    if (DEV_SKIP_INTRO) {
+    if (DEV_SKIP_INTRO || prefersReducedMotion()) {
       if (bgSlideRef.current) bgSlideRef.current.style.opacity = "1";
       if (splashRef.current) splashRef.current.style.opacity = "0";
       if (welcomeRef.current) welcomeRef.current.style.opacity = "1";
+      if (portalInfoRef.current) portalInfoRef.current.style.opacity = "1";
       if (whoTextRef.current) {
         whoTextRef.current.style.opacity = "1";
         whoTextRef.current.style.transform = "translateY(0)";
@@ -2358,10 +2433,13 @@ function Landing({ onHome, onDomainScreen, imHereEnabled, nextPortalDate }) {
           <p className="landing-portal-title">( Regulation )</p>
           <p className="landing-portal-label">next portal opening on</p>
           <p className="landing-portal-date">
-            {nextPortalDate ? fmtPortalDate(nextPortalDate) : "date TBD"}
+            {nextPortalDate
+              ? fmtPortalDate(nextPortalDate)
+              : PORTAL_DATE_PENDING_COPY}
           </p>
           <p className="home-timing">
-            7:00 PM – 10:30 PM. Please arrive before 7:45 PM.
+            {PORTAL_START_LABEL} – {PORTAL_END_LABEL}. Please arrive before{" "}
+            {PORTAL_FINAL_ARRIVAL_LABEL}.
             <br />
             To protect the listening experience, there is no entry from
             8:00–9:00 PM.

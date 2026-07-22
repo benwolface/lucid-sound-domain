@@ -1196,6 +1196,12 @@ body {
   text-align: center;
 }
 
+.j-artist-card-name--pending {
+  color: rgba(255, 255, 255, 0.42);
+  font-style: italic;
+  font-weight: 400;
+}
+
 .j-artist-card-bio {
   font-family: "Excrallik", cursive;
   font-size: clamp(0.8rem, 1.2vw, 1rem);
@@ -2093,11 +2099,54 @@ body {
 /* ── Accessibility ── */
 
 @media (prefers-reduced-motion: reduce) {
+  .home-page {
+    scroll-behavior: auto;
+    scroll-snap-type: none;
+  }
+
+  .home-bg,
+  .home-veil,
+  .home-first-view,
+  .j-timeline-mobile,
+  .welcome-wrap,
+  .waitlist-input-wrap,
+  .domain-screen {
+    transition: none !important;
+  }
+
+  .splash {
+    opacity: 0 !important;
+  }
+
   .splash-word {
-    opacity: 1 !important;
     filter: none !important;
     color: rgba(255, 255, 255, 0.5);
     text-shadow: none;
+  }
+
+  .welcome-line {
+    transition: none !important;
+    transform: scaleX(1) !important;
+  }
+
+  .j-animate,
+  .j-section.is-visible .j-animate {
+    opacity: 1;
+    transform: none;
+    transition: none !important;
+  }
+
+  .accretion-disk,
+  .welcome-ring,
+  .scroll-hint-chevron,
+  .section-chevron,
+  .j-node-ring,
+  .j-mnode-ring,
+  .arrival-btn--here,
+  .domain-screen-glow,
+  .domain-cursor,
+  .reel-spinner {
+    animation: none !important;
   }
 }
 
