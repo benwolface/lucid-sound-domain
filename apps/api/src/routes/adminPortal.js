@@ -270,6 +270,19 @@ const HTML = `<!DOCTYPE html>
     .partiful-help a { color: #aaa; }
     @media (max-width: 540px) {
       .partiful-kpis { grid-template-columns: repeat(2, 1fr); }
+      .bio-input-row { flex-direction: column; }
+      textarea.bio-input {
+        width: 100%;
+        min-height: 240px;
+      }
+      .bio-btn-col {
+        flex-direction: row;
+        width: 100%;
+      }
+      .bio-btn-col .date-save-btn {
+        flex: 1;
+        min-height: 42px;
+      }
     }
     input[type="file"].input-file {
       display: block; color: #888; font-size: 0.82rem;

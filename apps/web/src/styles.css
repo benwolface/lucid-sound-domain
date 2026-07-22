@@ -1982,8 +1982,9 @@ body {
   }
 
   .j-artist-grid {
-    gap: 20px;
+    gap: 18px;
     max-width: 100%;
+    margin-bottom: 24px;
   }
 
   .j-artist-card {
@@ -1992,17 +1993,37 @@ body {
       "photo"
       "name"
       "bio";
-    padding: 12px;
+    gap: 10px;
+    padding: 10px;
+    background: linear-gradient(
+      180deg,
+      rgba(0, 0, 0, 0.34),
+      rgba(0, 0, 0, 0.18)
+    );
+    border-color: rgba(255, 255, 255, 0.12);
+  }
+
+  .j-artist-photo-wrap {
+    width: min(100%, 320px);
+    margin: 0 auto;
   }
 
   .j-artist-card-name {
+    font-size: 1.34rem;
     text-align: center;
-    margin-top: 4px;
+    margin-top: 2px;
   }
 
   .j-artist-card-bio {
     max-width: none;
+    font-size: 1.02rem;
+    line-height: 1.42;
+    color: rgba(255, 255, 255, 0.9);
     text-align: left;
+  }
+
+  .j-artist-card-bio p {
+    margin-bottom: 10px;
   }
 }
 
@@ -2730,14 +2751,33 @@ body {
 
 /* Six nav stops need tighter labels on small phones */
 @media (max-width: 480px) {
+  .j-section {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+
+  .j-artist-card {
+    padding: 9px;
+  }
+
+  .j-artist-card-bio {
+    font-size: 1rem;
+    line-height: 1.44;
+  }
+
   .j-mnode-label {
-    font-size: 0.32rem;
-    letter-spacing: 0.08em;
+    font-size: 0.28rem;
+    letter-spacing: 0.04em;
   }
 
   .j-timeline-mobile {
     padding-left: 8px;
     padding-right: 8px;
+  }
+
+  .j-mnode {
+    flex: 1 1 0;
+    min-width: 0;
   }
 }
 
