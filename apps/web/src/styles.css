@@ -2291,8 +2291,12 @@ body {
 .j-archive-hint {
   font-family: "Cormorant Garamond", serif;
   font-style: italic;
+  font-weight: 700;
   font-size: clamp(0.9rem, 1.5vw, 1.1rem);
-  color: rgba(255, 255, 255, 0.42);
+  color: rgba(255, 255, 255, 0.78);
+  text-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.8),
+    0 0 14px rgba(0, 0, 0, 0.58);
   margin: 0 0 14px 0;
 }
 
