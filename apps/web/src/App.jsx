@@ -613,9 +613,7 @@ function Home({
                 >
                   {artist1Name || "selector to be announced"}
                 </p>
-                {artist1Bio && (
-                  <p className="j-artist-card-bio">{artist1Bio}</p>
-                )}
+                <ArtistBio bio={artist1Bio} />
               </div>
               <div className="j-artist-card">
                 <div className="j-artist-photo-wrap">
@@ -634,9 +632,7 @@ function Home({
                 >
                   {artist2Name || "selector to be announced"}
                 </p>
-                {artist2Bio && (
-                  <p className="j-artist-card-bio">{artist2Bio}</p>
-                )}
+                <ArtistBio bio={artist2Bio} />
               </div>
             </div>
           </section>
@@ -733,6 +729,22 @@ function Home({
           <p className="home-footer-copy">Lucid Sound Domain &copy; 2026</p>
         </footer>
       </div>
+    </div>
+  );
+}
+
+function ArtistBio({ bio }) {
+  if (!bio) return null;
+  const paragraphs = bio
+    .split(/\n{2,}/)
+    .map((paragraph) => paragraph.trim())
+    .filter(Boolean);
+
+  return (
+    <div className="j-artist-card-bio">
+      {paragraphs.map((paragraph, index) => (
+        <p key={`${paragraph.slice(0, 24)}-${index}`}>{paragraph}</p>
+      ))}
     </div>
   );
 }

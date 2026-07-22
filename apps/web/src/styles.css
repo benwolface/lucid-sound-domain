@@ -1254,24 +1254,41 @@ body {
 }
 
 .j-artist-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: clamp(20px, 4vw, 48px);
-  max-width: 680px;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(24px, 4vw, 36px);
+  width: min(100%, 900px);
+  max-width: 900px;
   margin: 0 0 40px 0;
 }
 
 .j-artist-card {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: minmax(220px, 320px) minmax(0, 1fr);
+  grid-template-areas:
+    "photo name"
+    "photo bio";
+  gap: 10px clamp(24px, 4vw, 42px);
+  align-items: start;
+  padding: clamp(12px, 2vw, 18px);
+  background: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.18),
+    rgba(0, 0, 0, 0.08)
+  );
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
 }
 
 .j-artist-photo-wrap {
+  grid-area: photo;
   aspect-ratio: 1 / 1;
   width: 100%;
   overflow: hidden;
   border-radius: 4px;
-  margin-bottom: 14px;
+  margin-bottom: 0;
   background: rgba(255, 255, 255, 0.05);
 }
 
@@ -1290,13 +1307,18 @@ body {
 }
 
 .j-artist-card-name {
+  grid-area: name;
   font-family: "Cormorant Garamond", Georgia, serif;
-  font-size: clamp(1.18rem, 1.75vw, 1.46rem);
+  font-size: clamp(1.36rem, 2vw, 1.72rem);
   font-weight: 700;
   color: #fff;
   letter-spacing: 0;
-  margin: 0 0 8px 0;
-  text-align: center;
+  margin: 0;
+  text-align: left;
+  line-height: 1.05;
+  text-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.72),
+    0 0 16px rgba(0, 0, 0, 0.36);
 }
 
 .j-artist-card-name--pending {
@@ -1306,14 +1328,26 @@ body {
 }
 
 .j-artist-card-bio {
+  grid-area: bio;
   font-family: "Cormorant Garamond", Georgia, serif;
-  font-size: clamp(1rem, 1.35vw, 1.16rem);
+  font-size: clamp(1rem, 1.28vw, 1.16rem);
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.86);
-  line-height: 1.42;
+  color: rgba(255, 255, 255, 0.88);
+  line-height: 1.38;
   letter-spacing: 0;
   margin: 0;
-  white-space: pre-line;
+  max-width: 540px;
+  text-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.72),
+    0 0 16px rgba(0, 0, 0, 0.36);
+}
+
+.j-artist-card-bio p {
+  margin: 0 0 12px 0;
+}
+
+.j-artist-card-bio p:last-child {
+  margin-bottom: 0;
 }
 
 .j-inline-link {
@@ -1948,8 +1982,27 @@ body {
   }
 
   .j-artist-grid {
-    gap: 14px;
+    gap: 20px;
     max-width: 100%;
+  }
+
+  .j-artist-card {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "photo"
+      "name"
+      "bio";
+    padding: 12px;
+  }
+
+  .j-artist-card-name {
+    text-align: center;
+    margin-top: 4px;
+  }
+
+  .j-artist-card-bio {
+    max-width: none;
+    text-align: left;
   }
 }
 
