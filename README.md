@@ -59,6 +59,15 @@ There's no separate staging environment for this project — Preview and Product
 
 For the frontend to talk to the API, ensure `VITE_API_BASE_URL` is set appropriately (for local we proxy `/api` to `apps/api`).
 
+### Deploy cache busting
+
+The PWA shell must not stay stale after production deploys. Vercel serves
+`/`, `/index.html`, `/sw.js`, `/registerSW.js`, `/manifest.webmanifest`, and
+`/version.json` with `Cache-Control: no-store`. The web app emits
+`version.json` at build time and checks it while the site is open; if a newer
+build is live, it updates the service worker, clears the old Workbox app-shell
+precache, and reloads.
+
 ## Config
 
 - [x] `RESEND_API_KEY` set in Vercel (Preview scoped to `staging-branch` +

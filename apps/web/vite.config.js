@@ -2,9 +2,32 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { VitePWA } from "vite-plugin-pwa";
 
+const buildId =
+  process.env.VERCEL_GIT_COMMIT_SHA ||
+  process.env.VERCEL_DEPLOYMENT_ID ||
+  `local-${Date.now()}`;
+const builtAt = new Date().toISOString();
+
+function deployVersionPlugin() {
+  return {
+    name: "deploy-version",
+    generateBundle() {
+      this.emitFile({
+        type: "asset",
+        fileName: "version.json",
+        source: JSON.stringify({ buildId, builtAt }, null, 2)
+      });
+    }
+  };
+}
+
 export default defineConfig({
+  define: {
+    __LSD_BUILD_ID__: JSON.stringify(buildId)
+  },
   plugins: [
     react(),
+    deployVersionPlugin(),
     VitePWA({
       registerType: "autoUpdate",
       includeAssets: ["favicon.svg"],
@@ -57,4 +80,3 @@ export default defineConfig({
     }
   }
 });
-
