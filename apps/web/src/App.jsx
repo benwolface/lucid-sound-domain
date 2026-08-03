@@ -578,10 +578,9 @@ function Home({
                   : "8:00 PM · Regulation"}
               </p>
               <p className="j-attend-note">Silent deep listening.</p>
-              <p className="j-attend-slot">9:00 PM · Recess</p>
+              <p className="j-attend-slot">9:00 PM · Break</p>
               <p className="j-attend-note">
-                Tea, snacks, and time to nourish yourself. I recommend
-                bringing dinner or eating beforehand.
+                Tea, snacks, and time to nourish yourself.
               </p>
               <p className="j-attend-slot">
                 {artist2Name
