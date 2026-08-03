@@ -1069,8 +1069,8 @@ function scatterRand(i, salt) {
 function ArchiveSection() {
   const [photos, setPhotos] = useState([]);
   const [videos, setVideos] = useState([]);
-  const [reelIdx, setReelIdx] = useState(null);
   const [zoomPhoto, setZoomPhoto] = useState(null);
+  const [zoomVideo, setZoomVideo] = useState(null);
 
   useEffect(() => {
     apiGetArchive()
@@ -1082,13 +1082,16 @@ function ArchiveSection() {
   }, []);
 
   useEffect(() => {
-    if (!zoomPhoto) return;
+    if (!zoomPhoto && !zoomVideo) return;
     const onKey = (e) => {
-      if (e.key === "Escape") setZoomPhoto(null);
+      if (e.key === "Escape") {
+        setZoomPhoto(null);
+        setZoomVideo(null);
+      }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [zoomPhoto]);
+  }, [zoomPhoto, zoomVideo]);
 
   if (!photos.length && !videos.length) {
     return (
@@ -1111,33 +1114,36 @@ function ArchiveSection() {
       {videos.length > 0 && (
         <>
           <p className="j-animate j-archive-hint j-archive-hint--reels">
-            recovered reels — hold one up to the light
+            recovered reels — moments in motion
           </p>
-          <div className="j-animate reel-shelf">
-            {videos.map((v, i) => (
-              <button
-                key={v.id}
-                type="button"
-                className="reel"
-                onClick={() => setReelIdx(i)}
-                aria-label={`play reel ${i + 1}`}
-              >
-                <ReelIcon />
-                <span className="reel-label">
-                  Regulation {String(i + 1).padStart(2, "0")}
-                </span>
-              </button>
-            ))}
+          <div className="j-animate archive-video-grid">
+            {videos.map((v, i) => {
+              const label =
+                v.caption || `Regulation ${String(i + 1).padStart(2, "0")}`;
+              return (
+                <button
+                  key={v.id}
+                  type="button"
+                  className="archive-video-card"
+                  onClick={() => setZoomVideo(v)}
+                  aria-label={`play ${label}`}
+                >
+                  <div className="archive-video-thumb">
+                    {v.type === "youtube" ? (
+                      <img src={v.thumb} alt="" draggable={false} />
+                    ) : (
+                      <video src={v.url} preload="metadata" muted playsInline />
+                    )}
+                    <span className="archive-video-play" aria-hidden="true">
+                      ▶
+                    </span>
+                  </div>
+                  <span className="archive-video-caption">{label}</span>
+                </button>
+              );
+            })}
           </div>
         </>
-      )}
-      {reelIdx !== null && (
-        <ProjectorOverlay
-          videos={videos}
-          idx={reelIdx}
-          setIdx={setReelIdx}
-          onClose={() => setReelIdx(null)}
-        />
       )}
       {zoomPhoto && (
         <div className="polaroid-lightbox" onClick={() => setZoomPhoto(null)}>
@@ -1159,6 +1165,44 @@ function ArchiveSection() {
             className="projector-close"
             onClick={() => setZoomPhoto(null)}
             aria-label="put the photo back"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+      {zoomVideo && (
+        <div className="polaroid-lightbox" onClick={() => setZoomVideo(null)}>
+          <div
+            className="archive-video-zoom"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {zoomVideo.type === "youtube" ? (
+              <iframe
+                src={`${zoomVideo.url}?autoplay=1&rel=0`}
+                title={zoomVideo.caption || "archive video"}
+                allow="autoplay; encrypted-media; fullscreen"
+                allowFullScreen
+              />
+            ) : (
+              <video
+                src={zoomVideo.url}
+                controls
+                autoPlay
+                playsInline
+                preload="metadata"
+              />
+            )}
+            {zoomVideo.caption && (
+              <span className="archive-video-zoom-caption">
+                {zoomVideo.caption}
+              </span>
+            )}
+          </div>
+          <button
+            type="button"
+            className="projector-close"
+            onClick={() => setZoomVideo(null)}
+            aria-label="close video"
           >
             ✕
           </button>
@@ -1261,138 +1305,6 @@ function PolaroidPile({ photos, onPhotoClick }) {
           </div>
         );
       })}
-    </div>
-  );
-}
-
-function ReelIcon() {
-  const holes = [...Array(6)].map((_, i) => {
-    const a = (i / 6) * Math.PI * 2 - Math.PI / 2;
-    return (
-      <circle
-        key={i}
-        cx={50 + Math.cos(a) * 27}
-        cy={50 + Math.sin(a) * 27}
-        r="10"
-        fill="#0a0a0a"
-        stroke="#3d3d3d"
-        strokeWidth="1.2"
-      />
-    );
-  });
-  const bolts = [...Array(6)].map((_, i) => {
-    const a = ((i + 0.5) / 6) * Math.PI * 2 - Math.PI / 2;
-    return (
-      <circle
-        key={i}
-        cx={50 + Math.cos(a) * 43.5}
-        cy={50 + Math.sin(a) * 43.5}
-        r="1.7"
-        fill="#0d0d0d"
-        stroke="#4a4a4a"
-        strokeWidth="0.6"
-      />
-    );
-  });
-  return (
-    <svg viewBox="0 0 100 100" aria-hidden="true">
-      <defs>
-        <radialGradient id="reel-metal" cx="38%" cy="32%" r="80%">
-          <stop offset="0%" stopColor="#3d3d3d" />
-          <stop offset="55%" stopColor="#262626" />
-          <stop offset="100%" stopColor="#161616" />
-        </radialGradient>
-      </defs>
-      {/* Everything but the play glyph spins on hover */}
-      <g className="reel-spinner">
-        <circle cx="50" cy="50" r="48" fill="#101010" stroke="#4a4a4a" strokeWidth="2" />
-        <circle cx="50" cy="50" r="44.5" fill="url(#reel-metal)" />
-        {/* wound film between the flanges */}
-        <circle cx="50" cy="50" r="27" fill="none" stroke="#121212" strokeWidth="21" opacity="0.55" />
-        {holes}
-        {bolts}
-        <circle cx="50" cy="50" r="12.5" fill="#0a0a0a" stroke="#4a4a4a" strokeWidth="1.6" />
-      </g>
-      <polygon className="reel-play" points="46.5,43.5 46.5,56.5 58,50" fill="currentColor" />
-    </svg>
-  );
-}
-
-function ProjectorOverlay({ videos, idx, setIdx, onClose }) {
-  useEffect(() => {
-    const onKey = (e) => {
-      if (e.key === "Escape") onClose();
-      if (e.key === "ArrowLeft")
-        setIdx((i) => (i - 1 + videos.length) % videos.length);
-      if (e.key === "ArrowRight") setIdx((i) => (i + 1) % videos.length);
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [videos.length, setIdx, onClose]);
-
-  const v = videos[idx];
-  if (!v) return null;
-
-  return (
-    <div className="projector-overlay" onClick={onClose}>
-      <div className="projector-beam" />
-      <div className="projector-stage" onClick={(e) => e.stopPropagation()}>
-        <div className="filmstrip">
-          <div className="filmstrip-holes" />
-          {v.type === "youtube" ? (
-            <iframe
-              key={v.id}
-              className="filmstrip-video filmstrip-iframe"
-              src={`${v.url}?autoplay=1&rel=0`}
-              title={`archive reel ${idx + 1}`}
-              allow="autoplay; encrypted-media; fullscreen"
-              allowFullScreen
-            />
-          ) : (
-            <video
-              key={v.id}
-              className="filmstrip-video"
-              src={v.url}
-              autoPlay
-              loop
-              playsInline
-              controls
-              preload="metadata"
-            />
-          )}
-          <div className="filmstrip-holes" />
-        </div>
-        <div className="projector-controls">
-          <button
-            type="button"
-            className="projector-arrow"
-            onClick={() => setIdx((i) => (i - 1 + videos.length) % videos.length)}
-            aria-label="previous reel"
-          >
-            ‹
-          </button>
-          <span className="projector-counter">
-            Regulation {String(idx + 1).padStart(2, "0")} /{" "}
-            {String(videos.length).padStart(2, "0")}
-          </span>
-          <button
-            type="button"
-            className="projector-arrow"
-            onClick={() => setIdx((i) => (i + 1) % videos.length)}
-            aria-label="next reel"
-          >
-            ›
-          </button>
-        </div>
-      </div>
-      <button
-        type="button"
-        className="projector-close"
-        onClick={onClose}
-        aria-label="close projector"
-      >
-        ✕
-      </button>
     </div>
   );
 }

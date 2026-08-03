@@ -484,7 +484,7 @@ body {
   overflow-x: hidden;
   scroll-behavior: smooth;
   background: #000;
-  scroll-snap-type: y mandatory;
+  scroll-snap-type: y proximity;
   scrollbar-gutter: stable;
 }
 
@@ -2391,13 +2391,21 @@ body {
   .j-mnode-ring,
   .arrival-btn--here,
   .domain-screen-glow,
-  .domain-cursor,
-  .reel-spinner {
+  .domain-cursor {
     animation: none !important;
   }
 }
 
 /* ── Archive: time capsule ── */
+
+/* This section grows taller than the viewport once photos + videos are
+   loaded. scroll-snap-stop: always (set globally on .j-section) forces
+   Safari to re-snap to the section's top edge on every wheel tick, which
+   makes a tall section feel stuck/unscrollable — drop it back to normal
+   here so the browser only snaps at rest, not on every scroll input. */
+#j-archive.j-section {
+  scroll-snap-stop: normal;
+}
 
 .j-archive-empty {
   font-family: "Cormorant Garamond", serif;
@@ -2481,194 +2489,86 @@ body {
   text-overflow: ellipsis;
 }
 
-/* Reel shelf */
-.reel-shelf {
-  display: flex;
-  gap: clamp(22px, 4.5vw, 48px);
-  justify-content: center;
-  align-items: flex-end;
-  flex-wrap: wrap;
+/* Archive video grid — cropped preview cards, tap to pull one into the light */
+.archive-video-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: clamp(16px, 3vw, 24px);
 }
 
-.reel {
-  background: none;
-  border: none;
+.archive-video-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 10px;
+  font: inherit;
+  color: inherit;
+  text-align: left;
   cursor: pointer;
   display: flex;
   flex-direction: column;
-  align-items: center;
   gap: 10px;
-  padding: 6px;
-  transition: transform 0.35s ease;
+  transition:
+    border-color 0.3s ease,
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
 }
 
-.reel:hover,
-.reel:focus-visible {
-  transform: translateY(-4px);
+.archive-video-card:hover,
+.archive-video-card:focus-visible {
+  border-color: rgba(143, 239, 74, 0.35);
+  transform: translateY(-3px);
+  box-shadow:
+    0 14px 32px rgba(0, 0, 0, 0.45),
+    0 0 22px rgba(255, 140, 10, 0.12);
 }
 
-.reel svg {
-  width: clamp(72px, 10vw, 104px);
-  height: auto;
-  color: rgba(255, 255, 255, 0.45);
-  transition: filter 0.3s ease, color 0.3s ease;
-  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.5));
+.archive-video-thumb {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #050505;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.04) inset;
 }
 
-.reel-spinner {
-  transform-origin: center;
-  transform-box: fill-box;
+.archive-video-thumb img,
+.archive-video-thumb video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  pointer-events: none;
 }
 
-.reel:hover svg,
-.reel:focus-visible svg {
+.archive-video-play {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  color: rgba(255, 255, 255, 0.85);
+  background: rgba(0, 0, 0, 0.22);
+  transition: color 0.3s ease, background 0.3s ease;
+}
+
+.archive-video-card:hover .archive-video-play,
+.archive-video-card:focus-visible .archive-video-play {
   color: #8fef4a;
-  filter: drop-shadow(0 6px 16px rgba(0, 0, 0, 0.6))
-    drop-shadow(0 0 16px rgba(255, 140, 10, 0.38));
+  background: rgba(0, 0, 0, 0.08);
 }
 
-.reel:hover .reel-spinner,
-.reel:focus-visible .reel-spinner {
-  animation: reel-spin 3.2s linear infinite;
-}
-
-@keyframes reel-spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-/* Play glyph in the hub — always faintly there so it reads as clickable,
-   ignites on hover while the reel turns around it */
-.reel-play {
-  opacity: 0.55;
-  transition: opacity 0.3s ease;
-}
-
-.reel:hover .reel-play,
-.reel:focus-visible .reel-play {
-  opacity: 1;
-}
-
-.reel-label {
+.archive-video-caption {
   font-family: "Akira Expanded", sans-serif;
   font-size: 0.5rem;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.45);
-  transition: color 0.3s ease;
-}
-
-.reel:hover .reel-label,
-.reel:focus-visible .reel-label {
-  color: #8fef4a;
-}
-
-/* Projector overlay — the light goes through the reel */
-.projector-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 3000;
-  background: rgba(0, 0, 0, 0.95);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-  animation: projector-dim 0.55s ease both;
-}
-
-@keyframes projector-dim {
-  from { background: rgba(0, 0, 0, 0); }
-  to { background: rgba(0, 0, 0, 0.95); }
-}
-
-.projector-beam {
-  position: absolute;
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: min(94vw, 940px);
-  height: 56vh;
-  clip-path: polygon(47.5% 0, 52.5% 0, 100% 100%, 0 100%);
-  background: linear-gradient(
-    to bottom,
-    rgba(255, 250, 228, 0.17),
-    rgba(255, 250, 228, 0)
-  );
-  pointer-events: none;
-  animation: beam-flicker 3.4s ease-in-out infinite;
-}
-
-@keyframes beam-flicker {
-  0%, 100% { opacity: 0.85; }
-  42% { opacity: 1; }
-  55% { opacity: 0.68; }
-  71% { opacity: 0.94; }
-}
-
-.projector-stage {
-  position: relative;
-  z-index: 1;
-  width: min(92vw, 760px);
-}
-
-.filmstrip {
-  background: #050505;
-  border-radius: 6px;
-  box-shadow: 0 0 70px rgba(255, 250, 228, 0.09);
-  overflow: hidden;
-}
-
-.filmstrip-holes {
-  height: 26px;
-  background-image: radial-gradient(
-    rgba(245, 240, 226, 0.85) 26%,
-    transparent 34%
-  );
-  background-size: 34px 13px;
-  background-repeat: repeat-x;
-  background-position: center;
-}
-
-.filmstrip-video {
-  display: block;
-  width: 100%;
-  max-height: 60vh;
-  background: #000;
-}
-
-.projector-controls {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 26px;
-  margin-top: 20px;
-}
-
-.projector-arrow {
-  background: none;
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  color: rgba(255, 255, 255, 0.8);
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  font-size: 1.5rem;
-  line-height: 1;
-  cursor: pointer;
-  transition: border-color 0.2s ease, color 0.2s ease;
-}
-
-.projector-arrow:hover {
-  border-color: #8fef4a;
-  color: #8fef4a;
-}
-
-.projector-counter {
-  font-family: "Akira Expanded", sans-serif;
-  font-size: 0.55rem;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(255, 255, 255, 0.55);
+  padding: 0 2px;
 }
 
 .projector-close {
@@ -2734,6 +2634,43 @@ body {
   white-space: normal;
 }
 
+/* Video lightbox — same "hold it up to the light" pattern as the photos,
+   sized to each video's own aspect ratio instead of a fixed frame so
+   portrait clips don't get pillarboxed inside a landscape box. */
+.archive-video-zoom {
+  position: relative;
+  width: min(90vw, 640px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  animation: polaroid-lift 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.archive-video-zoom iframe,
+.archive-video-zoom video {
+  width: 100%;
+  max-height: 78vh;
+  height: auto;
+  border: none;
+  border-radius: 6px;
+  background: #000;
+  display: block;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.8);
+}
+
+.archive-video-zoom iframe {
+  aspect-ratio: 16 / 9;
+}
+
+.archive-video-zoom-caption {
+  font-family: "Cormorant Garamond", serif;
+  font-style: italic;
+  font-size: 1.2rem;
+  color: rgba(255, 255, 255, 0.85);
+  text-align: center;
+}
+
 /* ── Archive on phones ── */
 @media (max-width: 768px) {
   .polaroid {
@@ -2760,17 +2697,9 @@ body {
     bottom: 14px;
   }
 
-  .reel svg {
-    width: 66px;
-  }
-
-  .filmstrip-holes {
-    height: 20px;
-    background-size: 26px 10px;
-  }
-
-  .projector-controls {
-    gap: 18px;
+  .archive-video-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
   }
 }
 
@@ -2923,7 +2852,3 @@ body {
   }
 }
 
-.filmstrip-iframe {
-  aspect-ratio: 16 / 9;
-  border: 0;
-}
