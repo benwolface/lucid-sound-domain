@@ -34,6 +34,18 @@
       transition: border-color 0.15s;
     }
     .input:focus { border-color: #555; }
+    .textarea-bio {
+      width: 100%;
+      min-height: 120px;
+      max-height: 280px;
+      overflow-y: auto;
+      resize: vertical;
+      line-height: 1.6;
+      font-family: inherit;
+      white-space: pre-wrap;
+    }
+    .date-input-row-bio { align-items: flex-start; }
+    .date-input-row-bio .date-save-btn { margin-top: 2px; }
     .btn {
       display: inline-flex; align-items: center; justify-content: center;
       padding: 11px 20px;
@@ -340,8 +352,8 @@
 
       <div class="date-row">
         <div class="date-label">ARTIST 1 BIO</div>
-        <div class="date-input-row">
-          <input type="text" id="artist1-bio" class="input" placeholder="one-line bio" />
+        <div class="date-input-row date-input-row-bio">
+          <textarea id="artist1-bio" class="input textarea-bio" placeholder="artist bio"></textarea>
           <button class="date-save-btn" id="artist1-bio-save" onclick="saveArtistField('artist1Bio', 'artist1-bio', 'artist1-bio-save')">Save</button>
         </div>
       </div>
@@ -358,8 +370,8 @@
 
       <div class="date-row">
         <div class="date-label">ARTIST 2 BIO</div>
-        <div class="date-input-row">
-          <input type="text" id="artist2-bio" class="input" placeholder="one-line bio" />
+        <div class="date-input-row date-input-row-bio">
+          <textarea id="artist2-bio" class="input textarea-bio" placeholder="artist bio"></textarea>
           <button class="date-save-btn" id="artist2-bio-save" onclick="saveArtistField('artist2Bio', 'artist2-bio', 'artist2-bio-save')">Save</button>
         </div>
       </div>
