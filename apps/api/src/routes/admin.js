@@ -316,11 +316,14 @@ function adminRouter() {
     const mimeType = match[1];
     const buffer = Buffer.from(match[2], "base64");
     const ext = mimeType.split("/")[1]?.replace("jpeg", "jpg") || "jpg";
-    const filename = `artist-${artist}.${ext}`;
+    // Versioned filename (not a fixed upsert target) so each upload gets its
+    // own URL — otherwise the CDN and viewers' browsers keep the previous
+    // photo's bytes cached indefinitely under the old, reused URL.
+    const filename = `artist-${artist}-${Date.now()}.${ext}`;
 
     const { error: uploadError } = await supabase.storage
       .from("artist-photos")
-      .upload(filename, buffer, { contentType: mimeType, upsert: true });
+      .upload(filename, buffer, { contentType: mimeType });
 
     if (uploadError) {
       console.error("[admin/upload-artist-photo]", uploadError);
