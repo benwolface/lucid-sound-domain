@@ -155,7 +155,7 @@ body {
   /* Center within the safe area (accounts for status bar + home indicator in standalone PWA) */
   top: calc(var(--sat) + (100% - var(--sat) - var(--sab)) / 2);
   left: 50%;
-  --landing-content-offset-y: 35px;
+  --landing-content-offset-y: 72px;
   transform: translate(-50%, calc(-50% + var(--landing-content-offset-y)));
   z-index: 3;
   display: flex;
@@ -164,7 +164,7 @@ body {
 }
 
 .landing--has-here .welcome-wrap {
-  --landing-content-offset-y: 35px;
+  --landing-content-offset-y: 72px;
 }
 
 /* Accretion disk — flat rotating ellipse of hot glowing gas */
