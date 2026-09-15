@@ -1635,9 +1635,12 @@ function adminPortalRouter() {
     // Injected at request time — env vars aren't loaded yet when this module's
     // template literal is evaluated (dotenv.config runs after requires).
     res.send(
-      HTML.replace("__SUPABASE_URL__", process.env.SUPABASE_URL || "").replace(
+      HTML.replace(
+        "__SUPABASE_URL__",
+        (process.env.SUPABASE_URL || "").trim()
+      ).replace(
         "__SUPABASE_ANON_KEY__",
-        process.env.SUPABASE_ANON_KEY || ""
+        (process.env.SUPABASE_ANON_KEY || "").trim()
       )
     );
   });
