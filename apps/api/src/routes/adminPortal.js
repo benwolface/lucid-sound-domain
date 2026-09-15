@@ -582,13 +582,12 @@ const HTML = `<!DOCTYPE html>
       <div class="date-row">
         <div class="date-label">ARTIST 1 BIO</div>
         <div class="bio-input-row">
-          <textarea id="artist1-bio" class="input bio-input" placeholder="Paragraph one...&#10;&#10;Paragraph two..." oninput="autosaveField('artist1Bio', 'artist1-bio', 'artist1-bio-status')" onblur="saveFieldNow('artist1Bio', 'artist1-bio', 'artist1-bio-status')"></textarea>
+          <textarea id="artist1-bio" class="input bio-input" placeholder="Line one...&#10;Line two..." oninput="autosaveField('artist1Bio', 'artist1-bio', 'artist1-bio-status')" onblur="saveFieldNow('artist1Bio', 'artist1-bio', 'artist1-bio-status')"></textarea>
           <div class="bio-btn-col">
-            <button class="date-save-btn" onclick="insertParagraphBreak('artist1-bio', 'artist1Bio', 'artist1-bio-status')">Paragraph break</button>
             <button class="date-save-btn btn-clear" onclick="clearArtistField('artist1Bio', 'artist1-bio')">Clear</button>
           </div>
         </div>
-        <div class="bio-help">Use a blank line between paragraphs. Those paragraph breaks render on the public site.</div>
+        <div class="bio-help">Each new line becomes its own paragraph on the public site.</div>
         <div class="date-preview" id="artist1-bio-status"></div>
       </div>
 
@@ -618,13 +617,12 @@ const HTML = `<!DOCTYPE html>
       <div class="date-row">
         <div class="date-label">ARTIST 2 BIO</div>
         <div class="bio-input-row">
-          <textarea id="artist2-bio" class="input bio-input" placeholder="Paragraph one...&#10;&#10;Paragraph two..." oninput="autosaveField('artist2Bio', 'artist2-bio', 'artist2-bio-status')" onblur="saveFieldNow('artist2Bio', 'artist2-bio', 'artist2-bio-status')"></textarea>
+          <textarea id="artist2-bio" class="input bio-input" placeholder="Line one...&#10;Line two..." oninput="autosaveField('artist2Bio', 'artist2-bio', 'artist2-bio-status')" onblur="saveFieldNow('artist2Bio', 'artist2-bio', 'artist2-bio-status')"></textarea>
           <div class="bio-btn-col">
-            <button class="date-save-btn" onclick="insertParagraphBreak('artist2-bio', 'artist2Bio', 'artist2-bio-status')">Paragraph break</button>
             <button class="date-save-btn btn-clear" onclick="clearArtistField('artist2Bio', 'artist2-bio')">Clear</button>
           </div>
         </div>
-        <div class="bio-help">Use a blank line between paragraphs. Those paragraph breaks render on the public site.</div>
+        <div class="bio-help">Each new line becomes its own paragraph on the public site.</div>
         <div class="date-preview" id="artist2-bio-status"></div>
       </div>
     </div>
@@ -1340,21 +1338,6 @@ const HTML = `<!DOCTYPE html>
   function saveFieldNow(key, inputId, statusId) {
     clearTimeout(autosaveTimers[inputId]);
     saveArtistField(key, inputId, statusId);
-  }
-
-  function insertParagraphBreak(inputId, key, statusId) {
-    const input = document.getElementById(inputId);
-    if (!input) return;
-    const start = input.selectionStart ?? input.value.length;
-    const end = input.selectionEnd ?? input.value.length;
-    const before = input.value.slice(0, start).replace(/[ \\t]*$/, "");
-    const after = input.value.slice(end).replace(/^[ \\t]*/, "");
-    const insert = before.endsWith("\\n\\n") || !before ? "" : "\\n\\n";
-    input.value = before + insert + after;
-    const nextCursor = before.length + insert.length;
-    input.focus();
-    input.setSelectionRange(nextCursor, nextCursor);
-    autosaveField(key, inputId, statusId, 250);
   }
 
   async function saveArtistField(key, inputId, statusId) {

@@ -735,7 +735,7 @@ function Home({
 function ArtistBio({ bio }) {
   if (!bio) return null;
   const paragraphs = bio
-    .split(/\n{2,}/)
+    .split(/\n+/)
     .map((paragraph) => paragraph.trim())
     .filter(Boolean);
 
