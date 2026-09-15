@@ -2087,11 +2087,36 @@ function Landing({
     setTimeout(() => (onComplete ? onComplete() : onHome(referralCode, isNew)), 5200);
   }
 
+  // ── Dock the splash logo in its post-intro top position instead of hiding it ──
+  function dockSplashLogo() {
+    const splashEl = splashRef.current;
+    if (!splashEl) return;
+    splashEl.style.transform = "";
+    const LOGO_SCALE = 0.2;
+    const sat =
+      parseFloat(
+        getComputedStyle(document.documentElement).getPropertyValue("--sat"),
+      ) || 0;
+    const LOGO_TOP_PX = 4 + sat;
+    const rect = splashEl.getBoundingClientRect();
+    const targetTY =
+      LOGO_TOP_PX +
+      (rect.height * LOGO_SCALE) / 2 -
+      (rect.top + rect.height / 2);
+    splashEl.style.opacity = "1";
+    splashEl.style.transform = `translateY(${targetTY}px) scale(${LOGO_SCALE})`;
+    document.querySelectorAll(".splash-word").forEach((w) => {
+      w.style.opacity = "1";
+      w.style.filter = "none";
+      w.classList.add("no-grid");
+    });
+  }
+
   // ── Intro animation ──
   useEffect(() => {
     if (DEV_SKIP_INTRO || prefersReducedMotion()) {
       if (bgSlideRef.current) bgSlideRef.current.style.opacity = "1";
-      if (splashRef.current) splashRef.current.style.opacity = "0";
+      dockSplashLogo();
       if (welcomeRef.current) welcomeRef.current.style.opacity = "1";
       if (portalInfoRef.current) portalInfoRef.current.style.opacity = "1";
       if (whoTextRef.current) {
@@ -2352,15 +2377,11 @@ function Landing({
       }
       words.forEach((w) => {
         w.style.transition = "opacity 0.25s ease, filter 0.25s ease";
-        w.style.opacity = "0";
-        w.style.filter = "none";
-        w.classList.remove("no-grid");
       });
       if (splashRef.current) {
-        splashRef.current.style.transition = "opacity 0.25s ease";
-        splashRef.current.style.opacity = "0";
-        splashRef.current.style.transform = "";
+        splashRef.current.style.transition = "opacity 0.25s ease, transform 0.35s ease";
       }
+      dockSplashLogo();
       if (slide) {
         slide.style.transition = "opacity 0.3s ease";
         slide.style.opacity = "1";
