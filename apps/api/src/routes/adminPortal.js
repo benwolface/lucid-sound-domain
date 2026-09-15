@@ -159,7 +159,7 @@ const HTML = `<!DOCTYPE html>
     .photo-preview {
       width: 72px; height: 72px; border-radius: 6px; object-fit: cover;
       border: 1px solid #2a2a2a; flex-shrink: 0; background: #1a1a1a;
-      display: none;
+      display: none; cursor: pointer;
     }
     .photo-placeholder {
       width: 72px; height: 72px; border-radius: 6px; border: 1px dashed #333;
@@ -169,6 +169,37 @@ const HTML = `<!DOCTYPE html>
     .photo-upload-col { display: flex; flex-direction: column; gap: 6px; flex: 1; }
     .photo-status { font-size: 0.78rem; color: #555; min-height: 1em; }
     .photo-status.error { color: #f87171; }
+
+    /* PHOTO CROP MODAL */
+    .crop-overlay {
+      display: none;
+      position: fixed; inset: 0; z-index: 100;
+      background: rgba(0,0,0,0.75);
+      align-items: center; justify-content: center;
+      padding: 24px;
+    }
+    .crop-overlay.open { display: flex; }
+    .crop-card {
+      background: #111; border: 1px solid #2a2a2a; border-radius: 12px;
+      padding: 20px; width: 100%; max-width: 380px;
+      display: flex; flex-direction: column; gap: 14px;
+    }
+    .crop-title { font-size: 0.9rem; font-weight: 600; }
+    .crop-viewport {
+      width: 100%; aspect-ratio: 1 / 1; border-radius: 8px;
+      overflow: hidden; position: relative; background: #000;
+      cursor: grab; touch-action: none;
+    }
+    .crop-viewport.dragging { cursor: grabbing; }
+    .crop-viewport img {
+      position: absolute; top: 0; left: 0;
+      max-width: none; user-select: none; -webkit-user-drag: none;
+    }
+    .crop-zoom-row { display: flex; align-items: center; gap: 10px; font-size: 0.8rem; color: #888; }
+    .crop-zoom-row input[type="range"] { flex: 1; }
+    .crop-hint { font-size: 0.78rem; color: #666; }
+    .crop-actions { display: flex; gap: 10px; }
+    .crop-actions .btn { flex: 1; }
 
     /* ARCHIVE */
     .archive-grid {
@@ -562,9 +593,9 @@ const HTML = `<!DOCTYPE html>
         <div class="date-label">ARTIST 1 PHOTO</div>
         <div class="photo-upload-row">
           <div class="photo-placeholder" id="artist1-photo-placeholder">＋</div>
-          <img id="artist1-photo-preview" class="photo-preview" alt="Artist 1" />
+          <img id="artist1-photo-preview" class="photo-preview" alt="Artist 1" title="Click to reframe" onclick="reframeExistingPhoto('1', 'artist1-photo-preview', 'artist1-photo-status')" />
           <div class="photo-upload-col">
-            <input type="file" id="artist1-photo-file" class="input-file" accept="image/*" onchange="uploadArtistPhoto('1', 'artist1-photo-file', 'artist1-photo-preview', 'artist1-photo-placeholder', 'artist1-photo-status')" />
+            <input type="file" id="artist1-photo-file" class="input-file" accept="image/*" onchange="handlePhotoFileSelected('1', 'artist1-photo-file', 'artist1-photo-preview', 'artist1-photo-placeholder', 'artist1-photo-status')" />
             <button class="date-save-btn btn-clear" onclick="clearArtistPhoto('1','artist1-photo-preview','artist1-photo-placeholder','artist1-photo-status')">Remove photo</button>
             <div class="photo-status" id="artist1-photo-status"></div>
           </div>
@@ -597,9 +628,9 @@ const HTML = `<!DOCTYPE html>
         <div class="date-label">ARTIST 2 PHOTO</div>
         <div class="photo-upload-row">
           <div class="photo-placeholder" id="artist2-photo-placeholder">＋</div>
-          <img id="artist2-photo-preview" class="photo-preview" alt="Artist 2" />
+          <img id="artist2-photo-preview" class="photo-preview" alt="Artist 2" title="Click to reframe" onclick="reframeExistingPhoto('2', 'artist2-photo-preview', 'artist2-photo-status')" />
           <div class="photo-upload-col">
-            <input type="file" id="artist2-photo-file" class="input-file" accept="image/*" onchange="uploadArtistPhoto('2', 'artist2-photo-file', 'artist2-photo-preview', 'artist2-photo-placeholder', 'artist2-photo-status')" />
+            <input type="file" id="artist2-photo-file" class="input-file" accept="image/*" onchange="handlePhotoFileSelected('2', 'artist2-photo-file', 'artist2-photo-preview', 'artist2-photo-placeholder', 'artist2-photo-status')" />
             <button class="date-save-btn btn-clear" onclick="clearArtistPhoto('2','artist2-photo-preview','artist2-photo-placeholder','artist2-photo-status')">Remove photo</button>
             <div class="photo-status" id="artist2-photo-status"></div>
           </div>
@@ -704,6 +735,24 @@ const HTML = `<!DOCTYPE html>
     </div>
   </div>
 
+</div>
+
+<div class="crop-overlay" id="crop-overlay">
+  <div class="crop-card">
+    <div class="crop-title">Reframe photo</div>
+    <div class="crop-viewport" id="crop-viewport" onmousedown="cropPointerDown(event)" ontouchstart="cropPointerDown(event)">
+      <img id="crop-image" alt="" />
+    </div>
+    <div class="crop-zoom-row">
+      <span>Zoom</span>
+      <input type="range" id="crop-zoom" min="1" max="3" step="0.01" value="1" oninput="onCropZoomInput()" />
+    </div>
+    <div class="crop-hint">Drag the photo to reposition it, use the slider to zoom, then save.</div>
+    <div class="crop-actions">
+      <button class="btn btn-ghost" onclick="closeCropModal()">Cancel</button>
+      <button class="btn btn-primary" id="crop-save-btn" onclick="saveCrop()">Save crop</button>
+    </div>
+  </div>
 </div>
 <script>
   const SUPABASE_URL = "__SUPABASE_URL__";
@@ -1241,55 +1290,215 @@ const HTML = `<!DOCTYPE html>
     }
   }
 
-  const MAX_PHOTO_BYTES = 2.5 * 1024 * 1024; // base64 inflates ~37% — stays under the 4mb API body limit
+  // Gate on the file picked — cropping to a square and re-compressing to a
+  // JPEG before upload keeps the actual upload payload small regardless of
+  // how large the original photo was.
+  const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
+  const CROP_OUTPUT_SIZE = 900; // px, square output
 
-  async function uploadArtistPhoto(artist, fileInputId, previewId, placeholderId, statusId) {
+  let cropState = null;
+
+  function handlePhotoFileSelected(artist, fileInputId, previewId, placeholderId, statusId) {
     const fileInput = document.getElementById(fileInputId);
     const file = fileInput.files[0];
     const status = document.getElementById(statusId);
     if (!file) return;
 
     if (file.size > MAX_PHOTO_BYTES) {
-      status.textContent = "Photo too large — keep it under 2.5MB.";
       status.classList.add("error");
+      status.textContent = "Photo too large — keep it under 5MB.";
       fileInput.value = "";
       return;
     }
 
     status.classList.remove("error");
+    status.textContent = "";
+    const reader = new FileReader();
+    reader.onload = () => {
+      openCropModal(artist, reader.result, previewId, placeholderId, statusId, false);
+      fileInput.value = "";
+    };
+    reader.onerror = () => {
+      status.classList.add("error");
+      status.textContent = "Couldn't read that file — try again.";
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function reframeExistingPhoto(artist, previewId, statusId) {
+    const preview = document.getElementById(previewId);
+    if (!preview || !preview.src) return;
+    openCropModal(artist, preview.src, previewId, "artist" + artist + "-photo-placeholder", statusId, true);
+  }
+
+  function openCropModal(artist, src, previewId, placeholderId, statusId, crossOrigin) {
+    const cropImg = document.getElementById("crop-image");
+    if (crossOrigin) {
+      cropImg.crossOrigin = "anonymous";
+    } else {
+      cropImg.removeAttribute("crossorigin");
+    }
+    cropImg.onload = () => {
+      document.getElementById("crop-overlay").classList.add("open");
+      const viewport = document.getElementById("crop-viewport");
+      const size = viewport.clientWidth || 320;
+      const naturalW = cropImg.naturalWidth;
+      const naturalH = cropImg.naturalHeight;
+      const baseScale = size / Math.min(naturalW, naturalH);
+      cropState = {
+        artist: artist,
+        previewId: previewId,
+        placeholderId: placeholderId,
+        statusId: statusId,
+        naturalW: naturalW,
+        naturalH: naturalH,
+        viewportSize: size,
+        baseScale: baseScale,
+        zoom: 1,
+        tx: (size - naturalW * baseScale) / 2,
+        ty: (size - naturalH * baseScale) / 2,
+        dragging: false
+      };
+      document.getElementById("crop-zoom").value = "1";
+      renderCropTransform();
+    };
+    cropImg.onerror = () => {
+      const status = document.getElementById(statusId);
+      status.classList.add("error");
+      status.textContent = "Couldn't load that image for reframing.";
+    };
+    cropImg.src = src;
+  }
+
+  function renderCropTransform() {
+    if (!cropState) return;
+    const cropImg = document.getElementById("crop-image");
+    const scale = cropState.baseScale * cropState.zoom;
+    cropImg.style.width = (cropState.naturalW * scale) + "px";
+    cropImg.style.height = (cropState.naturalH * scale) + "px";
+    cropImg.style.transform = "translate(" + cropState.tx + "px, " + cropState.ty + "px)";
+  }
+
+  function clampCropPosition() {
+    if (!cropState) return;
+    const scale = cropState.baseScale * cropState.zoom;
+    const dispW = cropState.naturalW * scale;
+    const dispH = cropState.naturalH * scale;
+    const minTx = cropState.viewportSize - dispW;
+    const minTy = cropState.viewportSize - dispH;
+    cropState.tx = Math.min(0, Math.max(minTx, cropState.tx));
+    cropState.ty = Math.min(0, Math.max(minTy, cropState.ty));
+  }
+
+  function onCropZoomInput() {
+    if (!cropState) return;
+    const prevScale = cropState.baseScale * cropState.zoom;
+    const center = cropState.viewportSize / 2;
+    const imgX = (center - cropState.tx) / prevScale;
+    const imgY = (center - cropState.ty) / prevScale;
+    cropState.zoom = parseFloat(document.getElementById("crop-zoom").value);
+    const nextScale = cropState.baseScale * cropState.zoom;
+    cropState.tx = center - imgX * nextScale;
+    cropState.ty = center - imgY * nextScale;
+    clampCropPosition();
+    renderCropTransform();
+  }
+
+  function cropPointerDown(e) {
+    if (!cropState) return;
+    const point = e.touches ? e.touches[0] : e;
+    cropState.dragging = true;
+    cropState.dragStartX = point.clientX;
+    cropState.dragStartY = point.clientY;
+    cropState.startTx = cropState.tx;
+    cropState.startTy = cropState.ty;
+    document.getElementById("crop-viewport").classList.add("dragging");
+    e.preventDefault();
+  }
+
+  function cropPointerMove(e) {
+    if (!cropState || !cropState.dragging) return;
+    const point = e.touches ? e.touches[0] : e;
+    cropState.tx = cropState.startTx + (point.clientX - cropState.dragStartX);
+    cropState.ty = cropState.startTy + (point.clientY - cropState.dragStartY);
+    clampCropPosition();
+    renderCropTransform();
+    e.preventDefault();
+  }
+
+  function cropPointerUp() {
+    if (!cropState) return;
+    cropState.dragging = false;
+    const vp = document.getElementById("crop-viewport");
+    if (vp) vp.classList.remove("dragging");
+  }
+
+  document.addEventListener("mousemove", cropPointerMove);
+  document.addEventListener("mouseup", cropPointerUp);
+  document.addEventListener("touchmove", cropPointerMove, { passive: false });
+  document.addEventListener("touchend", cropPointerUp);
+
+  function closeCropModal() {
+    document.getElementById("crop-overlay").classList.remove("open");
+    cropState = null;
+  }
+
+  async function saveCrop() {
+    if (!cropState) return;
+    const state = cropState;
+    const scale = state.baseScale * state.zoom;
+    const srcX = -state.tx / scale;
+    const srcY = -state.ty / scale;
+    const srcSize = state.viewportSize / scale;
+    const cropImg = document.getElementById("crop-image");
+
+    const canvas = document.createElement("canvas");
+    canvas.width = CROP_OUTPUT_SIZE;
+    canvas.height = CROP_OUTPUT_SIZE;
+    const ctx = canvas.getContext("2d");
+
+    const status = document.getElementById(state.statusId);
+    let dataUrl;
+    try {
+      ctx.drawImage(cropImg, srcX, srcY, srcSize, srcSize, 0, 0, CROP_OUTPUT_SIZE, CROP_OUTPUT_SIZE);
+      dataUrl = canvas.toDataURL("image/jpeg", 0.88);
+    } catch (err) {
+      console.error("[saveCrop]", err);
+      status.classList.add("error");
+      status.textContent = "Couldn't process that crop — try re-uploading instead.";
+      return;
+    }
+
+    const saveBtn = document.getElementById("crop-save-btn");
+    saveBtn.disabled = true;
+    status.classList.remove("error");
     status.textContent = "Uploading…";
 
     try {
-      const dataUrl = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-      });
-
       const res = await fetch("/api/admin/upload-artist-photo", {
         method: "POST",
         headers: { "Content-Type": "application/json", "x-admin-secret": adminSecret },
-        body: JSON.stringify({ artist, dataUrl })
+        body: JSON.stringify({ artist: state.artist, dataUrl: dataUrl })
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
-        throw new Error(body.error || \`Upload failed (\${res.status})\`);
+        throw new Error(body.error || "Upload failed (" + res.status + ")");
       }
-      const { url } = await res.json();
-      const preview = document.getElementById(previewId);
-      const placeholder = document.getElementById(placeholderId);
-      preview.src = url + "?t=" + Date.now();
+      const result = await res.json();
+      const preview = document.getElementById(state.previewId);
+      const placeholder = document.getElementById(state.placeholderId);
+      preview.src = result.url + "?t=" + Date.now();
       preview.style.display = "block";
-      placeholder.style.display = "none";
+      if (placeholder) placeholder.style.display = "none";
       status.textContent = "Uploaded ✓";
       setTimeout(() => { status.textContent = ""; }, 2000);
+      closeCropModal();
     } catch (err) {
-      console.error("[upload-artist-photo]", err);
-      status.textContent = err.message || "Upload failed — try again.";
+      console.error("[saveCrop upload]", err);
       status.classList.add("error");
+      status.textContent = err.message || "Upload failed — try again.";
     } finally {
-      fileInput.value = "";
+      saveBtn.disabled = false;
     }
   }
 
