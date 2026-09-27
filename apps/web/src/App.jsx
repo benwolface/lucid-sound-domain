@@ -1638,10 +1638,8 @@ function isEmailValid(value) {
 
 // ── Slow warm ambient glow behind the entry screen — a generative
 // placeholder for a future real video loop. A soft circle breathing on
-// one shared ~5.5s cycle, with a handful of soft light-ray "paths"
-// radiating out from the eclipse. Nothing sudden or "woo woo". ──
+// one shared ~5.5s cycle. Nothing sudden or "woo woo". ──
 const GLOW_CYCLE_MS = 5500;
-const GLOW_RAY_COUNT = 6;
 
 function HeartbeatGlow({ circleRef }) {
   const canvasRef = useRef(null);
@@ -1671,18 +1669,6 @@ function HeartbeatGlow({ circleRef }) {
     resize();
     window.addEventListener("resize", resize);
 
-    // Fixed set of ray angles, chosen once — they don't move, only their
-    // opacity breathes (each on its own slightly offset phase so it never
-    // reads as one uniform blink).
-    const rays = Array.from({ length: GLOW_RAY_COUNT }, (_, i) => {
-      const angle = (i / GLOW_RAY_COUNT) * Math.PI * 2 + (Math.random() - 0.5) * 0.4;
-      return {
-        angle,
-        halfWidth: (2.5 + Math.random() * 3) * (Math.PI / 180),
-        phaseOffset: Math.random() * GLOW_CYCLE_MS,
-      };
-    });
-
     // Falls back to viewport center/46% until the eclipse circle has
     // actually laid out, then tracks its real position every frame so the
     // glow can never drift out of alignment with it.
@@ -1710,36 +1696,6 @@ function HeartbeatGlow({ circleRef }) {
       ctx.fillRect(0, 0, width, height);
     }
 
-    function drawRays(cx, cy, t) {
-      const rayLength = Math.hypot(width, height) * 0.65;
-      ctx.save();
-      ctx.filter = "blur(28px)";
-      ctx.globalCompositeOperation = "screen";
-      rays.forEach((ray) => {
-        const localPulse =
-          (1 + Math.sin(((t + ray.phaseOffset) / GLOW_CYCLE_MS) * Math.PI * 2 - Math.PI / 2)) / 2;
-        const a = 0.05 + localPulse * 0.09;
-        const a1 = ray.angle - ray.halfWidth;
-        const a2 = ray.angle + ray.halfWidth;
-        const grad = ctx.createLinearGradient(
-          cx,
-          cy,
-          cx + Math.cos(ray.angle) * rayLength,
-          cy + Math.sin(ray.angle) * rayLength,
-        );
-        grad.addColorStop(0, `rgba(255, 195, 130, ${a})`);
-        grad.addColorStop(1, "rgba(255, 170, 90, 0)");
-        ctx.fillStyle = grad;
-        ctx.beginPath();
-        ctx.moveTo(cx, cy);
-        ctx.lineTo(cx + Math.cos(a1) * rayLength, cy + Math.sin(a1) * rayLength);
-        ctx.lineTo(cx + Math.cos(a2) * rayLength, cy + Math.sin(a2) * rayLength);
-        ctx.closePath();
-        ctx.fill();
-      });
-      ctx.restore();
-    }
-
     let raf = null;
     const startTime = performance.now();
 
@@ -1753,7 +1709,6 @@ function HeartbeatGlow({ circleRef }) {
 
       const pulse = (1 + Math.sin((t / GLOW_CYCLE_MS) * Math.PI * 2 - Math.PI / 2)) / 2; // 0..1
       const { cx, cy } = getCenter();
-      drawRays(cx, cy, t);
       drawGlow(cx, cy, pulse);
 
       raf = requestAnimationFrame(frame);
