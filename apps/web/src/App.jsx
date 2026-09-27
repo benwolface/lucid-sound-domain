@@ -1695,9 +1695,13 @@ function HeartbeatGlow({ circleRef }) {
     }
 
     function drawGlow(cx, cy, pulse) {
-      const baseR = Math.min(width, height) * (0.24 + pulse * 0.035);
+      // Radius swings more than before (0.05 vs 0.035) and alpha swings a
+      // full 3x (0.08→0.24, not 0.11→0.22) — the previous range was too
+      // narrow to read as "breathing" once the rays were also adding their
+      // own brightness on top of it.
+      const baseR = Math.min(width, height) * (0.27 + pulse * 0.05);
       const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, baseR);
-      const alpha = 0.11 + pulse * 0.11;
+      const alpha = 0.08 + pulse * 0.16;
       glow.addColorStop(0, `rgba(255, 150, 60, ${alpha})`);
       glow.addColorStop(0.4, `rgba(230, 120, 45, ${alpha * 0.7})`);
       glow.addColorStop(0.7, `rgba(180, 80, 25, ${alpha * 0.32})`);
