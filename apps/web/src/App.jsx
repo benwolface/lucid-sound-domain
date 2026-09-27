@@ -73,9 +73,11 @@ function saveSession(referralCode) {
 }
 
 // Landing only uses the two atmospheric shots
+// bg-2-disco.jpg dropped from the entry screen — its mirror-ball facets
+// read as scattered white orbs once dimmed; HeartbeatGlow now draws its
+// own light-ray "paths" instead, fully controllable and orb-free.
 const LANDING_BACKGROUNDS = [
   { url: "/bg-1-sky.jpg", position: "center center", size: "cover" },
-  { url: "/bg-2-disco.jpg", position: "center center", size: "cover" },
 ];
 
 // Home gets all three, including the red one
@@ -1635,11 +1637,13 @@ function isEmailValid(value) {
 }
 
 // ── Slow warm ambient glow behind the entry screen — a generative
-// placeholder for a future real video loop. A single soft circle
-// breathing on one shared ~5.5s cycle, nothing sudden or "woo woo". ──
+// placeholder for a future real video loop. A soft circle breathing on
+// one shared ~5.5s cycle, with a handful of soft light-ray "paths"
+// radiating out from the eclipse. Nothing sudden or "woo woo". ──
 const GLOW_CYCLE_MS = 5500;
+const GLOW_RAY_COUNT = 6;
 
-function HeartbeatGlow() {
+function HeartbeatGlow({ circleRef }) {
   const canvasRef = useRef(null);
 
   useEffect(() => {
@@ -1667,47 +1671,94 @@ function HeartbeatGlow() {
     resize();
     window.addEventListener("resize", resize);
 
+    // Fixed set of ray angles, chosen once — they don't move, only their
+    // opacity breathes (each on its own slightly offset phase so it never
+    // reads as one uniform blink).
+    const rays = Array.from({ length: GLOW_RAY_COUNT }, (_, i) => {
+      const angle = (i / GLOW_RAY_COUNT) * Math.PI * 2 + (Math.random() - 0.5) * 0.4;
+      return {
+        angle,
+        halfWidth: (2.5 + Math.random() * 3) * (Math.PI / 180),
+        phaseOffset: Math.random() * GLOW_CYCLE_MS,
+      };
+    });
+
+    // Falls back to viewport center/46% until the eclipse circle has
+    // actually laid out, then tracks its real position every frame so the
+    // glow can never drift out of alignment with it.
+    function getCenter() {
+      const rect = circleRef?.current?.getBoundingClientRect();
+      if (rect && rect.width > 0) {
+        return { cx: rect.left + rect.width / 2, cy: rect.top + rect.height / 2 };
+      }
+      return { cx: width / 2, cy: height * 0.46 };
+    }
+
+    function drawGlow(cx, cy, pulse) {
+      const baseR = Math.min(width, height) * (0.24 + pulse * 0.035);
+      const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, baseR);
+      const alpha = 0.11 + pulse * 0.11;
+      glow.addColorStop(0, `rgba(255, 150, 60, ${alpha})`);
+      glow.addColorStop(0.4, `rgba(230, 120, 45, ${alpha * 0.7})`);
+      glow.addColorStop(0.7, `rgba(180, 80, 25, ${alpha * 0.32})`);
+      glow.addColorStop(1, "rgba(0, 0, 0, 0)");
+      ctx.fillStyle = glow;
+      ctx.fillRect(0, 0, width, height);
+    }
+
+    function drawRays(cx, cy, t) {
+      const rayLength = Math.hypot(width, height) * 0.65;
+      ctx.save();
+      ctx.filter = "blur(28px)";
+      ctx.globalCompositeOperation = "screen";
+      rays.forEach((ray) => {
+        const localPulse =
+          (1 + Math.sin(((t + ray.phaseOffset) / GLOW_CYCLE_MS) * Math.PI * 2 - Math.PI / 2)) / 2;
+        const a = 0.05 + localPulse * 0.09;
+        const a1 = ray.angle - ray.halfWidth;
+        const a2 = ray.angle + ray.halfWidth;
+        const grad = ctx.createLinearGradient(
+          cx,
+          cy,
+          cx + Math.cos(ray.angle) * rayLength,
+          cy + Math.sin(ray.angle) * rayLength,
+        );
+        grad.addColorStop(0, `rgba(255, 195, 130, ${a})`);
+        grad.addColorStop(1, "rgba(255, 170, 90, 0)");
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.lineTo(cx + Math.cos(a1) * rayLength, cy + Math.sin(a1) * rayLength);
+        ctx.lineTo(cx + Math.cos(a2) * rayLength, cy + Math.sin(a2) * rayLength);
+        ctx.closePath();
+        ctx.fill();
+      });
+      ctx.restore();
+    }
+
     let raf = null;
     const startTime = performance.now();
 
     function frame(now) {
       const t = now - startTime;
+      // Full clear, not an accumulating trailing fade — the fade approach
+      // stacks hundreds of low-alpha fills over time, which quantizes into
+      // visible banding/graininess on an 8-bit canvas. A fresh gradient
+      // every frame is what actually renders smooth.
+      ctx.clearRect(0, 0, width, height);
 
-      // Soft trailing fade instead of a hard clear — keeps the pulse
-      // silky rather than flickery.
-      ctx.fillStyle = "rgba(6, 4, 2, 0.16)";
-      ctx.fillRect(0, 0, width, height);
-
-      // Shared breathing pulse — one slow sine, everything rides it.
       const pulse = (1 + Math.sin((t / GLOW_CYCLE_MS) * Math.PI * 2 - Math.PI / 2)) / 2; // 0..1
-
-      // Central warm glow, centered where the eclipse sits.
-      const cx = width / 2;
-      const cy = height * 0.46;
-      const baseR = Math.min(width, height) * (0.38 + pulse * 0.05);
-      const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, baseR);
-      const alpha = 0.10 + pulse * 0.10;
-      glow.addColorStop(0, `rgba(255, 150, 60, ${alpha})`);
-      glow.addColorStop(0.55, `rgba(200, 90, 30, ${alpha * 0.5})`);
-      glow.addColorStop(1, "rgba(0, 0, 0, 0)");
-      ctx.fillStyle = glow;
-      ctx.fillRect(0, 0, width, height);
+      const { cx, cy } = getCenter();
+      drawRays(cx, cy, t);
+      drawGlow(cx, cy, pulse);
 
       raf = requestAnimationFrame(frame);
     }
 
     if (reduced) {
       // One still frame: soft centered glow, no motion.
-      const cx = width / 2;
-      const cy = height * 0.46;
-      const baseR = Math.min(width, height) * 0.4;
-      const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, baseR);
-      glow.addColorStop(0, "rgba(255, 150, 60, 0.14)");
-      glow.addColorStop(1, "rgba(0, 0, 0, 0)");
-      ctx.fillStyle = "rgba(6, 4, 2, 1)";
-      ctx.fillRect(0, 0, width, height);
-      ctx.fillStyle = glow;
-      ctx.fillRect(0, 0, width, height);
+      const { cx, cy } = getCenter();
+      drawGlow(cx, cy, 0.5);
     } else {
       raf = requestAnimationFrame(frame);
     }
@@ -1716,7 +1767,7 @@ function HeartbeatGlow() {
       window.removeEventListener("resize", resize);
       if (raf) cancelAnimationFrame(raf);
     };
-  }, []);
+  }, [circleRef]);
 
   return <canvas ref={canvasRef} className="heartbeat-glow" />;
 }
@@ -1783,6 +1834,7 @@ function Landing({
   const whoTextRef = useRef(null);
   const diskRef = useRef(null);
   const ringRef = useRef(null);
+  const circleRef = useRef(null);
   const inputWrapRef = useRef(null);
   const lineRef = useRef(null);
   const innerWhiteRef = useRef(null);
@@ -2543,7 +2595,7 @@ function Landing({
         }}
       />
       <div className="bg-veil" />
-      <HeartbeatGlow />
+      <HeartbeatGlow circleRef={circleRef} />
 
       <div
         ref={splashRef}
@@ -2564,7 +2616,7 @@ function Landing({
       <div ref={welcomeRef} className="welcome-wrap">
         <div ref={diskRef} className="accretion-disk" />
         <div ref={ringRef} className="welcome-ring" />
-        <div className="welcome-circle">
+        <div ref={circleRef} className="welcome-circle">
           <div ref={innerWhiteRef} className="circle-inner-white" />
           <span ref={welcomeTextRef} className="circle-text">
             welcome
