@@ -206,7 +206,6 @@ export default function App() {
         onDomainScreen={() => setScreen("domain")}
         onBackHome={() => setScreen("home")}
         imHereEnabled={false}
-        nextPortalDate={nextPortalDate}
       />
     );
   if (screen === "domain")
@@ -218,7 +217,6 @@ export default function App() {
         onHome={handleHome}
         onDomainScreen={() => setScreen("domain")}
         imHereEnabled={false}
-        nextPortalDate={nextPortalDate}
       />
     </div>
   );
@@ -1636,13 +1634,99 @@ function isEmailValid(value) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
 }
 
+// ── Slow warm ambient glow behind the entry screen — a generative
+// placeholder for a future real video loop. A single soft circle
+// breathing on one shared ~5.5s cycle, nothing sudden or "woo woo". ──
+const GLOW_CYCLE_MS = 5500;
+
+function HeartbeatGlow() {
+  const canvasRef = useRef(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    const reduced = prefersReducedMotion();
+
+    // Sized off the window, not canvas.clientWidth/clientHeight — reading
+    // the canvas's own box can race layout (position: absolute; inset: 0
+    // hasn't necessarily resolved yet), and a buffer captured at the wrong
+    // aspect ratio gets stretched non-uniformly by the browser, turning a
+    // circular gradient into an egg. The canvas always fills the viewport,
+    // so window dimensions are correct with no timing dependency.
+    let width = 0;
+    let height = 0;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    function resize() {
+      width = window.innerWidth;
+      height = window.innerHeight;
+      canvas.width = width * dpr;
+      canvas.height = height * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+    resize();
+    window.addEventListener("resize", resize);
+
+    let raf = null;
+    const startTime = performance.now();
+
+    function frame(now) {
+      const t = now - startTime;
+
+      // Soft trailing fade instead of a hard clear — keeps the pulse
+      // silky rather than flickery.
+      ctx.fillStyle = "rgba(6, 4, 2, 0.16)";
+      ctx.fillRect(0, 0, width, height);
+
+      // Shared breathing pulse — one slow sine, everything rides it.
+      const pulse = (1 + Math.sin((t / GLOW_CYCLE_MS) * Math.PI * 2 - Math.PI / 2)) / 2; // 0..1
+
+      // Central warm glow, centered where the eclipse sits.
+      const cx = width / 2;
+      const cy = height * 0.46;
+      const baseR = Math.min(width, height) * (0.38 + pulse * 0.05);
+      const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, baseR);
+      const alpha = 0.10 + pulse * 0.10;
+      glow.addColorStop(0, `rgba(255, 150, 60, ${alpha})`);
+      glow.addColorStop(0.55, `rgba(200, 90, 30, ${alpha * 0.5})`);
+      glow.addColorStop(1, "rgba(0, 0, 0, 0)");
+      ctx.fillStyle = glow;
+      ctx.fillRect(0, 0, width, height);
+
+      raf = requestAnimationFrame(frame);
+    }
+
+    if (reduced) {
+      // One still frame: soft centered glow, no motion.
+      const cx = width / 2;
+      const cy = height * 0.46;
+      const baseR = Math.min(width, height) * 0.4;
+      const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, baseR);
+      glow.addColorStop(0, "rgba(255, 150, 60, 0.14)");
+      glow.addColorStop(1, "rgba(0, 0, 0, 0)");
+      ctx.fillStyle = "rgba(6, 4, 2, 1)";
+      ctx.fillRect(0, 0, width, height);
+      ctx.fillStyle = glow;
+      ctx.fillRect(0, 0, width, height);
+    } else {
+      raf = requestAnimationFrame(frame);
+    }
+
+    return () => {
+      window.removeEventListener("resize", resize);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, []);
+
+  return <canvas ref={canvasRef} className="heartbeat-glow" />;
+}
+
 function Landing({
   mode = "entry",
   onHome,
   onDomainScreen,
   onBackHome,
   imHereEnabled,
-  nextPortalDate,
 }) {
   const isAuthMode = mode === "auth";
   const [bg] = useState(
@@ -1705,7 +1789,6 @@ function Landing({
   const domainTextRef = useRef(null);
   const initiatedTextRef = useRef(null);
   const flashOverlayRef = useRef(null);
-  const portalInfoRef = useRef(null);
 
   // ── Fade the circle text to a new step ──
   function fadeToStep(nextStep) {
@@ -2004,7 +2087,6 @@ function Landing({
       inputWrapRef.current,
       welcomeTextRef.current,
       whoTextRef.current,
-      portalInfoRef.current,
     ].filter(Boolean);
 
     fadeEls.forEach((el) => {
@@ -2118,7 +2200,6 @@ function Landing({
       if (bgSlideRef.current) bgSlideRef.current.style.opacity = "1";
       dockSplashLogo();
       if (welcomeRef.current) welcomeRef.current.style.opacity = "1";
-      if (portalInfoRef.current) portalInfoRef.current.style.opacity = "1";
       if (whoTextRef.current) {
         whoTextRef.current.style.opacity = "1";
         whoTextRef.current.style.transform = "translateY(0)";
@@ -2462,6 +2543,7 @@ function Landing({
         }}
       />
       <div className="bg-veil" />
+      <HeartbeatGlow />
 
       <div
         ref={splashRef}
@@ -2480,24 +2562,6 @@ function Landing({
       </div>
 
       <div ref={welcomeRef} className="welcome-wrap">
-        <div ref={portalInfoRef} className="landing-portal-info">
-          <p className="landing-portal-title">( Regulation )</p>
-          <p className="landing-portal-essence">{DOMAIN_CORE_LINE}</p>
-          <p className="landing-portal-label">next portal opening on</p>
-          <p className="landing-portal-date">
-            {nextPortalDate
-              ? fmtPortalDate(nextPortalDate)
-              : PORTAL_DATE_PENDING_COPY}
-          </p>
-          <p className="home-timing">
-            {PORTAL_START_LABEL} – {PORTAL_END_LABEL}. Please arrive before{" "}
-            {PORTAL_FINAL_ARRIVAL_LABEL}.
-            <br />
-            To protect the listening experience,
-            <br />
-            there is no entry from 8:00–9:00 PM.
-          </p>
-        </div>
         <div ref={diskRef} className="accretion-disk" />
         <div ref={ringRef} className="welcome-ring" />
         <div className="welcome-circle">
