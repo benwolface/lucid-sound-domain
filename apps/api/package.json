@@ -9,7 +9,8 @@
     "vercel-build": "node -e \"console.log('Skipping database generation for preview deploy')\"",
     "lint": "node -e \"console.log('skip lint for scaffold')\"",
     "prisma:generate": "node -e \"console.log('Prisma removed from preview API')\"",
-    "prisma:migrate": "node -e \"console.log('Prisma removed from preview API')\""
+    "prisma:migrate": "node -e \"console.log('Prisma removed from preview API')\"",
+    "test": "node --test test/*.test.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.103.3",
