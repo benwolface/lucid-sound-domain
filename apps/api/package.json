@@ -5,6 +5,7 @@
   "type": "commonjs",
   "scripts": {
     "dev": "nodemon --delay 1 src/index.js",
+    "dev:sample": "node src/sample.js",
     "build": "node -e \"console.log('No build step for API')\"",
     "vercel-build": "node -e \"console.log('Skipping database generation for preview deploy')\"",
     "lint": "node -e \"console.log('skip lint for scaffold')\"",

@@ -6,6 +6,7 @@ const buildId =
   process.env.VERCEL_GIT_COMMIT_SHA ||
   process.env.VERCEL_DEPLOYMENT_ID ||
   `local-${Date.now()}`;
+const apiTarget = `http://localhost:${process.env.LSD_API_PORT ?? "8787"}`;
 const builtAt = new Date().toISOString();
 
 function deployVersionPlugin() {
@@ -70,11 +71,11 @@ export default defineConfig({
     host: "127.0.0.1",
     proxy: {
       "/api": {
-        target: "http://localhost:8787",
+        target: apiTarget,
         changeOrigin: true
       },
       "/admin": {
-        target: "http://localhost:8787",
+        target: apiTarget,
         changeOrigin: true
       }
     }
