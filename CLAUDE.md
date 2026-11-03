@@ -15,8 +15,15 @@ The maniOS project record lives at
 npm ci            # install
 npm run check     # API tests + web build; CI runs this
 npm test          # API tests only
-npm run dev       # web :5173 + api :8787 (uses real .env)
+npm run dev:sample  # sample env: web :5173 + api :8788, safe for agents
+npm run dev       # web :5173 + api :8787 (live Supabase/Resend; human only)
 ```
+
+`npm run dev:sample` runs the API on the in-memory sample store
+(`apps/api/src/sampleStore.js`) seeded with ten invented guests, RSVPs for a
+portal two weeks out, an archive video, and a past blast. There is no Resend
+key, so nothing emails anyone. The admin secret is `sample-admin`; the console
+prints a returning guest's referral code. Restarting resets everything.
 
 A change is done when `npm run check` passes and the change has a test, or you
 say why it can't have one.
@@ -35,9 +42,11 @@ say why it can't have one.
 Ask before: pushing, merging to `lsd-scaffold` (that deploys production),
 changing Vercel config, or anything that emails people.
 
-Tests swap `apps/api/src/store.js` for an in-memory fake and blank the
-credentials (`apps/api/test/helpers.js`), so they are always safe to run. A
-store function the fake doesn't implement throws instead of reaching Supabase.
+Tests and `dev:sample` share `apps/api/src/sandbox.js`, which blanks the
+credentials and swaps `store.js` for the sample store, so they are always safe
+to run. A test fails if the sample store misses any real store export. From an
+agent session (`CLAUDECODE` set), `npm run dev` exits unless `LSD_ALLOW_LIVE=1`,
+which only the user may grant.
 
 ## Branches and deploys
 
@@ -51,6 +60,7 @@ store function the fake doesn't implement throws instead of reaching Supabase.
 - `apps/web/src/lib/deployRefresh.js` - PWA stale-shell busting; keep it working
 - `apps/api/src/app.js` - Express app; `routes/` per area; `store.js` is all Supabase access
 - `apps/api/src/routes/adminPortal.js` - the `/admin` page, served as HTML
+- `apps/api/src/sandbox.js`, `sampleStore.js` - sample env for tests and `dev:sample`
 - `apps/api/test/` - node:test API tests
 
 ## Philosophy
@@ -69,8 +79,8 @@ store function the fake doesn't implement throws instead of reaching Supabase.
 
 ## TODO
 
-- [ ] A separate Supabase project (or local Supabase) for preview and dev, so testing never writes live rows
-- [ ] A test Resend key or a dry-run mode, so preview never emails real guests
+- [ ] A separate Supabase project for Vercel preview deploys, so previews never write live rows (local dev is covered by `dev:sample`)
+- [ ] A test Resend key or a dry-run mode for Vercel previews (local dev is covered by `dev:sample`)
 - [ ] Tests for admin settings, archive, attendance, and the blast route (with email stubbed)
 - [ ] Tests for auth sessions and the visitor cookie
 - [ ] Web tests: a Playwright smoke test of arrival -> waitlist join -> RSVP against a stubbed API

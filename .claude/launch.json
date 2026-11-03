@@ -1,0 +1,19 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "lsd-sample-api",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["-w", "apps/api", "run", "dev:sample"],
+      "port": 8788
+    },
+    {
+      "name": "lsd-sample-web",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["-w", "apps/web", "run", "dev"],
+      "env": { "LSD_API_PORT": "8788" },
+      "port": 5173,
+      "autoPort": true
+    }
+  ]
+}
