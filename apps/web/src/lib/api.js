@@ -81,15 +81,3 @@ export function apiGetPrivateSettings(referralCode) {
 export function apiGetArchive() {
   return apiRequest("/archive");
 }
-
-export function apiRsvpStatus(referralCode) {
-  const q = referralCode ? `?ref=${encodeURIComponent(referralCode)}` : "";
-  return apiRequest(`/rsvp/status${q}`);
-}
-
-export function apiRsvpRespond({ referralCode, response }) {
-  return apiRequest("/rsvp", {
-    method: "POST",
-    body: JSON.stringify({ referralCode, response })
-  });
-}

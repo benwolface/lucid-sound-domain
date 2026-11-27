@@ -521,24 +521,6 @@ const HTML = `<!DOCTYPE html>
       </div>
     </div>
 
-    <!-- LSD RSVPS -->
-    <div class="section">
-      <div class="section-header">
-        <div class="section-title">LSD RSVPs</div>
-        <div class="selection-controls">
-          <button class="link-btn" onclick="loadAttendance()">Refresh</button>
-          <button class="link-btn archive-del" onclick="resetAttendance()">Reset all</button>
-        </div>
-      </div>
-      <div class="result-summary">
-        <div class="stat success"><div class="stat-num" id="att-confirmed">—</div><div class="stat-label">Confirmed</div></div>
-        <div class="stat"><div class="stat-num" id="att-remaining">—</div><div class="stat-label">Spots left</div></div>
-        <div class="stat"><div class="stat-num" id="att-waitlist">—</div><div class="stat-label">Waitlist</div></div>
-      </div>
-      <div class="date-preview" id="att-note" style="margin-top:0"></div>
-      <div id="att-lists"></div>
-    </div>
-
     <!-- PARTIFUL SNAPSHOT -->
     <div class="section">
       <div class="section-header">
@@ -807,50 +789,8 @@ const HTML = `<!DOCTYPE html>
     loadArchive();
     loadSettings();
     loadAdminArchive();
-    loadAttendance();
     loadPartifulPrefs();
     analyzePartifulCsv();
-  }
-
-  // ── LSD RSVPs (live internal RSVP data) ──
-
-  async function loadAttendance() {
-    try {
-      const res = await fetch("/api/admin/attendance", { headers: { "x-admin-secret": adminSecret } });
-      const data = await res.json();
-      const confirmed = data.attending.length;
-      document.getElementById("att-confirmed").textContent = confirmed;
-      document.getElementById("att-remaining").textContent = Math.max(0, data.hardCap - confirmed);
-      document.getElementById("att-waitlist").textContent = data.waitlist.length;
-      document.getElementById("att-note").textContent = data.portalDate
-        ? \`Portal \${data.portalDate} — logged-in guests see "full" at \${data.publicCap}; hard cap \${data.hardCap} (\${data.hardCap - data.publicCap} held back).\`
-        : "Set a next portal date to open logged-in RSVPs.";
-      const row = (r, i) => \`<div class="att-row"><span class="att-name">\${i != null ? (i + 1) + ". " : ""}\${esc(r.name || "—")}</span><span class="att-contact">\${esc(r.email || r.phone || "")}</span></div>\`;
-      document.getElementById("att-lists").innerHTML =
-        \`<div class="att-group-title">Confirmed (\${confirmed})</div>\` +
-        (data.attending.map(r => row(r)).join("") || '<div class="att-empty">no one yet</div>') +
-        \`<div class="att-group-title">Waitlist — contact in this order (\${data.waitlist.length})</div>\` +
-        (data.waitlist.map((r, i) => row(r, i)).join("") || '<div class="att-empty">empty</div>') +
-        \`<div class="att-group-title">Will not attend (\${data.notAttending.length})</div>\` +
-        (data.notAttending.map(r => row(r)).join("") || '<div class="att-empty">none</div>');
-    } catch (err) {
-      console.error("[attendance]", err);
-    }
-  }
-
-  async function resetAttendance() {
-    if (!confirm("Reset ALL LSD RSVPs for the current portal? Everyone will have to respond again.")) return;
-    try {
-      const res = await fetch("/api/admin/attendance-reset", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "x-admin-secret": adminSecret },
-      });
-      if (!res.ok) throw new Error("reset failed");
-      loadAttendance();
-    } catch (err) {
-      console.error("[attendance-reset]", err);
-      alert("Reset failed — try again.");
-    }
   }
 
   // ── Partiful snapshot — CSV stays client-side in this admin session ──
